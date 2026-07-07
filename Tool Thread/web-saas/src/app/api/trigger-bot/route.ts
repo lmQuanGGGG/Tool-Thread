@@ -20,12 +20,19 @@ export async function POST(request: Request) {
 
     // Map botType sang tên file workflow
     let workflowId = 'reels_worker.yml';
+    let inputs: any = { email };
+
     if (botType === 'reels') workflowId = 'reels_worker.yml';
-    if (botType === 'threads') workflowId = 'threads_comment_worker.yml';
-    if (botType === 'fb') workflowId = 'fb_worker.yml';
-    if (botType === 'farm') workflowId = 'farm_worker.yml';
-    if (botType === 'shopee') workflowId = 'shopee_worker.yml';
-    if (botType === 'parse_links') workflowId = 'parse_links_worker.yml';
+    else if (botType === 'threads') workflowId = 'threads_comment_worker.yml';
+    else if (botType === 'fb') workflowId = 'fb_worker.yml';
+    else if (botType === 'farm') workflowId = 'farm_worker.yml';
+    else if (botType === 'shopee') workflowId = 'shopee_worker.yml';
+    else if (botType === 'parse_links') workflowId = 'parse_links_worker.yml';
+    else if (botType === 'fb_comment') workflowId = 'fb_comment_worker.yml';
+    else if (botType.startsWith('threads_post_')) {
+      workflowId = 'threads_post_worker.yml';
+      inputs.post_id = botType.replace('threads_post_', '');
+    }
 
     // Gọi API của Github để kích hoạt Workflow Dispatch
     const response = await fetch(`https://api.github.com/repos/${githubRepo}/actions/workflows/${workflowId}/dispatches`, {
@@ -37,14 +44,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         ref: 'main', // Chạy trên nhánh main
-        inputs: {
-          // Chúng ta không truyền email qua input mà workflow đang tự lấy từ get_users.js.
-          // NHƯNG ĐỢI ĐÃ! get_users.js đang móc trong bảng. 
-          // Workflow dispatch cần email để truyền vào USER_EMAIL.
-          // Ta cần cập nhật cấu hình file YAML một chút nếu muốn truyền thẳng qua input, 
-          // nhưng tạm thời truyền qua input "email" và sửa YAML sau nếu cần.
-          email: email 
-        }
+        inputs: inputs
       })
     });
 
