@@ -14,6 +14,7 @@ create table public.profiles (
   fb_cookie text,
   threads_cookie text,
   affiliate_links text,
+  parsed_affiliate_links jsonb, -- Mảng lưu thông tin link đã cào (title, img, cmt)
   tele_chat_id text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

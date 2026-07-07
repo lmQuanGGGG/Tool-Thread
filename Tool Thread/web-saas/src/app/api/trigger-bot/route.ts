@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     if (botType === 'fb') workflowId = 'fb_worker.yml';
     if (botType === 'farm') workflowId = 'farm_worker.yml';
     if (botType === 'shopee') workflowId = 'shopee_worker.yml';
+    if (botType === 'parse_links') workflowId = 'parse_links_worker.yml';
 
     // Gọi API của Github để kích hoạt Workflow Dispatch
     const response = await fetch(`https://api.github.com/repos/${githubRepo}/actions/workflows/${workflowId}/dispatches`, {

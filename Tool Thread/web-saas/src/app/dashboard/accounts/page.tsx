@@ -111,8 +111,55 @@ export default function AccountsPage() {
     load();
   }, []);
 
+  // Lắng nghe log Realtime từ Bot (Github Actions) qua Supabase
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const channel = supabase
+      .channel('realtime_logs')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bot_logs', filter: `email=eq.${userEmail}` },
+        (payload) => {
+          const newLog = payload.new;
+          let level: LogEntry["level"] = "INFO";
+          if (newLog.level === 'error') level = "ERROR";
+          if (newLog.level === 'success') level = "SUCCESS";
+          if (newLog.level === 'warn') level = "WARN";
+          
+          const timeStr = new Date(newLog.created_at).toLocaleTimeString("vi-VN", { hour12: false });
+          const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
+          
+          setLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userEmail]);
+
   const handleSave = async () => {
     if (!userId) return;
+
+    // Validate link count based on tier
+    const getMaxLinks = (tier: string) => {
+      if (tier === 'lite') return 1;
+      if (tier === 'plus') return 2;
+      if (tier === 'pro') return 4;
+      if (tier === 'promax') return 9999; // Không giới hạn
+      return 0; // free
+    };
+    
+    const maxLinks = getMaxLinks(userTier);
+    const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
+    
+    if (linkCount > maxLinks) {
+      pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói!`);
+      return;
+    }
+
     setSaving(true);
     pushLog("INFO", "Đang lưu cấu hình...");
     const { error } = await supabase.from("profiles").update(formData).eq("id", userId);
@@ -247,16 +294,21 @@ export default function AccountsPage() {
           {/* Module 3: Affiliate Links */}
           <ModuleCard
             label="Affiliate Link Pool"
-            subtitle={`${linkCount} link${linkCount !== 1 ? "s" : ""} loaded`}
+            subtitle={`${linkCount} link${linkCount !== 1 ? "s" : ""} loaded (Giới hạn theo Tier)`}
             dotActive={linkCount > 0}
           >
             <textarea
               rows={4}
               value={formData.affiliate_links}
               onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })}
-              placeholder={"https://shope.ee/link1\nhttps://shope.ee/link2"}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all"
+              placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(1), Plus(2), Pro(4), Promax(∞)"}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-2"
             />
+            <button onClick={() => handleTrigger("parse_links")} disabled={triggering || linkCount === 0}
+              className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
+              {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              Đồng bộ Tên & Sinh AI Comment
+            </button>
           </ModuleCard>
 
           {/* Module 4: Telegram + Actions */}
