@@ -158,6 +158,19 @@ export default function AccountsPage() {
     return true;
   };
 
+  const handleDeletePost = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xoá bài viết này không?")) return;
+    
+    pushLog("INFO", `Đang xoá bài viết...`, "threads");
+    const { error } = await supabase.from('crawl_data').delete().eq('id', id);
+    if (error) {
+       pushLog("ERROR", `Lỗi xoá bài viết: ${error.message}`, "threads");
+       return;
+    }
+    setThreadsPosts(prev => prev.filter(p => p.id !== id));
+    pushLog("SUCCESS", `Đã xoá bài viết vĩnh viễn.`, "threads");
+  };
+
   const handlePostToThreads = async (post: any) => {
     const saved = await handleSavePost(post);
     if (saved) {
@@ -418,9 +431,18 @@ export default function AccountsPage() {
             <ModuleCard label="Threads Crawl Poster" subtitle={threadsPosts.length + " bài khả dụng"} dotActive={threadsPosts.length > 0}>
               <div className="max-h-[350px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
                 {threadsPosts.map((post, i) => (
-                  <div key={post.id} className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3">
+                  <div key={post.id} className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3 relative group/post">
+                    {/* Nút Xoá Bài Viết Toàn Cục */}
+                    <button 
+                        onClick={() => handleDeletePost(post.id)}
+                        className="absolute top-2 right-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded w-6 h-6 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
+                        title="Xoá bài viết này"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
                     <textarea 
-                      className="w-full bg-transparent border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded p-1 text-[11px] text-zinc-300 resize-none transition-all outline-none"
+                      className="w-full bg-transparent border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded p-1 pr-8 text-[11px] text-zinc-300 resize-none transition-all outline-none"
                       rows={5}
                       value={post.text_content}
                       onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
