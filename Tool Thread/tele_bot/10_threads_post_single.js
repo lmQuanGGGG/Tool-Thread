@@ -264,7 +264,14 @@ async function runSinglePost() {
             const textInputs = await page.$$(textInput);
             if (textInputs.length > 1) {
                 await textInputs[textInputs.length - 1].click();
-                await page.keyboard.type(ninjaComment, { delay: 10 });
+                const lines = ninjaComment.split('\n');
+                for (let line of lines) {
+                    await page.keyboard.type(line, { delay: 10 });
+                    await page.keyboard.down('Shift');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Shift');
+                    await delay(100);
+                }
             }
         }
     }

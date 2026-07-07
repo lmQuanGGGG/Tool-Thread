@@ -408,7 +408,14 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                 await delay(3000);
                 await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
                 await page.click('div[contenteditable="true"]');
-                await page.keyboard.type(ninjaComment, { delay: 30 });
+                const lines = ninjaComment.split('\n');
+                for (let line of lines) {
+                    await page.keyboard.type(line, { delay: 30 });
+                    await page.keyboard.down('Shift');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Shift');
+                    await delay(100);
+                }
                 await delay(2000); // Đợi type xong hẳn
 
                 const postBox = await page.evaluate(() => {
