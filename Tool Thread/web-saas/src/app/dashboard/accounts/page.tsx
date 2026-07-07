@@ -140,14 +140,14 @@ export default function AccountsPage() {
           const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
           
           setLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `email=eq.${userEmail}` },
-        (payload) => {
-          if (payload.new.parsed_affiliate_links) {
-            setParsedLinks(payload.new.parsed_affiliate_links);
+          
+          // Tự động refetch data nếu bot parse_links báo thành công
+          if (newLog.bot_type === 'parse_links' && newLog.level === 'success') {
+            supabase.from("profiles").select("parsed_affiliate_links").eq("email", userEmail).single().then(({data}) => {
+              if (data && data.parsed_affiliate_links) {
+                setParsedLinks(data.parsed_affiliate_links);
+              }
+            });
           }
         }
       )
