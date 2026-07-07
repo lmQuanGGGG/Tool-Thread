@@ -29,7 +29,7 @@ async function getShopeeOGData(shortUrl) {
         let imageMatch = html.match(/<meta property="og:square_image" content="(.*?)"/i) || html.match(/<meta property="og:image" content="(.*?)"/i);
         
         if (titleMatch && imageMatch) {
-            let title = titleMatch[1].replace(' | Shopee Việt Nam', '').replace(' - YouTube', '').trim();
+            let title = titleMatch[1].replace(' | Shopee Việt Nam', '').trim();
             return { title, imageUrl: imageMatch[1] };
         }
     } catch (e) {
@@ -42,8 +42,7 @@ async function uploadToTelegram(imageUrl, chatId) {
     const tempFile = path.join(__dirname, `temp_shopee_${Date.now()}.png`);
     try {
         // Tải ảnh bằng curl để vượt anti-bot
-        let referer = imageUrl.includes('shopee') ? 'https://shopee.vn/' : 'https://google.com/';
-        execSync(`curl -s -o "${tempFile}" "${imageUrl}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Referer: ${referer}"`);
+        execSync(`curl -s -o "${tempFile}" "${imageUrl}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Referer: https://shopee.vn/"`);
         if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size < 100) return null;
         
         const form = new FormData();
@@ -75,7 +74,7 @@ async function generateComment(title) {
     try {
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `Bạn là một KOL review sản phẩm/nội dung trên Mạng xã hội Threads. Hãy viết ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua sản phẩm/xem nội dung này. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích. Tên tiêu đề: ${title}`;
+        const prompt = `Bạn là một KOL review sản phẩm Shopee trên Mạng xã hội Threads. Hãy viết ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua sản phẩm này. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích. Tên sản phẩm: ${title}`;
         const result = await model.generateContent(prompt);
         return result.response.text().trim();
     } catch(e) {
