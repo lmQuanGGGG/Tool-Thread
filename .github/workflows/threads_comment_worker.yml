@@ -40,4 +40,4 @@ jobs:
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 8_threads_auto_comment.js
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node "Tool Thread/tele_bot/8_threads_auto_comment.js"
