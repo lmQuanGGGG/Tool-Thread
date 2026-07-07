@@ -113,7 +113,10 @@ async function runSinglePost() {
     }
 
     // 2. Thực thi đăng bài bằng Puppeteer
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const browser = await puppeteer.launch({
+        headless: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setCookie(...cookies);
@@ -228,25 +231,53 @@ async function runSinglePost() {
       process.exit(1);
     }
 
-    await delay(8000); // Chờ Threads xử lý đăng bài
+    await delay(5000); // Chờ Threads xử lý đăng bài và hiện thông báo Toast
+
+    // Cố gắng tìm nút "Xem" hoặc "View" trên thông báo Toast để vào bài viết vừa đăng
+    const viewClicked = await page.evaluate(() => {
+        // Tìm tất cả các link hoặc nút có chữ "Xem" hoặc "View"
+        const elements = Array.from(document.querySelectorAll('a, div[role="button"], button'));
+        for (const el of elements) {
+            const text = (el.innerText || '').trim().toLowerCase();
+            if (text === 'xem' || text === 'view') {
+                el.click();
+                return true;
+            }
+        }
+        // Fallback: Tìm link nào mới xuất hiện chứa '/post/'
+        const postLinks = Array.from(document.querySelectorAll('a[href*="/post/"]'));
+        if (postLinks.length > 0) {
+            postLinks[0].click();
+            return true;
+        }
+        return false;
+    });
+
+    if (viewClicked) {
+        console.log("✅ Đã bấm vào nút Xem bài viết mới đăng!");
+        await delay(3000); // Chờ load trang bài viết chi tiết
+    } else {
+        console.log("⚠️ Không tìm thấy nút Xem trên thông báo, cmt có thể bị thả nhầm chỗ!");
+    }
 
     if (ninjaComment) {
         console.log("💬 Đang tiến hành thả Ninja Comment (Affiliate Link)...");
         await logToWeb(email, 'threads_post', `💬 Đang thả comment chứa link Affiliate...`, 'info');
         try {
             await delay(5000); // Chờ bài đăng hiện lên
-            const replied = await page.evaluate(() => {
-                const svgs = Array.from(document.querySelectorAll('svg[aria-label="Reply"], svg[aria-label="Trả lời"]'));
+            const replyBox = await page.evaluate(() => {
+                const svgs = Array.from(document.querySelectorAll('svg[aria-label="Reply"], svg[aria-label="Trả lời"], svg[aria-label="Comment"], svg[aria-label="Bình luận"]'));
                 if (svgs.length > 0) {
                     const targetBtn = svgs[0];
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
-                    clickable.click(); 
-                    return true; 
+                    const rect = clickable.getBoundingClientRect();
+                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 }
-                return false;
+                return null;
             });
 
-            if (replied) {
+            if (replyBox) {
+                await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
                 console.log("[INFO] Đã click mở hộp thoại Reply...");
                 await delay(3000);
                 await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
