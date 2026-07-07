@@ -1,0 +1,6 @@
+{
+  "name": "AutoFarm MMO",
+  "description": "Architectural automation landing page and console simulator for Threads & Reels, featuring an interactive Three.js 3D dollar and coin background.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

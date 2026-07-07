@@ -1,0 +1,5 @@
+node_modules/
+temp_*
+reels_videos/
+*.mp4
+*.part

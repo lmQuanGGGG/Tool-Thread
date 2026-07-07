@@ -30,39 +30,61 @@ interface ParsedLink {
 /* ─── Helpers ────────────────────────────────────────── */
 const now = () => new Date().toLocaleTimeString("vi-VN", { hour12: false });
 
+/* Terminal log colors (dark terminal) */
 const LEVEL_COLOR: Record<LogEntry["level"], string> = {
-  INFO:    "text-slate-800",
+  INFO:    "text-zinc-400",
   SUCCESS: "text-emerald-400",
   WARN:    "text-amber-400",
   ERROR:   "text-red-400",
 };
 const LEVEL_BG: Record<LogEntry["level"], string> = {
-  INFO:    "bg-zinc-700/60 text-slate-900",
-  SUCCESS: "bg-emerald-500/20 text-emerald-400",
-  WARN:    "bg-amber-500/20 text-amber-400",
-  ERROR:   "bg-red-500/20 text-red-400",
+  INFO:    "bg-white/5 text-zinc-400",
+  SUCCESS: "bg-emerald-500/10 text-emerald-400",
+  WARN:    "bg-amber-500/10 text-amber-400",
+  ERROR:   "bg-red-500/10 text-red-400",
 };
 
 /* ─── Sub-components ─────────────────────────────────── */
 function StatusDot({ active }: { active: boolean }) {
-  return (
-    <span className={`w-2 h-2 rounded-full shrink-0 ${active ? "bg-emerald-400 shadow-[0_0_6px_theme(colors.emerald.400)]" : "bg-zinc-600"}`} />
-  );
+  return <span className={`status-dot ${active ? "status-dot-active" : "status-dot-inactive"}`} />;
 }
 
-function ModuleCard({
-  label, subtitle, dotActive, children
-}: { label: string; subtitle: string; dotActive: boolean; children: React.ReactNode }) {
+function Label({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-[13px] font-semibold text-[var(--text-primary)]">{children}</h3>;
+}
+
+/* ─── Terminal Panel ─────────────────────────────────── */
+function TerminalPanel({ logs, logEndRef, onClear, title }: {
+  logs: LogEntry[];
+  logEndRef: React.RefObject<HTMLDivElement | null>;
+  onClear: () => void;
+  title: string;
+}) {
   return (
-    <div className="glass-panel rounded-2xl p-6 transition-all hover:border-zinc-600/80 group">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
-          <StatusDot active={dotActive} />
-          <span className="font-mono font-bold text-sm text-slate-950 tracking-widest uppercase">{label}</span>
+    <div className="terminal flex flex-col h-full">
+      <div className="terminal-bar">
+        <div className="flex items-center gap-3">
+          <div className="terminal-dots">
+            <span className="bg-[#FF5F57]" />
+            <span className="bg-[#FEBC2E]" />
+            <span className="bg-[#28C840]" />
+          </div>
+          <span className="text-[11px] font-mono font-medium text-zinc-500">{title}</span>
         </div>
-        <span className="font-mono text-[10px] text-slate-700">{subtitle}</span>
+        <button onClick={onClear} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
-      {children}
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[11px]">
+        {logs.map((log, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
+            <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
+          </div>
+        ))}
+        <div ref={logEndRef} />
+      </div>
     </div>
   );
 }
@@ -122,14 +144,12 @@ export default function AccountsPage() {
         if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓", "threads");
       }
       setLoading(false);
-      // Fetch crawl data
       const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', user.id).eq('posted', false).order('created_at', { ascending: false }).limit(20);
       if (cData) setThreadsPosts(cData);
     }
     load();
   }, []);
 
-  // Các hàm quản lý Threads Post Editor
   const handleUpdatePostText = (id: string, newText: string) => {
     setThreadsPosts(prev => prev.map(p => p.id === id ? { ...p, text_content: newText } : p));
   };
@@ -180,7 +200,7 @@ export default function AccountsPage() {
     }
   };
 
-  // Lắng nghe log Realtime từ Bot (Github Actions) qua Supabase
+  // Realtime logs
   useEffect(() => {
     if (!userEmail) return;
 
@@ -202,7 +222,6 @@ export default function AccountsPage() {
           if (newLog.bot_type && newLog.bot_type.includes('threads')) {
             setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
             
-            // Xoá bài khỏi UI tự động nếu Threads Post báo thành công
             if (newLog.level === 'success' && newLog.bot_type === 'threads_post') {
               supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({data}) => {
                 if (data) setThreadsPosts(data);
@@ -212,7 +231,6 @@ export default function AccountsPage() {
             setFbLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
           }
           
-          // Tự động refetch data nếu bot parse_links báo thành công
           if (newLog.bot_type === 'parse_links' && newLog.level === 'success') {
             supabase.from("profiles").select("parsed_affiliate_links").eq("email", userEmail).single().then(({data}) => {
               if (data && data.parsed_affiliate_links) {
@@ -232,13 +250,12 @@ export default function AccountsPage() {
   const handleSave = async () => {
     if (!userId) return;
 
-    // Validate link count based on tier
     const getMaxLinks = (tier: string) => {
       if (tier === 'lite') return 3;
       if (tier === 'plus') return 10;
       if (tier === 'pro') return 20;
-      if (tier === 'promax') return 9999; // Không giới hạn
-      return 1; // free
+      if (tier === 'promax') return 9999;
+      return 1;
     };
     
     const maxLinks = getMaxLinks(userTier);
@@ -299,77 +316,78 @@ export default function AccountsPage() {
   const isManual  = userTier === "free" || userTier === "lite";
   const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
 
+  /* ─── LOADING ─── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] bg-zinc-950">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <Bot className="w-10 h-10 text-emerald-400 animate-pulse" />
-          <p className="font-mono text-sm text-slate-700 text-pretty">Đang khởi động hệ thống...</p>
+          <div className="w-11 h-11 rounded-xl bg-[var(--accent-blue)] flex items-center justify-center shadow-md">
+            <Bot className="w-5 h-5 text-white animate-pulse" />
+          </div>
+          <div className="space-y-2 text-center">
+            <div className="skeleton h-4 w-44 mx-auto" />
+            <div className="skeleton h-3 w-28 mx-auto" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen  text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-slate-950">
-      {/* ── HEADER NAVIGATION ── */}
-      <header className="sticky top-0 z-50 /80 backdrop-blur-xl border-b border-white/5 px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <Bot className="w-5 h-5 text-slate-950" />
-            <span className="font-semibold text-sm tracking-tight text-slate-950">AutoFarm Simulator</span>
-            <span className="px-2 py-0.5 rounded-full bg-slate-900/50 text-[10px] font-mono text-slate-800 border border-white/5 uppercase">v3.5</span>
+    <div className="min-h-screen flex flex-col font-[var(--font-sans)]">
+      {/* ── HEADER ── */}
+      <header className="sticky top-0 z-50 px-6 h-14 flex items-center justify-between bg-[var(--bg-surface-1)]/80 backdrop-blur-xl border-b border-[var(--border-subtle)]">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-[var(--accent-blue)] flex items-center justify-center">
+              <Bot className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="font-semibold text-[13px] text-[var(--text-primary)]">AutoFarm</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-[var(--bg-surface-2)] text-[9px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)] uppercase tracking-wider">v3.5</span>
           </div>
 
-          <nav className="flex items-center gap-1">
-            <button 
-              onClick={() => setActiveTab("global")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === "global" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
-            >
-              Cấu Hình Chung
-            </button>
-            <button 
-              onClick={() => setActiveTab("fb")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "fb" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
-            >
-              Facebook Engine
-            </button>
-            <button 
-              onClick={() => setActiveTab("threads")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "threads" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
-            >
-              Threads Engine
-            </button>
+          {/* Tab bar */}
+          <nav className="flex items-center gap-0.5 bg-[var(--bg-surface-2)] rounded-lg p-1">
+            {(["global", "fb", "threads"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`tab ${activeTab === t ? "tab-active" : ""}`}
+              >
+                {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
+              </button>
+            ))}
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div className="flex flex-col items-end">
-            <span className="text-[11px] font-medium text-slate-800">{userEmail}</span>
-            <span className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">{userTier} TIER</span>
+            <span className="text-[11px] font-medium text-[var(--text-secondary)]">{userEmail}</span>
+            <span className="text-[10px] font-mono text-[var(--accent-green)] uppercase tracking-widest font-semibold">{userTier} tier</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-700 flex items-center justify-center border border-white/10">
-            <span className="text-xs font-bold text-slate-900">{userEmail?.charAt(0).toUpperCase()}</span>
+          <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] flex items-center justify-center">
+            <span className="text-xs font-bold text-[var(--text-primary)]">{userEmail?.charAt(0).toUpperCase()}</span>
           </div>
         </div>
       </header>
 
-      {/* ── MAIN WORKSPACE ── */}
-      <main className="flex-1 max-w-[1200px] w-full mx-auto p-8">
+      {/* ── WORKSPACE ── */}
+      <main className="flex-1 max-w-[1200px] w-full mx-auto px-8 py-8">
         
-        {/* TAB 1: GLOBAL CONFIGS */}
+        {/* ═══ TAB: CẤU HÌNH CHUNG ═══ */}
         {activeTab === "global" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+          <div className="space-y-7 animate-fade-up">
             <div>
-              <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Cấu Hình Chung</h1>
-              <p className="text-sm text-slate-700 text-pretty">Quản lý kho link Affiliate và nhận thông báo qua Telegram.</p>
+              <h1 className="heading-page text-balance mb-1.5">Cấu Hình Chung</h1>
+              <p className="text-sm text-[var(--text-secondary)] text-pretty">Quản lý kho link Affiliate và nhận thông báo qua Telegram.</p>
             </div>
 
-            <div className="page-layout">
-              <div className="area-half shadow-layered glass-panel p-6 hover:border-white/10 transition-colors">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-slate-950">Affiliate Link Pool</h3>
-                  <div className={`w-2 h-2 rounded-full ${formData.affiliate_links ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
+            <div className="grid-2">
+              {/* Affiliate */}
+              <div className="card p-6 animate-fade-up delay-1">
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Affiliate Link Pool</Label>
+                  <StatusDot active={!!formData.affiliate_links} />
                 </div>
                 <textarea 
                   rows={4} 
@@ -377,22 +395,23 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 resize-none transition-all mb-4" 
+                  className="input-clean w-full p-3.5 font-mono resize-none mb-4" 
                 />
                 <button 
                   onClick={() => handleTrigger("parse_links")} 
                   disabled={triggering || !formData.affiliate_links} 
-                  className="w-full flex items-center justify-center gap-2 btn-premium bg-white text-black hover:bg-zinc-200 font-medium text-sm px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 btn btn-primary text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:!transform-none"
                 >
                   {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   Đồng Bộ Tên & Sinh Comment AI
                 </button>
               </div>
 
-              <div className="area-half shadow-layered glass-panel p-6 hover:border-white/10 transition-colors h-fit">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-slate-950">Telegram Notify</h3>
-                  <div className={`w-2 h-2 rounded-full ${formData.tele_chat_id ? 'bg-sky-500' : 'bg-zinc-700'}`} />
+              {/* Telegram */}
+              <div className="card p-6 h-fit animate-fade-up delay-2">
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Telegram Notify</Label>
+                  <StatusDot active={!!formData.tele_chat_id} />
                 </div>
                 <input 
                   type="text" 
@@ -400,26 +419,29 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder="Chat ID — nhắn @userinfobot để lấy" 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 transition-all" 
+                  className="input-clean w-full p-3.5 font-mono" 
                 />
-                <p className="mt-4 text-xs text-slate-700 leading-relaxed">
+                <p className="mt-3.5 text-[12px] text-[var(--text-muted)] leading-relaxed">
                   Nhận cảnh báo real-time khi bot post bài thành công, lỗi cookie, hoặc các thống kê crawl định kỳ.
                 </p>
               </div>
             </div>
 
-            {/* Parsing Results */}
+            {/* Parsed Links */}
             {parsedLinks.length > 0 && (
-              <div className="glass-panel p-6">
-                <h3 className="font-medium text-slate-950 mb-6">AI Parsing Results ({parsedLinks.length})</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 dim-siblings">
+              <div className="card p-6 animate-fade-up delay-3">
+                <div className="flex items-center justify-between mb-5">
+                  <Label>AI Parsing Results</Label>
+                  <span className="px-2 py-1 rounded-md bg-[var(--bg-surface-2)] text-[11px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)]">{parsedLinks.length} items</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 dim-siblings">
                   {parsedLinks.map((p, i) => (
-                    <div key={i} className="flex gap-4  border border-white/5 p-4 rounded-xl">
-                      <img src={p.image_url} alt="" className="w-16 h-16 rounded-lg object-cover bg-slate-950 border border-white/5 shrink-0" />
+                    <div key={i} className="flex gap-3.5 bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] p-3.5 rounded-xl hover:border-[var(--border-hover)] hover:shadow-sm transition-all">
+                      <img src={p.image_url} alt="" className="w-14 h-14 rounded-lg object-cover bg-[var(--bg-surface-3)] border border-[var(--border-subtle)] shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-950 truncate mb-1">{p.title}</p>
-                        <p className="text-[11px] text-slate-700 font-mono truncate mb-2">{p.aff_link}</p>
-                        <p className="text-xs text-slate-800 italic">"{p.suggested_comment}"</p>
+                        <p className="text-[13px] font-medium text-[var(--text-primary)] truncate mb-0.5">{p.title}</p>
+                        <p className="text-[10px] text-[var(--text-muted)] font-mono truncate mb-1">{p.aff_link}</p>
+                        <p className="text-[11px] text-[var(--text-secondary)] italic leading-snug">"{p.suggested_comment}"</p>
                       </div>
                     </div>
                   ))}
@@ -429,19 +451,19 @@ export default function AccountsPage() {
           </div>
         )}
 
-        {/* TAB 2: FACEBOOK ENGINE */}
+        {/* ═══ TAB: FACEBOOK ═══ */}
         {activeTab === "fb" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 page-layout">
-            <div className="area-half space-y-6">
+          <div className="grid-2 animate-fade-up">
+            <div className="space-y-5">
               <div>
-                <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Facebook Engine</h1>
-                <p className="text-sm text-slate-700 text-pretty">Thiết lập Cookie và chạy tiến trình Facebook.</p>
+                <h1 className="heading-page text-balance mb-1.5">Facebook Engine</h1>
+                <p className="text-sm text-[var(--text-secondary)] text-pretty">Thiết lập Cookie và chạy tiến trình Facebook.</p>
               </div>
 
-              <div className="glass-panel p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-slate-950">FB Access Cookie</h3>
-                  <div className={`w-2 h-2 rounded-full ${formData.fb_cookie ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
+              <div className="card p-6 animate-fade-up delay-1">
+                <div className="flex items-center justify-between mb-4">
+                  <Label>FB Access Cookie</Label>
+                  <StatusDot active={!!formData.fb_cookie} />
                 </div>
                 <textarea 
                   rows={4} 
@@ -449,14 +471,14 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder="c_user=...; xs=...; datr=...;" 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-emerald-400 font-bold placeholder:text-slate-800 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 resize-none transition-all mb-6" 
+                  className="input-clean input-clean-green w-full p-3.5 font-mono text-emerald-700 font-semibold resize-none mb-5" 
                 />
                 
                 <div className="grid grid-cols-2 gap-3">
                   <button 
                     onClick={() => handleTrigger("reels")} 
                     disabled={triggering || !formData.fb_cookie} 
-                    className="flex items-center justify-center gap-2 btn-premium bg-zinc-100 text-slate-950 hover:bg-white font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 btn btn-secondary text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:!transform-none"
                   >
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     FB Reels
@@ -464,7 +486,7 @@ export default function AccountsPage() {
                   <button 
                     onClick={() => handleTrigger("fb_comment")} 
                     disabled={triggering || !formData.fb_cookie} 
-                    className="flex items-center justify-center gap-2 btn-premium bg-slate-900 text-white hover:bg-zinc-700 font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 btn btn-green text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:!transform-none"
                   >
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
                     Auto Comment
@@ -473,44 +495,31 @@ export default function AccountsPage() {
               </div>
             </div>
 
-            <div className="area-half shadow-layered h-[500px] bg-zinc-950 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
-              <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-slate-950">
-                <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-zinc-400" />
-                  <span className="text-xs font-mono font-medium text-zinc-300">fb-live-logs.log</span>
-                </div>
-                <button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-slate-600 hover:text-zinc-300 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[12px] custom-scrollbar">
-                {fbLogs.map((log, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="text-slate-600 shrink-0">[{log.time}]</span>
-                    <span className={`px-1.5 rounded text-[10px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
-                    <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
-                  </div>
-                ))}
-                <div ref={fbLogEndRef} />
-              </div>
+            <div className="h-[500px] animate-fade-up delay-2">
+              <TerminalPanel
+                logs={fbLogs}
+                logEndRef={fbLogEndRef}
+                onClear={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])}
+                title="fb-live-logs.log"
+              />
             </div>
           </div>
         )}
 
-        {/* TAB 3: THREADS ENGINE */}
+        {/* ═══ TAB: THREADS ═══ */}
         {activeTab === "threads" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="page-layout items-start">
-              <div className="area-half space-y-6">
+          <div className="space-y-7 animate-fade-up">
+            <div className="grid-2 items-start">
+              <div className="space-y-5">
                 <div>
-                  <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Threads Engine</h1>
-                  <p className="text-sm text-slate-700 text-pretty">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
+                  <h1 className="heading-page text-balance mb-1.5">Threads Engine</h1>
+                  <p className="text-sm text-[var(--text-secondary)] text-pretty">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
                 </div>
 
-                <div className="glass-panel p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-medium text-slate-950">Threads Access Cookie</h3>
-                    <div className={`w-2 h-2 rounded-full ${formData.threads_cookie ? 'bg-blue-500' : 'bg-zinc-700'}`} />
+                <div className="card p-6 animate-fade-up delay-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label>Threads Access Cookie</Label>
+                    <StatusDot active={!!formData.threads_cookie} />
                   </div>
                   <textarea 
                     rows={4} 
@@ -518,97 +527,83 @@ export default function AccountsPage() {
                     onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} 
                     onBlur={handleSave} 
                     placeholder="sessionid=...; ds_user_id=...;" 
-                    className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-blue-400 font-bold placeholder:text-slate-800 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 resize-none transition-all mb-6" 
+                    className="input-clean input-clean-violet w-full p-3.5 font-mono text-violet-700 font-semibold resize-none mb-5" 
                   />
                   <button 
                     onClick={() => handleTrigger("threads")} 
                     disabled={triggering || !formData.threads_cookie} 
-                    className="w-full flex items-center justify-center gap-2 btn-premium bg-blue-600 text-white hover:bg-blue-500 font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 btn btn-violet text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:!transform-none"
                   >
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     Khởi động AI Commenter
                   </button>
                 </div>
 
-                {/* Threads Terminal */}
-                <div className="h-[350px] bg-zinc-950 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
-                  <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-slate-950">
-                    <div className="flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-zinc-400" />
-                      <span className="text-xs font-mono font-medium text-zinc-300">threads-live-logs.log</span>
-                    </div>
-                    <button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-slate-600 hover:text-zinc-300 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[12px] custom-scrollbar">
-                    {threadsLogs.map((log, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <span className="text-slate-600 shrink-0">[{log.time}]</span>
-                        <span className={`px-1.5 rounded text-[10px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
-                        <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
-                      </div>
-                    ))}
-                    <div ref={threadsLogEndRef} />
-                  </div>
+                {/* Terminal */}
+                <div className="h-[350px] animate-fade-up delay-2">
+                  <TerminalPanel
+                    logs={threadsLogs}
+                    logEndRef={threadsLogEndRef}
+                    onClear={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])}
+                    title="threads-live-logs.log"
+                  />
                 </div>
-
               </div>
 
-              {/* Right Col: Threads Poster */}
-              <div className="area-half shadow-layered glass-panel p-6 flex flex-col h-[700px]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-slate-950">Threads Crawl Poster</h3>
-                  <span className="px-3 py-1 bg-slate-900 rounded-full text-xs text-slate-800">{threadsPosts.length} Bài Đăng</span>
+              {/* Threads Post Editor */}
+              <div className="card-elevated p-6 flex flex-col h-[700px] animate-fade-up delay-3">
+                <div className="flex items-center justify-between mb-5">
+                  <Label>Threads Crawl Poster</Label>
+                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsPosts.length} Bài</span>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar dim-siblings">
-                  {threadsPosts.map((post, i) => (
-                    <div key={post.id} className=" border border-white/5 rounded-xl p-5 relative group/post transition-colors hover:border-zinc-700">
+                <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
+                  {threadsPosts.map((post) => (
+                    <div key={post.id} className="bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] rounded-xl p-5 relative group/post hover:border-[var(--border-hover)] hover:shadow-sm transition-all">
                       <button 
                           onClick={() => handleDeletePost(post.id)}
-                          className="absolute top-4 right-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-slate-950 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
-                          title="Xoá bài viết này"
+                          className="absolute top-3 right-3 btn-danger-subtle rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
+                          title="Xoá bài viết"
                       >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
                       <textarea 
-                        className="w-full bg-transparent text-[13px] text-slate-900 resize-none outline-none leading-relaxed min-h-[100px]"
+                        className="w-full bg-transparent text-[13px] text-[var(--text-primary)] resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-[var(--text-muted)]"
                         value={post.text_content}
                         onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
                         placeholder="Nội dung bài viết..."
                       />
                       
                       {post.image_urls && post.image_urls.length > 0 && (
-                         <div className="mt-4 flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                         <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
                             {post.image_urls.map((url: string, idx: number) => (
                                <div key={idx} className="relative group shrink-0">
-                                 <img src={url} className="h-24 w-auto rounded-lg object-cover border border-white/5 transition-all group-hover:opacity-30" />
+                                 <img src={url} className="h-20 w-auto rounded-lg object-cover border border-[var(--border-subtle)] transition-all group-hover:opacity-30" />
                                  <button 
                                     onClick={() => handleRemovePostImage(post.id, idx)}
-                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-slate-950 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100"
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100"
                                  >
-                                   <Trash2 className="w-4 h-4" />
+                                   <Trash2 className="w-3.5 h-3.5" />
                                  </button>
                                </div>
                             ))}
                          </div>
                       )}
                       
-                      <div className="mt-6 flex justify-end gap-3">
-                        <button onClick={() => handleSavePost(post)} className="btn-premium bg-slate-900 text-slate-900 hover:bg-zinc-700 text-xs font-medium px-4 py-2 rounded-lg transition-all">
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button onClick={() => handleSavePost(post)} className="btn btn-secondary text-[12px] font-medium px-4 py-1.5">
                           Lưu
                         </button>
-                        <button onClick={() => handlePostToThreads(post)} className="btn-premium bg-zinc-100 text-slate-950 hover:bg-white text-xs font-medium px-5 py-2 rounded-lg transition-all">
+                        <button onClick={() => handlePostToThreads(post)} className="btn btn-violet text-[12px] font-medium px-4 py-1.5">
                           Đăng Lên Threads
                         </button>
                       </div>
                     </div>
                   ))}
                   {threadsPosts.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-600">
-                       <MessageCircle className="w-10 h-10 mb-4 opacity-50" />
+                    <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)]">
+                       <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
                        <p className="text-sm">Không có dữ liệu Crawl nào.</p>
                     </div>
                   )}
