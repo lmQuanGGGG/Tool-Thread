@@ -55,10 +55,10 @@ async function runSinglePost() {
     console.log(`✅ Đã lấy thành công nội dung bài viết: ${postData.post_id}`);
     await logToWeb(email, 'threads_post', `✅ Đã lấy nội dung chuẩn bị đăng...`, 'info');
 
-    // 1.5 Lấy cookie của user
+    // 1.5 Lấy cookie và link affiliate của user
     const { data: profileData, error: profileErr } = await supabase
       .from('profiles')
-      .select('threads_cookie')
+      .select('threads_cookie, affiliate_links')
       .eq('email', email)
       .single();
 
@@ -70,6 +70,23 @@ async function runSinglePost() {
 
     console.log("⏳ Đang gọi Puppeteer mở Chrome ẩn danh và đăng bài...");
     await logToWeb(email, 'threads_post', `⏳ Khởi động Chrome ẩn danh...`, 'info');
+
+    let ninjaComment = '';
+    const affiliateLinks = (profileData.affiliate_links || '').split('\n').map(l => l.trim()).filter(Boolean);
+    if (affiliateLinks.length > 0) {
+        const catchphrases = [
+            "Cái này xài thích lắm á mn, tui ưng xỉu:",
+            "Mấy bà ơi gom lẹ deal này nha, xài bao êm:",
+            "Ai chưa thử cái này thì thử liền đi, khum hối hận đâu:",
+            "Eo ôi ưng cái bụng ghê, để lại link cho bà nào cần nè:",
+            "Góc rắc thính: Món này dạo này tui mê cực kì:",
+            "Hôm bữa ai hỏi tui xài gì thì link đây nha:",
+            "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"
+        ];
+        let randomThinh = catchphrases[Math.floor(Math.random() * catchphrases.length)];
+        let randomLink = affiliateLinks[Math.floor(Math.random() * affiliateLinks.length)];
+        ninjaComment = `👉 ${randomThinh} ${randomLink}`;
+    }
 
     // Parse Cookies
     let cookies = [];
@@ -212,6 +229,69 @@ async function runSinglePost() {
     }
 
     await delay(8000); // Chờ Threads xử lý đăng bài
+
+    if (ninjaComment) {
+        console.log("💬 Đang tiến hành thả Ninja Comment (Affiliate Link)...");
+        await logToWeb(email, 'threads_post', `💬 Đang thả comment chứa link Affiliate...`, 'info');
+        try {
+            await delay(5000); // Chờ bài đăng hiện lên
+            const replied = await page.evaluate(() => {
+                const svgs = Array.from(document.querySelectorAll('svg[aria-label="Reply"], svg[aria-label="Trả lời"]'));
+                if (svgs.length > 0) {
+                    const targetBtn = svgs[0];
+                    const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
+                    clickable.click(); 
+                    return true; 
+                }
+                return false;
+            });
+
+            if (replied) {
+                await delay(3000);
+                await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                await page.click('div[contenteditable="true"]');
+                await page.keyboard.type(ninjaComment, { delay: 30 });
+                await delay(2000);
+
+                const replyBtnRect = await page.evaluate(() => {
+                    const activeEl = document.activeElement;
+                    if (!activeEl) return null;
+                    let container = activeEl.parentElement;
+                    for (let i = 0; i < 6; i++) {
+                        if (!container) break;
+                        const btns = [...container.querySelectorAll('div[role="button"]')];
+                        const iconBtns = btns.filter(b => b.querySelector('svg'));
+                        if (iconBtns.length > 0) {
+                            const btn = iconBtns[iconBtns.length - 1];
+                            const rect = btn.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0) {
+                                return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                            }
+                        }
+                        container = container.parentElement;
+                    }
+                    return null;
+                });
+                
+                if (replyBtnRect) {
+                    await page.mouse.click(replyBtnRect.x, replyBtnRect.y);
+                }
+                
+                await delay(1000);
+                await page.keyboard.down('Meta');
+                await page.keyboard.press('Enter');
+                await page.keyboard.up('Meta');
+                await page.keyboard.down('Control');
+                await page.keyboard.press('Enter');
+                await page.keyboard.up('Control');
+                
+                await delay(15000); // Chờ post cmt
+            }
+        } catch (e) {
+            console.error('[ERROR] Ninja Comment thất bại:', e.message);
+        }
+    }
+
     await browser.close();
     
     // Dọn dẹp ảnh tạm
