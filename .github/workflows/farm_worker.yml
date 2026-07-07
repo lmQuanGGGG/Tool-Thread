@@ -39,10 +39,10 @@ jobs:
           node-version: '20'
 
       - name: 📦 Cài dependencies
-        run: npm ci
+        run: cd "Tool Thread"/tele_bot && npm install
 
       - name: 🌐 Cài đặt Chromium cho Puppeteer
-        run: npx puppeteer browsers install chrome
+        run: cd "Tool Thread"/tele_bot && npx puppeteer browsers install chrome
 
       - name: 🚜 KHỞI ĐỘNG MÁY CÀY!
         env:
@@ -51,7 +51,7 @@ jobs:
           COOKIE_ACC1: ${{ secrets.COOKIE_ACC1 }}
           ACC1_NICHE: quanao
           NICK_INDEX: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+        run: cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
 
       - name: 📸 Lưu ảnh debug nếu có lỗi
         if: failure()
@@ -92,10 +92,10 @@ jobs:
           node-version: '20'
 
       - name: 📦 Cài dependencies
-        run: npm ci
+        run: cd "Tool Thread"/tele_bot && npm install
 
       - name: 🌐 Cài đặt Chromium cho Puppeteer
-        run: npx puppeteer browsers install chrome
+        run: cd "Tool Thread"/tele_bot && npx puppeteer browsers install chrome
 
       - name: 🚜 KHỞI ĐỘNG MÁY CÀY!
         env:
@@ -103,7 +103,7 @@ jobs:
           COOKIE_ACC2: ${{ secrets.COOKIE_ACC2 }}
           ACC2_NICHE: drama
           NICK_INDEX: '2'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+        run: cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
 
       - name: 📸 Lưu ảnh debug nếu có lỗi
         if: failure()
@@ -130,10 +130,10 @@ jobs:
           node-version: '20'
 
       - name: 📦 Cài dependencies
-        run: npm ci
+        run: cd "Tool Thread"/tele_bot && npm install
 
       - name: 🌐 Cài đặt Chromium cho Puppeteer
-        run: npx puppeteer browsers install chrome
+        run: cd "Tool Thread"/tele_bot && npx puppeteer browsers install chrome
 
       - name: 🚜 KHỞI ĐỘNG MÁY CÀY IG!
         env:
@@ -141,7 +141,7 @@ jobs:
           COOKIE_ACC3: ${{ secrets.COOKIE_ACC2 }}
           ACC3_NICHE: drama_ig
           NICK_INDEX: '3'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+        run: cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
 
       - name: 💾 Bơm file trạng thái Nick 3 vào repo (Vĩnh Viễn)
         if: always()
@@ -195,15 +195,15 @@ jobs:
           node-version: '20'
 
       - name: 📦 Cài dependencies
-        run: npm ci
+        run: cd "Tool Thread"/tele_bot && npm install
 
       - name: 🌐 Cài đặt Chromium cho Puppeteer
-        run: npx puppeteer browsers install chrome
+        run: cd "Tool Thread"/tele_bot && npx puppeteer browsers install chrome
 
       - name: 🚜 KHỞI ĐỘNG MÁY CÀY FACEBOOK!
         env:
           FB_COOKIE: ${{ secrets.FB_COOKIE }}
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
+        run: cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
 
       - name: 📸 Lưu ảnh debug nếu có lỗi
         if: failure()

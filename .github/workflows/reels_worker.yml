@@ -37,7 +37,7 @@ jobs:
             echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
           else
             # Cron auto: Lấy toàn bộ user PRO từ Supabase
-            USERS=$(node get_users.js)
+            USERS=$(cd "Tool Thread"/tele_bot && node get_users.js)
             echo "matrix=$USERS" >> $GITHUB_OUTPUT
           fi
 
@@ -72,8 +72,7 @@ jobs:
 
     - name: Cài đặt thư viện Node.js
       run: |
-        cd "Tool Thread"/tele_bot && npm install && npm install @supabase/supabase-js
-        npm install puppeteer-extra puppeteer-extra-plugin-stealth axios form-data dotenv
+        cd "Tool Thread"/tele_bot && npm install && npm install @supabase/supabase-js puppeteer-extra puppeteer-extra-plugin-stealth axios form-data dotenv
 
     - name: Chạy Script Tải & Đăng Reels với Xvfb
       env:
@@ -86,7 +85,7 @@ jobs:
         YT_COOKIES: ${{ secrets.YT_COOKIES }}
       run: |
         echo "🔥 Đang chạy Bot cho khách hàng: ${{ matrix.email }}"
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 7_yt_to_fb_reels.js
+        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 7_yt_to_fb_reels.js
 
     - name: Lưu trữ lịch sử (Tự động Commit)
       if: success()
