@@ -381,7 +381,7 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
             await delay(2000);
 
             // Tìm nút Reply thứ 2 trên tường
-            const replied = await page.evaluate(() => {
+            const replyBox = await page.evaluate(() => {
                 const svgs = [...document.querySelectorAll('svg')];
                 const replyIcons = svgs.filter(s => {
                     const label = (s.getAttribute('aria-label') || '').toLowerCase();
@@ -392,19 +392,20 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                     // Cố tình chọn bài thứ 2 (index 1)
                     const targetBtn = replyIcons[1];
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
-                    clickable.click(); 
-                    return true; 
+                    const rect = clickable.getBoundingClientRect();
+                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 } else if (replyIcons.length === 1) {
                     console.log('[WARN] Tường mới có đúng 1 bài, thả tạm vô bài này!');
                     const targetBtn = replyIcons[0];
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
-                    clickable.click(); 
-                    return true; 
+                    const rect = clickable.getBoundingClientRect();
+                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 }
-                return false;
+                return null;
             });
 
-            if (replied) {
+            if (replyBox) {
+                await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
                 console.log('[INFO] Đã click mở hộp thoại Reply...');
                 await delay(3000);
                 await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
