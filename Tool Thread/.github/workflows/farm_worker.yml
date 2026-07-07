@@ -1,0 +1,214 @@
+name: 🤖 Máy Cày Auto-Post
+
+on:
+  # Cron: Chạy lúc 17:00 giờ Việt Nam (10:00 UTC) mỗi ngày
+  schedule:
+    - cron: '0 10 * * 1-5'
+  
+  # Cho phép sếp bấm tay kích hoạt trực tiếp trên Github (để test)
+  workflow_dispatch:
+    inputs:
+      nick_index:
+        description: 'Nhập 1: Con Uyên, 2: Drama, 3: IG, 4: FB Shopee'
+        required: true
+        default: '1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "thread_bot"
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # JOB 1: CHẠY NICK SỐ 1 (CON UYÊN - QUẦN ÁO)
+  # ==========================================
+  farm_nick_1:
+    name: 🌾 Cày Nick 1 (Con Uyên)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.nick_index == '1'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Cài dependencies
+        run: npm ci
+
+      - name: 🌐 Cài đặt Chromium cho Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: 🚜 KHỞI ĐỘNG MÁY CÀY!
+        env:
+          # Sếp cần thêm các Secrets này vào Github Repo Settings -> Secrets
+          TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+          COOKIE_ACC1: ${{ secrets.COOKIE_ACC1 }}
+          ACC1_NICHE: quanao
+          NICK_INDEX: '1'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+
+      - name: 📸 Lưu ảnh debug nếu có lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots-nick1
+          path: debug_*.png
+          retention-days: 3
+
+      - name: 💾 Bơm file trạng thái Nick 1 vào repo (Vĩnh Viễn)
+        if: always()
+        run: |
+          git config --global user.name "Máy Cày Auto [Bot]"
+          git config --global user.email "bot@maycay.local"
+          git add -f account_state_1.json
+          git commit -m "💾 Auto-save trạng thái bài đăng Nick 1" || echo "Không có bài đăng mới, bỏ qua commit"
+          # Vòng lặp chống conflict nếu 2 nick push cùng lúc
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main && break || sleep 5
+          done
+
+  # ==========================================
+  # JOB 2: CHẠY NICK SỐ 2 (DRAMA)
+  # ==========================================
+  farm_nick_2:
+    name: 🌾 Cày Nick 2 (Drama)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.nick_index == '2'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Cài dependencies
+        run: npm ci
+
+      - name: 🌐 Cài đặt Chromium cho Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: 🚜 KHỞI ĐỘNG MÁY CÀY!
+        env:
+          TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+          COOKIE_ACC2: ${{ secrets.COOKIE_ACC2 }}
+          ACC2_NICHE: drama
+          NICK_INDEX: '2'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+
+      - name: 📸 Lưu ảnh debug nếu có lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots-nick2
+          path: debug_*.png
+          
+  # ==========================================
+  # JOB 3: CHẠY NICK SỐ 3 (DRAMA IG - BẤM TAY)
+  # ==========================================
+  farm_nick_3:
+    name: 📸 Cày Nick Drama (IG)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.nick_index == '3'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Cài dependencies
+        run: npm ci
+
+      - name: 🌐 Cài đặt Chromium cho Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: 🚜 KHỞI ĐỘNG MÁY CÀY IG!
+        env:
+          TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+          COOKIE_ACC3: ${{ secrets.COOKIE_ACC2 }}
+          ACC3_NICHE: drama_ig
+          NICK_INDEX: '3'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 3_auto_post_puppeteer.js
+
+      - name: 💾 Bơm file trạng thái Nick 3 vào repo (Vĩnh Viễn)
+        if: always()
+        run: |
+          git config --global user.name "Máy Cày Auto [Bot]"
+          git config --global user.email "bot@maycay.local"
+          git add -f account_state_3.json
+          git commit -m "💾 Auto-save trạng thái bài đăng Nick 3 (IG)" || echo "Không có bài đăng mới, bỏ qua commit"
+          # Vòng lặp chống conflict nếu nhiều nick push cùng lúc
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main && break || sleep 5
+          done
+
+      - name: 📸 Lưu ảnh debug nếu có lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots-nick3
+          path: debug_*.png
+          retention-days: 3
+
+      - name: 💾 Bơm file trạng thái Nick 2 vào repo (Vĩnh Viễn)
+        if: always()
+        run: |
+          git config --global user.name "Máy Cày Auto [Bot]"
+          git config --global user.email "bot@maycay.local"
+          git add -f account_state_2.json
+          git commit -m "💾 Auto-save trạng thái bài đăng Nick 2" || echo "Không có bài đăng mới, bỏ qua commit"
+          # Vòng lặp chống conflict nếu 2 nick push cùng lúc
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main && break || sleep 5
+          done
+
+  # ==========================================
+  # JOB 4: CHẠY FB SHOPEE POST (LÚC 18H)
+  # ==========================================
+  farm_nick_fb:
+    name: 📘 Cày Nick Facebook
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.nick_index == '4'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Cài dependencies
+        run: npm ci
+
+      - name: 🌐 Cài đặt Chromium cho Puppeteer
+        run: npx puppeteer browsers install chrome
+
+      - name: 🚜 KHỞI ĐỘNG MÁY CÀY FACEBOOK!
+        env:
+          FB_COOKIE: ${{ secrets.FB_COOKIE }}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
+
+      - name: 📸 Lưu ảnh debug nếu có lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots-fb
+          path: fb_bot/debug_*.png
+          retention-days: 3

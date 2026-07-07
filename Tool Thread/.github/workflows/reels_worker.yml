@@ -1,0 +1,97 @@
+name: FB Reels Auto Poster
+
+on:
+  schedule:
+    - cron: '15 4,7,9,13,15 * * 1-5' # Chạy giờ UTC (tương đương 11:15, 14:15, 16:15, 20:15, 22:15 VN)
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Email khách hàng cần chạy Bot (Dành cho tài khoản Free bấm tay)'
+        required: true
+        default: 'admin@autofarm.com'
+permissions:
+  contents: write # Cho phép Github Actions push commit tệp reels_history.json lại
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install DB deps
+        run: npm install @supabase/supabase-js dotenv
+      - name: Lấy danh sách Khách hàng từ Supabase
+        id: set-matrix
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Free user bấm tay: Chỉ chạy cho đúng email được truyền vào
+            echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
+          else
+            # Cron auto: Lấy toàn bộ user PRO từ Supabase
+            USERS=$(node get_users.js)
+            echo "matrix=$USERS" >> $GITHUB_OUTPUT
+          fi
+
+  run-reels-bot:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        email: ${{ fromJson(needs.setup.outputs.matrix) }}
+      max-parallel: 20
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Cài Deno (JS Runtime cho yt-dlp EJS)
+      uses: denoland/setup-deno@v2
+      with:
+        deno-version: v2.x
+        
+    - name: Cài đặt thư viện yt-dlp và ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+        sudo pip3 install -U "yt-dlp[default]"
+
+    - name: Cài đặt thư viện Node.js
+      run: |
+        cd tele_bot && npm install && npm install @supabase/supabase-js
+        npm install puppeteer-extra puppeteer-extra-plugin-stealth axios form-data dotenv
+
+    - name: Chạy Script Tải & Đăng Reels với Xvfb
+      env:
+        USER_EMAIL: ${{ matrix.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Dự phòng
+        FB_COOKIE_REELS: ${{ secrets.FB_COOKIE_REELS }}
+        SHOPEE_AFF_LINK: ${{ secrets.SHOPEE_AFF_LINK }}
+        YT_COOKIES: ${{ secrets.YT_COOKIES }}
+      run: |
+        echo "🔥 Đang chạy Bot cho khách hàng: ${{ matrix.email }}"
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 7_yt_to_fb_reels.js
+
+    - name: Lưu trữ lịch sử (Tự động Commit)
+      if: success()
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add reels_history.json
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update reels history for ${{ matrix.email }}" && git pull --rebase && git push)

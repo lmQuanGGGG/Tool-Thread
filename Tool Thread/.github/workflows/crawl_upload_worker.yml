@@ -1,0 +1,32 @@
+name: Auto Upload Crawl Images to Telegram
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Chạy tự động mỗi 5 phút
+  workflow_dispatch: # Cho phép bấm chạy bằng tay trên Github
+
+jobs:
+  upload_media:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Cài đặt thư viện
+        working-directory: ./tele_bot
+        run: npm install
+
+      - name: Chạy script Upload ảnh từ Crawl Data lên Telegram
+        working-directory: ./tele_bot
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+          TELE_STORAGE_CHAT: ${{ secrets.TELE_STORAGE_CHAT }}
+        run: node 9_upload_crawl_images.js

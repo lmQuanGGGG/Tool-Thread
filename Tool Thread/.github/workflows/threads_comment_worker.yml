@@ -1,0 +1,43 @@
+name: Threads Auto Comment Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      nick_index:
+        description: 'Chỉ định bot (1 hoặc 2)'
+        required: false
+        default: '1'
+      email:
+        description: 'Email khách hàng'
+        required: false
+        default: 'admin@autofarm.com'
+
+permissions:
+  contents: write
+
+jobs:
+  run-threads-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+
+    - name: Run Threads Bot with Xvfb
+      env:
+        NICK_INDEX: ${{ github.event.inputs.nick_index }}
+        USER_EMAIL: ${{ github.event.inputs.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: |
+        # Xvfb giả lập màn hình để lách thuật toán Headless
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 8_threads_auto_comment.js

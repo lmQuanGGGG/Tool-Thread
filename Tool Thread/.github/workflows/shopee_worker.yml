@@ -1,0 +1,38 @@
+name: FB Shopee Post Story Bot
+
+on:
+  schedule:
+    - cron: '15 4,7,9,13,15 * * 1-5' # Chạy giờ UTC (tương đương 11:15, 14:15, 16:15, 20:15, 22:15 VN)
+  workflow_dispatch:
+    inputs:
+      nick_index:
+        description: 'Chỉ định bot (mặc định shopee)'
+        required: false
+        default: 'shopee'
+
+permissions:
+  contents: write
+
+jobs:
+  run-shopee-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
+
+    - name: Run FB Shopee Post Story Bot with Xvfb
+      env:
+        FB_COOKIE: ${{ secrets.FB_COOKIE }}
+      run: |
+        # Xvfb giả lập màn hình để lách thuật toán Headless của FB
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
