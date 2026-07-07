@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import { 
   Send, Bot, User, Shield, Terminal, Zap, RefreshCw, BarChart2, 
   Layers, MessageSquare, Play, CheckCircle, AlertTriangle, Cpu
-} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { supabase } from "../../utils/supabase";
 
 interface LogMessage {
   id: string;
@@ -41,10 +41,53 @@ export function DemoConsole() {
   // Administrative Dashboard States
   const [reelUrl, setReelUrl] = useState("https://www.instagram.com/reel/Cx189VhyzP9/");
   const [cloningLogs, setCloningLogs] = useState<LogMessage[]>([
-    { id: "1", timestamp: "09:40:12", level: "info", message: "Hệ thống AutoFarm khởi động thành công. Sẵn sàng nhận lệnh." },
-    { id: "2", timestamp: "09:40:15", level: "success", message: "Đã liên kết 12 tài khoản Threads và 8 tài khoản Reels qua API bảo mật." },
-    { id: "3", timestamp: "09:40:18", level: "info", message: "Độ trễ Proxy SOCKS5 trung bình: 142ms. Trạng thái: Rất khỏe (99.8%)" }
+    { id: "init1", timestamp: new Date().toTimeString().split(" ")[0], level: "info", message: "Đang chờ kết nối log từ Database..." }
   ]);
+
+  // Lắng nghe Realtime Log từ Supabase
+  useEffect(() => {
+    const fetchInitialLogs = async () => {
+      const { data, error } = await supabase
+        .from("bot_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      
+      if (!error && data) {
+        const mapped = data.reverse().map((log: any) => ({
+          id: log.id,
+          timestamp: new Date(log.created_at).toTimeString().split(" ")[0],
+          level: log.level as any,
+          message: `[${log.bot_type}] ${log.message}`
+        }));
+        if (mapped.length > 0) setCloningLogs(mapped);
+      }
+    };
+    
+    fetchInitialLogs();
+
+    const channel = supabase
+      .channel("public:bot_logs")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "bot_logs" },
+        (payload) => {
+          const newLog = payload.new;
+          const logMsg: LogMessage = {
+            id: newLog.id,
+            timestamp: new Date(newLog.created_at).toTimeString().split(" ")[0],
+            level: newLog.level as any,
+            message: `[${newLog.bot_type}] ${newLog.message}`
+          };
+          setCloningLogs((prev) => [...prev.slice(-49), logMsg]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   const [cloneProgress, setCloneProgress] = useState<number | null>(null);
   const [cloneStage, setCloneStage] = useState("");
   const [commentTopic, setCommentTopic] = useState("MMO & Kiếm tiền Online");

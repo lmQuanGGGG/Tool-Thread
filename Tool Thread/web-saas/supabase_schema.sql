@@ -101,3 +101,16 @@ insert into public.tier_limits (tier, auto_run, reels_per_day, threads_per_day, 
 -- Enable RLS cho tier_limits (Public read, chỉ Admin mới được update)
 alter table public.tier_limits enable row level security;
 create policy "Public can view tier limits" on tier_limits for select using (true);
+create table public.bot_logs (
+  id uuid default uuid_generate_v4() primary key,
+  email text not null,
+  bot_type text not null,
+  message text not null,
+  level text default 'info',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.bot_logs enable row level security;
+create policy "Users can view own logs" on bot_logs for select using (
+  auth.uid() in (select id from profiles where profiles.email = bot_logs.email)
+);

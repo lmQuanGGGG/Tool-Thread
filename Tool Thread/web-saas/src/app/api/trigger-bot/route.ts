@@ -20,6 +20,8 @@ export async function POST(request: Request) {
 
     // Map botType sang tên file workflow
     let workflowId = 'reels_worker.yml';
+    if (botType === 'reels') workflowId = 'reels_worker.yml';
+    if (botType === 'threads') workflowId = 'threads_comment_worker.yml';
     if (botType === 'fb') workflowId = 'fb_worker.yml';
     if (botType === 'farm') workflowId = 'farm_worker.yml';
     if (botType === 'shopee') workflowId = 'shopee_worker.yml';
