@@ -312,7 +312,7 @@ async function runSinglePost() {
       await logToWeb(email, 'threads_post', `⚠️ Đăng thành công nhưng lỗi cập nhật trạng thái DB!`, 'warn');
     } else {
       console.log("✅ Đã cập nhật trạng thái posted = true");
-      await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads!`, 'success');
+      await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads! [ID: ${postId}]`, 'success');
     }
 
     process.exit(0);

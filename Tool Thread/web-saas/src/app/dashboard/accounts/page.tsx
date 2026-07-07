@@ -97,6 +97,8 @@ export default function AccountsPage() {
 
   useEffect(() => { globalLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [globalLogs]);
 
+  const [threadsTotalCount, setThreadsTotalCount] = useState<number>(0);
+
   useEffect(() => { fbLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [fbLogs]);
   useEffect(() => { threadsLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadsLogs]);
 
@@ -116,6 +118,8 @@ export default function AccountsPage() {
         if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓", "threads");
       }
       setLoading(false);
+      const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('posted', false);
+      setThreadsTotalCount(count || 0);
       const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', user.id).eq('posted', false).order('created_at', { ascending: false }).limit(20);
       if (cData) setThreadsPosts(cData);
     }
@@ -144,6 +148,7 @@ export default function AccountsPage() {
     const { error } = await supabase.from('crawl_data').delete().eq('id', id);
     if (error) { pushLog("ERROR", `Lỗi xoá bài viết: ${error.message}`, "threads"); return; }
     setThreadsPosts(prev => prev.filter(p => p.id !== id));
+    setThreadsTotalCount(prev => Math.max(0, prev - 1));
     pushLog("SUCCESS", `Đã xoá bài viết vĩnh viễn.`, "threads");
   };
   const handlePostToThreads = async (post: any) => {
@@ -164,7 +169,13 @@ export default function AccountsPage() {
       const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
         setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
-        if (newLog.level === 'success' && newLog.bot_type === 'threads_post') {
+        if (newLog.level === 'success' && newLog.bot_type === 'threads_post' && newLog.message.includes('ID:')) {
+          const match = newLog.message.match(/\[ID:\s*([a-zA-Z0-9-]+)\]/);
+          if (match && match[1]) {
+             const postedId = match[1];
+             setThreadsPosts(prev => prev.filter(p => p.id !== postedId));
+             setThreadsTotalCount(prev => Math.max(0, prev - 1));
+          }
           supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({data}) => { if (data) setThreadsPosts(data); });
         }
       } else if (newLog.bot_type === 'parse_links') {
@@ -408,7 +419,7 @@ export default function AccountsPage() {
               <div className={`${cardClass} p-6 flex flex-col h-[700px] anim-fade-up anim-d3`}>
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
-                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsPosts.length} Bài</span>
+                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
                 </div>
                 <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
                   {threadsPosts.map((post) => (
