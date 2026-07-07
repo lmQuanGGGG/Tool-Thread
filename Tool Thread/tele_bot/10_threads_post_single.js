@@ -216,7 +216,57 @@ async function runSinglePost() {
             await chooser.accept(downloadedImages.slice(0,9));
             await delay(4000); // Chờ load ảnh
         }
-      }
+    }
+
+    if (ninjaComment) {
+        await logToWeb(email, 'threads_post', `💬 Đang thêm bình luận chứa Link Affiliate chung vào Thread...`, 'info');
+        const addThreadClicked = await page.evaluate(() => {
+            const divs = Array.from(document.querySelectorAll('div'));
+            const add = divs.find(d => {
+                const t = (d.innerText || '').toLowerCase();
+                return t === 'add to thread' || t === 'thêm vào chuỗi';
+            });
+            if (add) {
+                add.click();
+                return true;
+            }
+            return false;
+        });
+
+        if (addThreadClicked) {
+            await delay(1500);
+            const textInputs = await page.$$(textInput); // Lấy danh sách các ô nhập chữ
+            if (textInputs.length > 1) {
+                await textInputs[textInputs.length - 1].click();
+                await delay(500);
+                const lines = ninjaComment.split('\n');
+                for (let line of lines) {
+                    await page.keyboard.type(line, { delay: 10 });
+                    await page.keyboard.down('Shift');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Shift');
+                    await delay(100);
+                }
+                await logToWeb(email, 'threads_post', `✍️ Đã gõ xong bình luận Affiliate.`, 'info');
+                await delay(1000);
+            } else {
+                await logToWeb(email, 'threads_post', `⚠️ Không mở được hộp thoại bình luận, sẽ đăng bài không kèm link.`, 'error');
+            }
+        } else {
+            // Backup: Nếu không thấy nút Add to thread (VD do ngôn ngữ khác), ta thử tìm bằng cách lấy tất cả textboxes
+            // Có thể dùng phím Tab 3 lần
+            await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Add to thread. Thử dùng Tab...`, 'info');
+            await page.keyboard.press('Tab');
+            await page.keyboard.press('Tab');
+            await page.keyboard.press('Tab');
+            await page.keyboard.press('Enter');
+            await delay(1500);
+            const textInputs = await page.$$(textInput);
+            if (textInputs.length > 1) {
+                await textInputs[textInputs.length - 1].click();
+                await page.keyboard.type(ninjaComment, { delay: 10 });
+            }
+        }
     }
 
     // Bấm nút Post
@@ -247,106 +297,7 @@ async function runSinglePost() {
 
     await delay(10000); // Chờ 10s cho bài đăng lên server hoàn tất
 
-    if (!ninjaComment) {
-        console.log("⚠️ Tài khoản này chưa cài đặt Affiliate Links trong Database! Bỏ qua bước cmt dạo.");
-        await logToWeb(email, 'threads_post', `⚠️ Tài khoản chưa có Affiliate Link, bỏ qua bước thả Ninja Comment.`, 'warn');
-    } else {
-        console.log("💬 Đang tiến hành thả Ninja Comment (Affiliate Link)...");
-        await logToWeb(email, 'threads_post', `💬 Đang thả comment chứa link Affiliate...`, 'info');
-        
-        try {
-            // Lấy link trang cá nhân (Profile) từ thanh điều hướng bên trái
-            const profileUrl = await page.evaluate(() => {
-                const main = document.querySelector('main');
-                const allLinks = Array.from(document.querySelectorAll('a[href^="/@"]'));
-                
-                // Tìm thẻ <a> trỏ tới profile (không chứa /post/ và không nằm trong khu vực main feed)
-                const navProfileLink = allLinks.find(a => {
-                    if (a.href.includes('/post/')) return false;
-                    if (main && main.contains(a)) return false;
-                    return true; // Đây chắc chắn là link tới trang cá nhân trên sidebar!
-                });
-                return navProfileLink ? navProfileLink.href : null;
-            });
 
-            if (profileUrl) {
-                console.log(`✅ Chuyển hướng sang trang cá nhân: ${profileUrl} để thả cmt vào bài mới nhất...`);
-                await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
-                await delay(6000); // Chờ trang cá nhân tải
-            } else {
-                console.log("⚠️ Không tìm thấy link trang cá nhân, đành tìm nút Reply trên màn hình hiện tại...");
-                await delay(3000);
-            }
-
-            // Click nút Reply của bài đầu tiên (mới nhất)
-            const replyBox = await page.evaluate(() => {
-                const svgs = Array.from(document.querySelectorAll('svg[aria-label="Reply"], svg[aria-label="Trả lời"], svg[aria-label="Comment"], svg[aria-label="Bình luận"]'));
-                if (svgs.length > 0) {
-                    const targetBtn = svgs[0];
-                    const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
-                    const rect = clickable.getBoundingClientRect();
-                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-                }
-                return null;
-            });
-
-            if (replyBox) {
-                await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
-                console.log("[INFO] Đã click mở hộp thoại Reply...");
-                await delay(3000);
-                await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
-                await page.click('div[contenteditable="true"]');
-                await page.keyboard.type(ninjaComment, { delay: 30 });
-                await delay(2000);
-
-                const postBox = await page.evaluate(() => {
-                    const dialog = document.querySelector('div[role="dialog"]') || document;
-                    const svgs = Array.from(dialog.querySelectorAll('svg'));
-                    
-                    const submitSvgs = svgs.filter(s => {
-                        const label = (s.getAttribute('aria-label') || '').toLowerCase();
-                        return label === 'câu trả lời' || label === 'reply' || label === 'post' || label === 'đăng';
-                    });
-                    
-                    if (submitSvgs.length > 0) {
-                        for (let i = submitSvgs.length - 1; i >= 0; i--) {
-                            const btn = submitSvgs[i].closest('div[role="button"], button') || submitSvgs[i];
-                            if (btn && !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true') {
-                                const rect = btn.getBoundingClientRect();
-                                return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-                            }
-                        }
-                    }
-                    return null;
-                });
-                
-                if (postBox) {
-                    await page.mouse.click(postBox.x + postBox.width / 2, postBox.y + postBox.height / 2);
-                    console.log('[SUCCESS] Đã bắt được và click nút mũi tên (Send) bằng chuột thật!');
-                } else {
-                    console.log("[WARN] Không tìm thấy tọa độ nút Đăng, thử dùng phím tắt...");
-                    await delay(1000);
-                    await page.keyboard.down('Meta');
-                    await page.keyboard.press('Enter');
-                    await page.keyboard.up('Meta');
-                    
-                    await page.keyboard.down('Control');
-                    await page.keyboard.press('Enter');
-                    await page.keyboard.up('Control');
-                }
-                
-                await delay(15000); // Chờ post cmt
-                console.log("✅ Đã thả comment Affiliate thành công!");
-                await logToWeb(email, 'threads_post', `✅ Đã thả comment Affiliate thành công!`, 'success');
-            } else {
-                console.log("⚠️ Không tìm thấy nút Reply để thả comment.");
-                await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
-            }
-        } catch (e) {
-            console.error('[ERROR] Ninja Comment thất bại:', e.message);
-            await logToWeb(email, 'threads_post', `❌ Lỗi thả comment: ${e.message}`, 'error');
-        }
-    }
 
     await browser.close();
     
