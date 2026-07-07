@@ -277,6 +277,7 @@ export default function AccountsPage() {
               rows={4}
               value={formData.fb_cookie}
               onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })}
+              onBlur={handleSave}
               placeholder="c_user=...; xs=...; datr=...;"
               className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all"
             />
@@ -298,6 +299,7 @@ export default function AccountsPage() {
               rows={4}
               value={formData.threads_cookie}
               onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })}
+              onBlur={handleSave}
               placeholder="sessionid=...; ds_user_id=...;"
               className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all"
             />
@@ -319,6 +321,7 @@ export default function AccountsPage() {
               rows={4}
               value={formData.affiliate_links}
               onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })}
+              onBlur={handleSave}
               placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(1), Plus(2), Pro(4), Promax(∞)"}
               className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-2"
             />
@@ -360,6 +363,7 @@ export default function AccountsPage() {
               type="text"
               value={formData.tele_chat_id}
               onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })}
+              onBlur={handleSave}
               placeholder="Chat ID — nhắn @userinfobot để lấy"
               className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all mb-3"
             />
