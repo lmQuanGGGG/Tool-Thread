@@ -341,50 +341,60 @@ export default function AccountsPage() {
         </div>
       </div>
 
-            {/* ── BODY: 2-col ── */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* LEFT COLUMN: FACEBOOK */}
-        <div className="flex-1 flex flex-col border-r border-zinc-800/80 bg-zinc-950/50">
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {/* Module 1: FB Cookie */}
-            <ModuleCard label="FB Reels Engine" subtitle="Bypass Cookie Auth v2.0" dotActive={!!formData.fb_cookie}>
-              <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all" />
-              {formData.fb_cookie && (
-                <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /><span className="font-mono text-[10px] text-emerald-400">Cookie loaded — Ready to deploy</span></div>
-              )}
-            </ModuleCard>
-
-            {/* Module 3: Affiliate Links */}
+      {/* ── BODY ── */}
+      <div className="flex flex-col flex-1 overflow-hidden p-2 gap-2">
+        {/* SHARED TOP ROW */}
+        <div className="flex shrink-0 gap-2 max-h-[300px]">
+          {/* Affiliate Links */}
+          <div className="flex-[2] flex flex-col overflow-hidden">
             <ModuleCard label="Affiliate Link Pool" subtitle={"Giới hạn theo Tier"} dotActive={formData.affiliate_links.length > 0}>
-              <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-2" />
-              <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
-                {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-                Đồng bộ Tên & Sinh AI Comment
-              </button>
-              {parsedLinks.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase">AI Parsing Results ({parsedLinks.length})</p>
-                  <div className="max-h-[120px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                    {parsedLinks.map((p, i) => (
-                      <div key={i} className="flex gap-2 bg-zinc-950/80 p-2 rounded-lg border border-zinc-800">
-                        <div className="w-10 h-10 shrink-0 bg-zinc-900 rounded overflow-hidden"><img src={p.image_url} alt="img" className="w-full h-full object-cover opacity-80" /></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-zinc-300 font-bold truncate">{p.title}</p>
-                          <p className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">Link: {p.aff_link}</p>
-                          <p className="text-[10px] text-emerald-400 italic truncate mt-1">" {p.suggested_comment} "</p>
+              <div className="flex flex-col h-full">
+                <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-2 shrink-0" />
+                <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40 shrink-0 w-fit">
+                  {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+                  Đồng bộ Tên & Sinh AI Comment
+                </button>
+                {parsedLinks.length > 0 && (
+                  <div className="mt-4 flex-1 overflow-hidden flex flex-col">
+                    <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase shrink-0 mb-2">AI Parsing Results ({parsedLinks.length})</p>
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                      {parsedLinks.map((p, i) => (
+                        <div key={i} className="flex gap-2 bg-zinc-950/80 p-2 rounded-lg border border-zinc-800">
+                          <div className="w-10 h-10 shrink-0 bg-zinc-900 rounded overflow-hidden"><img src={p.image_url} alt="img" className="w-full h-full object-cover opacity-80" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] text-zinc-300 font-bold truncate">{p.title}</p>
+                            <p className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">Link: {p.aff_link}</p>
+                            <p className="text-[10px] text-emerald-400 italic truncate mt-1">" {p.suggested_comment} "</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </ModuleCard>
+          </div>
 
-            {/* Module 4: Telegram */}
+          {/* Telegram Notify */}
+          <div className="flex-[1] flex flex-col">
             <ModuleCard label="Telegram Notify" subtitle="Real-time alerts" dotActive={!!formData.tele_chat_id}>
               <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all mb-3" />
             </ModuleCard>
+          </div>
+        </div>
+
+        {/* BOTTOM ROW: FB & THREADS */}
+        <div className="flex flex-1 overflow-hidden gap-2">
+          {/* LEFT COLUMN: FACEBOOK */}
+          <div className="flex-1 flex flex-col border border-zinc-800/80 rounded-xl bg-zinc-950/50 overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Module 1: FB Cookie */}
+              <ModuleCard label="FB Reels Engine" subtitle="Bypass Cookie Auth v2.0" dotActive={!!formData.fb_cookie}>
+                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all" />
+                {formData.fb_cookie && (
+                  <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /><span className="font-mono text-[10px] text-emerald-400">Cookie loaded — Ready to deploy</span></div>
+                )}
+              </ModuleCard>
 
             <div className="flex flex-wrap gap-2 mt-2">
               <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
@@ -417,15 +427,15 @@ export default function AccountsPage() {
         </div>
 
         {/* RIGHT COLUMN: THREADS */}
-        <div className="flex-1 flex flex-col bg-zinc-950/50">
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {/* Module 2: Threads Cookie */}
-            <ModuleCard label="Threads AI Commenter" subtitle="Simulate Authentic Discourse" dotActive={!!formData.threads_cookie}>
-              <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all" />
-              {formData.threads_cookie && (
-                <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" /><span className="font-mono text-[10px] text-blue-400">Threads auth — Connected</span></div>
-              )}
-            </ModuleCard>
+          <div className="flex-1 flex flex-col border border-zinc-800/80 rounded-xl bg-zinc-950/50 overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Module 2: Threads Cookie */}
+              <ModuleCard label="Threads AI Commenter" subtitle="Simulate Authentic Discourse" dotActive={!!formData.threads_cookie}>
+                <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all" />
+                {formData.threads_cookie && (
+                  <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" /><span className="font-mono text-[10px] text-blue-400">Threads auth — Connected</span></div>
+                )}
+              </ModuleCard>
 
             <div className="flex flex-wrap gap-2 mt-2 mb-4">
               <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className="flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 text-blue-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
@@ -503,6 +513,7 @@ export default function AccountsPage() {
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );
