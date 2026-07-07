@@ -93,4 +93,9 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add "Tool Thread/tele_bot/reels_history.json"
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update reels history for ${{ matrix.email }}" && git pull --rebase && git push)
+        git diff --staged --quiet || git commit -m "Auto-update reels history for ${{ matrix.email }}"
+        for i in {1..15}; do
+          git pull --autostash --rebase && git push && break
+          echo "Git push failed due to conflict, retrying in a few seconds..."
+          sleep $((RANDOM % 10 + 5))
+        done
