@@ -1,0 +1,40 @@
+name: Facebook Auto Comment Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Email khách hàng'
+        required: false
+        default: 'admin@autofarm.com'
+
+permissions:
+  contents: write
+
+jobs:
+  run-fb-comment-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd "Tool Thread/tele_bot" && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+
+    - name: Run FB Comment Bot with Xvfb
+      env:
+        USER_EMAIL: ${{ github.event.inputs.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        FB_COOKIE: ${{ secrets.FB_COOKIE }}
+      run: |
+        # Xvfb giả lập màn hình để lách thuật toán Headless
+        cd "Tool Thread/tele_bot"
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node test_fb_cmt.js
