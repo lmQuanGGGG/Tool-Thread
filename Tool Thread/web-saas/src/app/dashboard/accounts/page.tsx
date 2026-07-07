@@ -163,11 +163,11 @@ export default function AccountsPage() {
 
     // Validate link count based on tier
     const getMaxLinks = (tier: string) => {
-      if (tier === 'lite') return 1;
-      if (tier === 'plus') return 2;
-      if (tier === 'pro') return 4;
+      if (tier === 'lite') return 3;
+      if (tier === 'plus') return 10;
+      if (tier === 'pro') return 20;
       if (tier === 'promax') return 9999; // Không giới hạn
-      return 0; // free
+      return 1; // free
     };
     
     const maxLinks = getMaxLinks(userTier);
