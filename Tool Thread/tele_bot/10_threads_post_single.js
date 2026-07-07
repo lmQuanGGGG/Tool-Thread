@@ -286,9 +286,13 @@ async function runSinglePost() {
                 await page.keyboard.up('Control');
                 
                 await delay(15000); // Chờ post cmt
+                await logToWeb(email, 'threads_post', `✅ Đã thả comment Affiliate thành công!`, 'success');
+            } else {
+                await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
             }
         } catch (e) {
             console.error('[ERROR] Ninja Comment thất bại:', e.message);
+            await logToWeb(email, 'threads_post', `❌ Lỗi thả comment: ${e.message}`, 'error');
         }
     }
 
