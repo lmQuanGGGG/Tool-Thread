@@ -235,9 +235,10 @@ async function downloadImageFromTelegram(file_id) {
 
                     // Kiểu 2: Nút dạng mũi tên (SVG)
                     if (!postBtn) {
-                        const svgs = Array.from(dialog.querySelectorAll('svg[aria-label="Post"], svg[aria-label="Đăng"], svg[aria-label="Reply"], svg[aria-label="Trả lời"]'));
+                        const svgs = Array.from(dialog.querySelectorAll('svg[aria-label="Post"], svg[aria-label="Đăng"], svg[aria-label="Reply"], svg[aria-label="Trả lời"], svg[aria-label="Câu trả lời"]'));
                         if (svgs.length > 0) {
-                            postBtn = svgs[svgs.length - 1]; // Ưu tiên nút xuất hiện sau cùng (trong modal)
+                            let svg = svgs[svgs.length - 1]; // Ưu tiên nút xuất hiện sau cùng (trong modal)
+                            postBtn = svg.closest('div[role="button"]') || svg;
                         }
                     }
 
