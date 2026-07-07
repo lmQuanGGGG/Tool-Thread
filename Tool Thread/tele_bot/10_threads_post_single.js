@@ -275,6 +275,7 @@ async function runSinglePost() {
                 if (replyIcons.length > 0) {
                     const targetBtn = replyIcons[0]; // BÀI ĐẦU TIÊN
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
+                    clickable.scrollIntoView({ behavior: 'instant', block: 'center' });
                     const rect = clickable.getBoundingClientRect();
                     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 }
@@ -282,9 +283,28 @@ async function runSinglePost() {
             });
 
             if (replyBox) {
+                await delay(1000); // Wait for scroll to settle
                 await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
                 await delay(3000);
-                await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                
+                try {
+                    await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                } catch (e) {
+                    await logToWeb(email, 'threads_post', `⚠️ Click Reply rồi nhưng không thấy ô nhập chữ. Đang thử click bằng DOM...`, 'warn');
+                    await page.evaluate(() => {
+                        const svgs = [...document.querySelectorAll('svg')];
+                        const replyIcons = svgs.filter(s => {
+                            const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                            return label === 'reply' || label === 'trả lời' || label === 'comment' || label === 'bình luận';
+                        });
+                        if (replyIcons.length > 0) {
+                            const btn = replyIcons[0].closest('div[role="button"], button') || replyIcons[0];
+                            btn.click();
+                        }
+                    });
+                    await delay(3000);
+                    await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                }
                 await page.click('div[contenteditable="true"]');
                 
                 const lines = ninjaComment.split('\n');

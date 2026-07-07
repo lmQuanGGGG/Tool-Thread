@@ -387,15 +387,15 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                 });
                 
                 if (replyIcons.length > 1) {
-                    // Cố tình chọn bài thứ 2 (index 1)
-                    const targetBtn = replyIcons[1];
+                    const targetBtn = replyIcons[1]; // Bài thứ 2
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
+                    clickable.scrollIntoView({ behavior: 'instant', block: 'center' });
                     const rect = clickable.getBoundingClientRect();
                     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 } else if (replyIcons.length === 1) {
-                    console.log('[WARN] Tường mới có đúng 1 bài, thả tạm vô bài này!');
                     const targetBtn = replyIcons[0];
                     const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
+                    clickable.scrollIntoView({ behavior: 'instant', block: 'center' });
                     const rect = clickable.getBoundingClientRect();
                     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                 }
@@ -403,10 +403,32 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
             });
 
             if (replyBox) {
+                await delay(1000); // Wait for scroll to settle
                 await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
                 console.log('[INFO] Đã click mở hộp thoại Reply...');
                 await delay(3000);
-                await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                
+                try {
+                    await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                } catch (e) {
+                    console.log('[WARN] Click Reply rồi nhưng không thấy ô nhập chữ. Đang thử click bằng DOM...');
+                    await page.evaluate(() => {
+                        const svgs = [...document.querySelectorAll('svg')];
+                        const replyIcons = svgs.filter(s => {
+                            const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                            return label === 'reply' || label === 'trả lời' || label === 'comment' || label === 'bình luận';
+                        });
+                        if (replyIcons.length > 1) {
+                            const btn = replyIcons[1].closest('div[role="button"], button') || replyIcons[1];
+                            btn.click();
+                        } else if (replyIcons.length === 1) {
+                            const btn = replyIcons[0].closest('div[role="button"], button') || replyIcons[0];
+                            btn.click();
+                        }
+                    });
+                    await delay(3000);
+                    await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                }
                 await page.click('div[contenteditable="true"]');
                 const lines = ninjaComment.split('\n');
                 for (let line of lines) {
