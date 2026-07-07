@@ -347,6 +347,8 @@ async function fetchLatestVideos() {
         await delay(90000);
 
         console.log("✅ Đăng FB Reels thành công!");
+        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đăng FB Reels thành công: ${videoToProcess.title}`, 'success');
+        await updateUsageStats(process.env.USER_EMAIL || 'admin@autofarm.com', 'reels_posted', 1);
 
         // Lưu lịch sử
         postedIds.push(videoToProcess.id);
@@ -354,6 +356,7 @@ async function fetchLatestVideos() {
 
     } catch (err) {
         console.error("❌ Lỗi khi đăng Reels:", err.message);
+        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track
     } finally {
