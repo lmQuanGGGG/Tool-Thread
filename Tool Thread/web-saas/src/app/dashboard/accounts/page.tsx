@@ -192,7 +192,7 @@ export default function AccountsPage() {
 
   const handleSave = async () => {
     if (!userId) return;
-    const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 1; };
+    const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 2; };
     const maxLinks = getMaxLinks(userTier);
     const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
     if (linkCount > maxLinks) { 
