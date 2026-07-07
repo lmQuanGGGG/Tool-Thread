@@ -199,6 +199,13 @@ export default function AccountsPage() {
           
           if (newLog.bot_type && newLog.bot_type.includes('threads')) {
             setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
+            
+            // Xoá bài khỏi UI tự động nếu Threads Post báo thành công
+            if (newLog.level === 'success' && newLog.bot_type === 'threads_post') {
+              supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({data}) => {
+                if (data) setThreadsPosts(data);
+              });
+            }
           } else {
             setFbLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
           }
@@ -218,7 +225,7 @@ export default function AccountsPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userEmail]);
+  }, [userEmail, userId]);
 
   const handleSave = async () => {
     if (!userId) return;
