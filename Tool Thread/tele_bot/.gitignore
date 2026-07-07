@@ -1,0 +1,17 @@
+node_modules/
+*.log
+npm-debug.log*
+
+# Ảnh tạm (sau khi đăng xong sẽ bị xóa, không cần đưa lên Git)
+temp_img_*.jpg
+debug_nick_*.png
+
+# Cookie là bí mật tuyệt đối — KHÔNG BAO GIỜ commit lên Git
+# Chúng phải được lưu trong Github Secrets
+cookies_*.json
+
+# File trạng thái nick được đồng bộ bằng Github Actions artifact, không cần commit
+account_state_*.json
+
+# KHÔNG BAO GIỜ ĐƯỢC ĐƯA LÊN GIT
+.env

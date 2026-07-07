@@ -1,0 +1,7 @@
+name = "tele-auto-post-bot"
+main = "src/index.js"
+compatibility_date = "2024-03-29"
+
+# Khai báo biến môi trường (Giá trị thực sẽ lưu bằng wrangler secret put)
+[vars]
+ADMIN_CHAT_ID = "-5396355060"
