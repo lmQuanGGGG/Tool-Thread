@@ -342,177 +342,170 @@ export default function AccountsPage() {
       </div>
 
       {/* ── BODY ── */}
-      <div className="flex flex-col flex-1 overflow-hidden p-2 gap-2">
+      <div className="flex flex-col flex-1 overflow-hidden p-6 gap-6">
         {/* SHARED TOP ROW */}
-        <div className="flex shrink-0 gap-2 max-h-[300px]">
+        <div className="flex shrink-0 gap-6">
           {/* Affiliate Links */}
-          <div className="flex-[2] flex flex-col overflow-hidden">
+          <div className="flex-[2] min-w-0">
             <ModuleCard label="Affiliate Link Pool" subtitle={"Giới hạn theo Tier"} dotActive={formData.affiliate_links.length > 0}>
-              <div className="flex flex-col h-full">
-                <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-2 shrink-0" />
-                <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40 shrink-0 w-fit">
-                  {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-                  Đồng bộ Tên & Sinh AI Comment
-                </button>
-                {parsedLinks.length > 0 && (
-                  <div className="mt-4 flex-1 overflow-hidden flex flex-col">
-                    <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase shrink-0 mb-2">AI Parsing Results ({parsedLinks.length})</p>
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                      {parsedLinks.map((p, i) => (
-                        <div key={i} className="flex gap-2 bg-zinc-950/80 p-2 rounded-lg border border-zinc-800">
-                          <div className="w-10 h-10 shrink-0 bg-zinc-900 rounded overflow-hidden"><img src={p.image_url} alt="img" className="w-full h-full object-cover opacity-80" /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] text-zinc-300 font-bold truncate">{p.title}</p>
-                            <p className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">Link: {p.aff_link}</p>
-                            <p className="text-[10px] text-emerald-400 italic truncate mt-1">" {p.suggested_comment} "</p>
-                          </div>
+              <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-3" />
+              <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 w-fit">
+                {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                Đồng bộ Tên & Sinh AI Comment
+              </button>
+              {parsedLinks.length > 0 && (
+                <div className="mt-5 border-t border-zinc-800/60 pt-4">
+                  <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase mb-3">AI Parsing Results ({parsedLinks.length})</p>
+                  <div className="max-h-[160px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                    {parsedLinks.map((p, i) => (
+                      <div key={i} className="flex gap-3 bg-zinc-950/40 p-2.5 rounded-xl border border-zinc-800/80 hover:border-zinc-700 transition-colors">
+                        <div className="w-12 h-12 shrink-0 bg-zinc-900 rounded-lg overflow-hidden border border-zinc-800"><img src={p.image_url} alt="img" className="w-full h-full object-cover opacity-90" /></div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <p className="text-[11px] text-zinc-200 font-bold truncate mb-0.5">{p.title}</p>
+                          <p className="text-[9px] text-zinc-500 font-mono truncate mb-1">Link: <span className="text-zinc-400">{p.aff_link}</span></p>
+                          <p className="text-[10px] text-emerald-400 italic truncate">" {p.suggested_comment} "</p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </ModuleCard>
           </div>
 
           {/* Telegram Notify */}
-          <div className="flex-[1] flex flex-col">
+          <div className="flex-[1] min-w-0">
             <ModuleCard label="Telegram Notify" subtitle="Real-time alerts" dotActive={!!formData.tele_chat_id}>
-              <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all mb-3" />
+              <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all" />
             </ModuleCard>
           </div>
         </div>
 
         {/* BOTTOM ROW: FB & THREADS */}
-        <div className="flex flex-1 overflow-hidden gap-2">
+        <div className="flex flex-1 overflow-hidden gap-6">
           {/* LEFT COLUMN: FACEBOOK */}
-          <div className="flex-1 flex flex-col border border-zinc-800/80 rounded-xl bg-zinc-950/50 overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 flex flex-col gap-5 min-w-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
               {/* Module 1: FB Cookie */}
               <ModuleCard label="FB Reels Engine" subtitle="Bypass Cookie Auth v2.0" dotActive={!!formData.fb_cookie}>
-                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all" />
+                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all mb-3" />
                 {formData.fb_cookie && (
-                  <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" /><span className="font-mono text-[10px] text-emerald-400">Cookie loaded — Ready to deploy</span></div>
+                  <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.5)]" /><span className="font-mono text-[10px] text-emerald-400">Cookie loaded — Ready to deploy</span></div>
                 )}
-              </ModuleCard>
-
-            <div className="flex flex-wrap gap-2 mt-2">
-              <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
-                {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                Run FB Reels
-              </button>
-              <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 text-purple-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
-                {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageCircle className="w-3 h-3" />}
-                Run FB Auto Comment
-              </button>
-            </div>
-          </div>
-
-          {/* FB LOGS */}
-          <div className="h-[250px] shrink-0 border-t border-zinc-800/80 flex flex-col bg-zinc-900/40">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800/80">
-              <div className="flex items-center gap-2"><Terminal className="w-3.5 h-3.5 text-emerald-400" /><span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">FB Live Logs</span></div>
-              <button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-600 hover:text-zinc-400 transition-colors" title="Clear logs"><Trash2 className="w-3.5 h-3.5" /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 font-mono text-[10px]">
-              {fbLogs.map((log, i) => (
-                <div key={i} className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2"><span className="text-zinc-600">[{log.time}]</span><span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BG[log.level]}`}>{log.level}</span></div>
-                  <p className={`leading-relaxed pl-1 ${LEVEL_COLOR[log.level]}`}>{log.msg}</p>
+                <div className="flex flex-wrap gap-2.5">
+                  <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                    {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                    Run FB Reels
+                  </button>
+                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 text-purple-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                    {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
+                    Run FB Auto Comment
+                  </button>
                 </div>
-              ))}
-              <div ref={fbLogEndRef} />
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: THREADS */}
-          <div className="flex-1 flex flex-col border border-zinc-800/80 rounded-xl bg-zinc-950/50 overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {/* Module 2: Threads Cookie */}
-              <ModuleCard label="Threads AI Commenter" subtitle="Simulate Authentic Discourse" dotActive={!!formData.threads_cookie}>
-                <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all" />
-                {formData.threads_cookie && (
-                  <div className="mt-2 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full" /><span className="font-mono text-[10px] text-blue-400">Threads auth — Connected</span></div>
-                )}
               </ModuleCard>
-
-            <div className="flex flex-wrap gap-2 mt-2 mb-4">
-              <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className="flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 text-blue-400 font-mono font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full transition-all disabled:opacity-40">
-                {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                Run Threads Comment Bot
-              </button>
             </div>
 
-            {/* Module: Crawl Data */}
-            <ModuleCard label="Threads Crawl Poster" subtitle={threadsPosts.length + " bài khả dụng"} dotActive={threadsPosts.length > 0}>
-              <div className="max-h-[350px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-                {threadsPosts.map((post, i) => (
-                  <div key={post.id} className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3 relative group/post">
-                    {/* Nút Xoá Bài Viết Toàn Cục */}
-                    <button 
-                        onClick={() => handleDeletePost(post.id)}
-                        className="absolute top-2 right-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded w-6 h-6 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
-                        title="Xoá bài viết này"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    <textarea 
-                      className="w-full bg-transparent border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded p-1 pr-8 text-[11px] text-zinc-300 resize-none transition-all outline-none"
-                      rows={5}
-                      value={post.text_content}
-                      onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
-                    />
-                    {post.image_urls && post.image_urls.length > 0 && (
-                       <div className="mt-2 flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                          {post.image_urls.map((url: string, idx: number) => (
-                             <div key={idx} className="relative group shrink-0">
-                               <img src={url} className="h-20 w-auto rounded object-cover border border-zinc-800 transition-all group-hover:opacity-60" />
-                               <button 
-                                  onClick={() => handleRemovePostImage(post.id, idx)}
-                                  className="absolute top-1 right-1 bg-red-500/80 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
-                               >
-                                 <Trash2 className="w-3 h-3" />
-                               </button>
-                             </div>
-                          ))}
-                       </div>
-                    )}
-                    <div className="mt-3 flex justify-end gap-2">
-                      <button onClick={() => handleSavePost(post)} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-[10px] font-bold px-3 py-1.5 rounded transition-all">
-                        Lưu Thay Đổi
-                      </button>
-                      <button onClick={() => handlePostToThreads(post)} className="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-400 text-[10px] font-bold px-4 py-1.5 rounded transition-all">
-                        Post To Threads
-                      </button>
-                    </div>
+            {/* FB LOGS */}
+            <div className="h-[280px] shrink-0 bg-zinc-900/80 border border-zinc-700/60 rounded-2xl flex flex-col overflow-hidden backdrop-blur-sm">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/80 bg-zinc-900/50">
+                <div className="flex items-center gap-2.5"><Terminal className="w-4 h-4 text-emerald-400" /><span className="font-mono text-[11px] font-bold text-zinc-300 uppercase tracking-widest">FB Live Logs</span></div>
+                <button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-800/50 hover:bg-zinc-700 p-1.5 rounded-md" title="Clear logs"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[11px] custom-scrollbar">
+                {fbLogs.map((log, i) => (
+                  <div key={i} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2"><span className="text-zinc-600">[{log.time}]</span><span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BG[log.level]}`}>{log.level}</span></div>
+                    <p className={`leading-relaxed pl-1 ${LEVEL_COLOR[log.level]}`}>{log.msg}</p>
                   </div>
                 ))}
-                {threadsPosts.length === 0 && <p className="text-zinc-500 text-[11px] italic">Không có dữ liệu Crawl.</p>}
+                <div ref={fbLogEndRef} />
               </div>
-            </ModuleCard>
-
+            </div>
           </div>
 
-          {/* THREADS LOGS */}
-          <div className="h-[250px] shrink-0 border-t border-zinc-800/80 flex flex-col bg-zinc-900/40">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800/80">
-              <div className="flex items-center gap-2"><Terminal className="w-3.5 h-3.5 text-blue-400" /><span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Threads Live Logs</span></div>
-              <button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-600 hover:text-zinc-400 transition-colors" title="Clear logs"><Trash2 className="w-3.5 h-3.5" /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 font-mono text-[10px]">
-              {threadsLogs.map((log, i) => (
-                <div key={i} className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2"><span className="text-zinc-600">[{log.time}]</span><span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BG[log.level]}`}>{log.level}</span></div>
-                  <p className={`leading-relaxed pl-1 ${LEVEL_COLOR[log.level]}`}>{log.msg}</p>
+          {/* RIGHT COLUMN: THREADS */}
+          <div className="flex-1 flex flex-col gap-5 min-w-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
+              {/* Module 2: Threads Cookie */}
+              <ModuleCard label="Threads AI Commenter" subtitle="Simulate Authentic Discourse" dotActive={!!formData.threads_cookie}>
+                <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all mb-3" />
+                {formData.threads_cookie && (
+                  <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]" /><span className="font-mono text-[10px] text-blue-400">Threads auth — Connected</span></div>
+                )}
+                <div className="flex flex-wrap gap-2.5">
+                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 text-blue-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                    {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                    Run Threads Comment Bot
+                  </button>
                 </div>
-              ))}
-              <div ref={threadsLogEndRef} />
+              </ModuleCard>
+
+              {/* Module: Crawl Data */}
+              <ModuleCard label="Threads Crawl Poster" subtitle={threadsPosts.length + " bài khả dụng"} dotActive={threadsPosts.length > 0}>
+                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                  {threadsPosts.map((post, i) => (
+                    <div key={post.id} className="bg-zinc-950/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-xl p-4 relative group/post transition-colors">
+                      <button 
+                          onClick={() => handleDeletePost(post.id)}
+                          className="absolute top-3 right-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
+                          title="Xoá bài viết này"
+                      >
+                          <Trash2 className="w-4 h-4" />
+                      </button>
+
+                      <textarea 
+                        className="w-full bg-zinc-900/30 border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded-lg p-3 pr-10 text-[12px] text-zinc-300 resize-none transition-all outline-none leading-relaxed"
+                        rows={4}
+                        value={post.text_content}
+                        onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
+                      />
+                      {post.image_urls && post.image_urls.length > 0 && (
+                         <div className="mt-3 flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                            {post.image_urls.map((url: string, idx: number) => (
+                               <div key={idx} className="relative group shrink-0">
+                                 <img src={url} className="h-24 w-auto rounded-lg object-cover border border-zinc-800 transition-all group-hover:opacity-40" />
+                                 <button 
+                                    onClick={() => handleRemovePostImage(post.id, idx)}
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100"
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+                                 </button>
+                               </div>
+                            ))}
+                         </div>
+                      )}
+                      <div className="mt-4 flex justify-end gap-3 border-t border-zinc-800/60 pt-4">
+                        <button onClick={() => handleSavePost(post)} className="bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold px-4 py-2 rounded-lg transition-all">
+                          Lưu Thay Đổi
+                        </button>
+                        <button onClick={() => handlePostToThreads(post)} className="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-400 text-[11px] font-bold px-5 py-2 rounded-lg transition-all">
+                          Post To Threads
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {threadsPosts.length === 0 && <p className="text-zinc-500 text-[12px] italic text-center py-4">Không có dữ liệu Crawl.</p>}
+                </div>
+              </ModuleCard>
+            </div>
+
+            {/* THREADS LOGS */}
+            <div className="h-[280px] shrink-0 bg-zinc-900/80 border border-zinc-700/60 rounded-2xl flex flex-col overflow-hidden backdrop-blur-sm">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/80 bg-zinc-900/50">
+                <div className="flex items-center gap-2.5"><Terminal className="w-4 h-4 text-blue-400" /><span className="font-mono text-[11px] font-bold text-zinc-300 uppercase tracking-widest">Threads Live Logs</span></div>
+                <button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-800/50 hover:bg-zinc-700 p-1.5 rounded-md" title="Clear logs"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[11px] custom-scrollbar">
+                {threadsLogs.map((log, i) => (
+                  <div key={i} className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2"><span className="text-zinc-600">[{log.time}]</span><span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BG[log.level]}`}>{log.level}</span></div>
+                    <p className={`leading-relaxed pl-1 ${LEVEL_COLOR[log.level]}`}>{log.msg}</p>
+                  </div>
+                ))}
+                <div ref={threadsLogEndRef} />
+              </div>
             </div>
           </div>
-        </div>
-
         </div>
       </div>
     </div>
