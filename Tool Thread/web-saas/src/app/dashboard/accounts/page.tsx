@@ -20,6 +20,13 @@ interface LogEntry {
   msg: string;
 }
 
+interface ParsedLink {
+  aff_link: string;
+  title: string;
+  image_url: string;
+  suggested_comment: string;
+}
+
 /* ─── Helpers ────────────────────────────────────────── */
 const now = () => new Date().toLocaleTimeString("vi-VN", { hour12: false });
 
@@ -71,6 +78,7 @@ export default function AccountsPage() {
   const [formData, setFormData]   = useState<FormData>({
     fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "",
   });
+  const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([
     { time: now(), level: "INFO", msg: "AutoFarm System khởi động. Chờ lệnh..." },
   ]);
@@ -91,7 +99,7 @@ export default function AccountsPage() {
       setUserEmail(user.email || null);
 
       const { data, error } = await supabase
-        .from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier")
+        .from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links")
         .eq("id", user.id).single();
 
       if (!error && data) {
@@ -102,6 +110,7 @@ export default function AccountsPage() {
           affiliate_links: data.affiliate_links || "",
           tele_chat_id: data.tele_chat_id || "",
         });
+        setParsedLinks(data.parsed_affiliate_links || []);
         pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`);
         if (data.fb_cookie)      pushLog("INFO", "FB Cookie: Đã cấu hình ✓");
         if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓");
@@ -131,6 +140,15 @@ export default function AccountsPage() {
           const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
           
           setLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `email=eq.${userEmail}` },
+        (payload) => {
+          if (payload.new.parsed_affiliate_links) {
+            setParsedLinks(payload.new.parsed_affiliate_links);
+          }
         }
       )
       .subscribe();
@@ -309,6 +327,27 @@ export default function AccountsPage() {
               {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
               Đồng bộ Tên & Sinh AI Comment
             </button>
+            
+            {/* Hiển thị kết quả AI */}
+            {parsedLinks.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase">AI Parsing Results ({parsedLinks.length})</p>
+                <div className="max-h-[120px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {parsedLinks.map((p, i) => (
+                    <div key={i} className="flex gap-2 bg-zinc-950/80 p-2 rounded-lg border border-zinc-800">
+                      <div className="w-10 h-10 shrink-0 bg-zinc-900 rounded overflow-hidden">
+                        <img src={p.image_url} alt="img" className="w-full h-full object-cover opacity-80" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-zinc-300 font-bold truncate">{p.title}</p>
+                        <p className="text-[9px] text-zinc-400 font-mono truncate mt-0.5">Link: {p.aff_link}</p>
+                        <p className="text-[10px] text-emerald-400 italic truncate mt-1">" {p.suggested_comment} "</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </ModuleCard>
 
           {/* Module 4: Telegram + Actions */}
