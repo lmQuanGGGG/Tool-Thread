@@ -31,13 +31,13 @@ interface ParsedLink {
 const now = () => new Date().toLocaleTimeString("vi-VN", { hour12: false });
 
 const LEVEL_COLOR: Record<LogEntry["level"], string> = {
-  INFO:    "text-zinc-700",
+  INFO:    "text-slate-800",
   SUCCESS: "text-emerald-400",
   WARN:    "text-amber-400",
   ERROR:   "text-red-400",
 };
 const LEVEL_BG: Record<LogEntry["level"], string> = {
-  INFO:    "bg-zinc-700/60 text-zinc-800",
+  INFO:    "bg-zinc-700/60 text-slate-900",
   SUCCESS: "bg-emerald-500/20 text-emerald-400",
   WARN:    "bg-amber-500/20 text-amber-400",
   ERROR:   "bg-red-500/20 text-red-400",
@@ -58,9 +58,9 @@ function ModuleCard({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <StatusDot active={dotActive} />
-          <span className="font-mono font-bold text-sm text-zinc-900 tracking-widest uppercase">{label}</span>
+          <span className="font-mono font-bold text-sm text-slate-950 tracking-widest uppercase">{label}</span>
         </div>
-        <span className="font-mono text-[10px] text-zinc-600">{subtitle}</span>
+        <span className="font-mono text-[10px] text-slate-700">{subtitle}</span>
       </div>
       {children}
     </div>
@@ -304,39 +304,39 @@ export default function AccountsPage() {
       <div className="flex items-center justify-center min-h-[60vh] bg-zinc-950">
         <div className="flex flex-col items-center gap-4">
           <Bot className="w-10 h-10 text-emerald-400 animate-pulse" />
-          <p className="font-mono text-sm text-zinc-600 text-pretty">Đang khởi động hệ thống...</p>
+          <p className="font-mono text-sm text-slate-700 text-pretty">Đang khởi động hệ thống...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen  text-zinc-800 flex flex-col font-sans selection:bg-zinc-800 selection:text-zinc-900">
+    <div className="min-h-screen  text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-slate-950">
       {/* ── HEADER NAVIGATION ── */}
       <header className="sticky top-0 z-50 /80 backdrop-blur-xl border-b border-white/5 px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
-            <Bot className="w-5 h-5 text-zinc-900" />
-            <span className="font-semibold text-sm tracking-tight text-zinc-900">AutoFarm Simulator</span>
-            <span className="px-2 py-0.5 rounded-full bg-zinc-800/50 text-[10px] font-mono text-zinc-700 border border-white/5 uppercase">v3.5</span>
+            <Bot className="w-5 h-5 text-slate-950" />
+            <span className="font-semibold text-sm tracking-tight text-slate-950">AutoFarm Simulator</span>
+            <span className="px-2 py-0.5 rounded-full bg-slate-900/50 text-[10px] font-mono text-slate-800 border border-white/5 uppercase">v3.5</span>
           </div>
 
           <nav className="flex items-center gap-1">
             <button 
               onClick={() => setActiveTab("global")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === "global" ? "bg-white/10 text-zinc-900" : "text-zinc-600 hover:text-zinc-800 hover:bg-white/5"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === "global" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
             >
               Cấu Hình Chung
             </button>
             <button 
               onClick={() => setActiveTab("fb")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "fb" ? "bg-white/10 text-zinc-900" : "text-zinc-600 hover:text-zinc-800 hover:bg-white/5"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "fb" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
             >
               Facebook Engine
             </button>
             <button 
               onClick={() => setActiveTab("threads")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "threads" ? "bg-white/10 text-zinc-900" : "text-zinc-600 hover:text-zinc-800 hover:bg-white/5"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${activeTab === "threads" ? "bg-white/10 text-slate-950" : "text-slate-700 hover:text-slate-900 hover:bg-white/5"}`}
             >
               Threads Engine
             </button>
@@ -345,11 +345,11 @@ export default function AccountsPage() {
 
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-end">
-            <span className="text-[11px] font-medium text-zinc-700">{userEmail}</span>
+            <span className="text-[11px] font-medium text-slate-800">{userEmail}</span>
             <span className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">{userTier} TIER</span>
           </div>
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-700 flex items-center justify-center border border-white/10">
-            <span className="text-xs font-bold text-zinc-800">{userEmail?.charAt(0).toUpperCase()}</span>
+            <span className="text-xs font-bold text-slate-900">{userEmail?.charAt(0).toUpperCase()}</span>
           </div>
         </div>
       </header>
@@ -361,14 +361,14 @@ export default function AccountsPage() {
         {activeTab === "global" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div>
-              <h1 className="text-fluid-h1 font-semibold text-zinc-900 tracking-tight mb-2 text-balance">Cấu Hình Chung</h1>
-              <p className="text-sm text-zinc-600 text-pretty">Quản lý kho link Affiliate và nhận thông báo qua Telegram.</p>
+              <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Cấu Hình Chung</h1>
+              <p className="text-sm text-slate-700 text-pretty">Quản lý kho link Affiliate và nhận thông báo qua Telegram.</p>
             </div>
 
             <div className="page-layout">
               <div className="area-half shadow-layered glass-panel p-6 hover:border-white/10 transition-colors">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-zinc-900">Affiliate Link Pool</h3>
+                  <h3 className="font-medium text-slate-950">Affiliate Link Pool</h3>
                   <div className={`w-2 h-2 rounded-full ${formData.affiliate_links ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
                 </div>
                 <textarea 
@@ -377,7 +377,7 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-zinc-800 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 resize-none transition-all mb-4" 
+                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 resize-none transition-all mb-4" 
                 />
                 <button 
                   onClick={() => handleTrigger("parse_links")} 
@@ -391,7 +391,7 @@ export default function AccountsPage() {
 
               <div className="area-half shadow-layered glass-panel p-6 hover:border-white/10 transition-colors h-fit">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-zinc-900">Telegram Notify</h3>
+                  <h3 className="font-medium text-slate-950">Telegram Notify</h3>
                   <div className={`w-2 h-2 rounded-full ${formData.tele_chat_id ? 'bg-sky-500' : 'bg-zinc-700'}`} />
                 </div>
                 <input 
@@ -400,9 +400,9 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder="Chat ID — nhắn @userinfobot để lấy" 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-zinc-800 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 transition-all" 
+                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 transition-all" 
                 />
-                <p className="mt-4 text-xs text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs text-slate-700 leading-relaxed">
                   Nhận cảnh báo real-time khi bot post bài thành công, lỗi cookie, hoặc các thống kê crawl định kỳ.
                 </p>
               </div>
@@ -411,15 +411,15 @@ export default function AccountsPage() {
             {/* Parsing Results */}
             {parsedLinks.length > 0 && (
               <div className="glass-panel p-6">
-                <h3 className="font-medium text-zinc-900 mb-6">AI Parsing Results ({parsedLinks.length})</h3>
+                <h3 className="font-medium text-slate-950 mb-6">AI Parsing Results ({parsedLinks.length})</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 dim-siblings">
                   {parsedLinks.map((p, i) => (
                     <div key={i} className="flex gap-4  border border-white/5 p-4 rounded-xl">
-                      <img src={p.image_url} alt="" className="w-16 h-16 rounded-lg object-cover bg-zinc-900 border border-white/5 shrink-0" />
+                      <img src={p.image_url} alt="" className="w-16 h-16 rounded-lg object-cover bg-slate-950 border border-white/5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-zinc-900 truncate mb-1">{p.title}</p>
-                        <p className="text-[11px] text-zinc-600 font-mono truncate mb-2">{p.aff_link}</p>
-                        <p className="text-xs text-zinc-700 italic">"{p.suggested_comment}"</p>
+                        <p className="text-sm font-medium text-slate-950 truncate mb-1">{p.title}</p>
+                        <p className="text-[11px] text-slate-700 font-mono truncate mb-2">{p.aff_link}</p>
+                        <p className="text-xs text-slate-800 italic">"{p.suggested_comment}"</p>
                       </div>
                     </div>
                   ))}
@@ -434,13 +434,13 @@ export default function AccountsPage() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 page-layout">
             <div className="area-half space-y-6">
               <div>
-                <h1 className="text-fluid-h1 font-semibold text-zinc-900 tracking-tight mb-2 text-balance">Facebook Engine</h1>
-                <p className="text-sm text-zinc-600 text-pretty">Thiết lập Cookie và chạy tiến trình Facebook.</p>
+                <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Facebook Engine</h1>
+                <p className="text-sm text-slate-700 text-pretty">Thiết lập Cookie và chạy tiến trình Facebook.</p>
               </div>
 
               <div className="glass-panel p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-zinc-900">FB Access Cookie</h3>
+                  <h3 className="font-medium text-slate-950">FB Access Cookie</h3>
                   <div className={`w-2 h-2 rounded-full ${formData.fb_cookie ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
                 </div>
                 <textarea 
@@ -449,14 +449,14 @@ export default function AccountsPage() {
                   onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} 
                   onBlur={handleSave} 
                   placeholder="c_user=...; xs=...; datr=...;" 
-                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-emerald-400 font-bold placeholder:text-zinc-700 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 resize-none transition-all mb-6" 
+                  className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-emerald-400 font-bold placeholder:text-slate-800 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 resize-none transition-all mb-6" 
                 />
                 
                 <div className="grid grid-cols-2 gap-3">
                   <button 
                     onClick={() => handleTrigger("reels")} 
                     disabled={triggering || !formData.fb_cookie} 
-                    className="flex items-center justify-center gap-2 btn-premium bg-zinc-100 text-zinc-900 hover:bg-white font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 btn-premium bg-zinc-100 text-slate-950 hover:bg-white font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
                   >
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     FB Reels
@@ -464,7 +464,7 @@ export default function AccountsPage() {
                   <button 
                     onClick={() => handleTrigger("fb_comment")} 
                     disabled={triggering || !formData.fb_cookie} 
-                    className="flex items-center justify-center gap-2 btn-premium bg-zinc-800 text-white hover:bg-zinc-700 font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 btn-premium bg-slate-900 text-white hover:bg-zinc-700 font-medium text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-50"
                   >
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
                     Auto Comment
@@ -474,19 +474,19 @@ export default function AccountsPage() {
             </div>
 
             <div className="area-half shadow-layered h-[500px] bg-zinc-950 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
-              <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-zinc-900">
+              <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-slate-950">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-zinc-400" />
                   <span className="text-xs font-mono font-medium text-zinc-300">fb-live-logs.log</span>
                 </div>
-                <button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-slate-600 hover:text-zinc-300 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[12px] custom-scrollbar">
                 {fbLogs.map((log, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <span className="text-zinc-500 shrink-0">[{log.time}]</span>
+                    <span className="text-slate-600 shrink-0">[{log.time}]</span>
                     <span className={`px-1.5 rounded text-[10px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
                     <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
                   </div>
@@ -503,13 +503,13 @@ export default function AccountsPage() {
             <div className="page-layout items-start">
               <div className="area-half space-y-6">
                 <div>
-                  <h1 className="text-fluid-h1 font-semibold text-zinc-900 tracking-tight mb-2 text-balance">Threads Engine</h1>
-                  <p className="text-sm text-zinc-600 text-pretty">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
+                  <h1 className="text-fluid-h1 font-semibold text-slate-950 tracking-tight mb-2 text-balance">Threads Engine</h1>
+                  <p className="text-sm text-slate-700 text-pretty">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
                 </div>
 
                 <div className="glass-panel p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-medium text-zinc-900">Threads Access Cookie</h3>
+                    <h3 className="font-medium text-slate-950">Threads Access Cookie</h3>
                     <div className={`w-2 h-2 rounded-full ${formData.threads_cookie ? 'bg-blue-500' : 'bg-zinc-700'}`} />
                   </div>
                   <textarea 
@@ -518,7 +518,7 @@ export default function AccountsPage() {
                     onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} 
                     onBlur={handleSave} 
                     placeholder="sessionid=...; ds_user_id=...;" 
-                    className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-blue-400 font-bold placeholder:text-zinc-700 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 resize-none transition-all mb-6" 
+                    className="w-full  border border-white/5 rounded-xl p-4 text-[13px] font-mono text-blue-400 font-bold placeholder:text-slate-800 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 resize-none transition-all mb-6" 
                   />
                   <button 
                     onClick={() => handleTrigger("threads")} 
@@ -532,19 +532,19 @@ export default function AccountsPage() {
 
                 {/* Threads Terminal */}
                 <div className="h-[350px] bg-zinc-950 border border-white/5 rounded-2xl flex flex-col overflow-hidden">
-                  <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-zinc-900">
+                  <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-slate-950">
                     <div className="flex items-center gap-2">
                       <Terminal className="w-4 h-4 text-zinc-400" />
                       <span className="text-xs font-mono font-medium text-zinc-300">threads-live-logs.log</span>
                     </div>
-                    <button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-slate-600 hover:text-zinc-300 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-[12px] custom-scrollbar">
                     {threadsLogs.map((log, i) => (
                       <div key={i} className="flex items-start gap-3">
-                        <span className="text-zinc-500 shrink-0">[{log.time}]</span>
+                        <span className="text-slate-600 shrink-0">[{log.time}]</span>
                         <span className={`px-1.5 rounded text-[10px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
                         <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
                       </div>
@@ -558,8 +558,8 @@ export default function AccountsPage() {
               {/* Right Col: Threads Poster */}
               <div className="area-half shadow-layered glass-panel p-6 flex flex-col h-[700px]">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-medium text-zinc-900">Threads Crawl Poster</h3>
-                  <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs text-zinc-700">{threadsPosts.length} Bài Đăng</span>
+                  <h3 className="font-medium text-slate-950">Threads Crawl Poster</h3>
+                  <span className="px-3 py-1 bg-slate-900 rounded-full text-xs text-slate-800">{threadsPosts.length} Bài Đăng</span>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar dim-siblings">
@@ -567,14 +567,14 @@ export default function AccountsPage() {
                     <div key={post.id} className=" border border-white/5 rounded-xl p-5 relative group/post transition-colors hover:border-zinc-700">
                       <button 
                           onClick={() => handleDeletePost(post.id)}
-                          className="absolute top-4 right-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-zinc-900 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
+                          className="absolute top-4 right-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-slate-950 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
                           title="Xoá bài viết này"
                       >
                           <Trash2 className="w-4 h-4" />
                       </button>
 
                       <textarea 
-                        className="w-full bg-transparent text-[13px] text-zinc-800 resize-none outline-none leading-relaxed min-h-[100px]"
+                        className="w-full bg-transparent text-[13px] text-slate-900 resize-none outline-none leading-relaxed min-h-[100px]"
                         value={post.text_content}
                         onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
                         placeholder="Nội dung bài viết..."
@@ -587,7 +587,7 @@ export default function AccountsPage() {
                                  <img src={url} className="h-24 w-auto rounded-lg object-cover border border-white/5 transition-all group-hover:opacity-30" />
                                  <button 
                                     onClick={() => handleRemovePostImage(post.id, idx)}
-                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-zinc-900 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100"
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-slate-950 rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100"
                                  >
                                    <Trash2 className="w-4 h-4" />
                                  </button>
@@ -597,17 +597,17 @@ export default function AccountsPage() {
                       )}
                       
                       <div className="mt-6 flex justify-end gap-3">
-                        <button onClick={() => handleSavePost(post)} className="btn-premium bg-zinc-800 text-zinc-800 hover:bg-zinc-700 text-xs font-medium px-4 py-2 rounded-lg transition-all">
+                        <button onClick={() => handleSavePost(post)} className="btn-premium bg-slate-900 text-slate-900 hover:bg-zinc-700 text-xs font-medium px-4 py-2 rounded-lg transition-all">
                           Lưu
                         </button>
-                        <button onClick={() => handlePostToThreads(post)} className="btn-premium bg-zinc-100 text-zinc-900 hover:bg-white text-xs font-medium px-5 py-2 rounded-lg transition-all">
+                        <button onClick={() => handlePostToThreads(post)} className="btn-premium bg-zinc-100 text-slate-950 hover:bg-white text-xs font-medium px-5 py-2 rounded-lg transition-all">
                           Đăng Lên Threads
                         </button>
                       </div>
                     </div>
                   ))}
                   {threadsPosts.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-zinc-500">
+                    <div className="h-full flex flex-col items-center justify-center text-slate-600">
                        <MessageCircle className="w-10 h-10 mb-4 opacity-50" />
                        <p className="text-sm">Không có dữ liệu Crawl nào.</p>
                     </div>
