@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../utils/supabase";
 
 /* ─── Types ─────────────────────────────────────────── */
-interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; }
+interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; target_channels: string; }
 interface LogEntry { time: string; level: "INFO" | "SUCCESS" | "WARN" | "ERROR"; msg: string; }
 interface ParsedLink { aff_link: string; title: string; image_url: string; suggested_comment: string; }
 
@@ -74,22 +74,28 @@ export default function AccountsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<string>("free");
-  const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "" });
+  const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "", target_channels: "" });
   const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
+  const [globalLogs, setGlobalLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Hệ thống sẵn sàng." }]);
   const [fbLogs, setFbLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "FB System khởi động..." }]);
   const [threadsLogs, setThreadsLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Threads System khởi động..." }]);
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
 
+  const globalLogEndRef = useRef<HTMLDivElement>(null);
   const fbLogEndRef = useRef<HTMLDivElement>(null);
   const threadsLogEndRef = useRef<HTMLDivElement>(null);
 
+  const pushGlobalLog = (level: LogEntry["level"], msg: string) => setGlobalLogs(prev => [...prev, { time: now(), level, msg }]);
   const pushFbLog = (level: LogEntry["level"], msg: string) => setFbLogs(prev => [...prev, { time: now(), level, msg }]);
   const pushThreadsLog = (level: LogEntry["level"], msg: string) => setThreadsLogs(prev => [...prev, { time: now(), level, msg }]);
-  const pushLog = (level: LogEntry["level"], msg: string, target: "fb" | "threads" | "both" = "both") => {
+  const pushLog = (level: LogEntry["level"], msg: string, target: "global" | "fb" | "threads" | "both" = "both") => {
+    if (target === "global") pushGlobalLog(level, msg);
     if (target === "fb" || target === "both") pushFbLog(level, msg);
     if (target === "threads" || target === "both") pushThreadsLog(level, msg);
   };
+
+  useEffect(() => { globalLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [globalLogs]);
 
   useEffect(() => { fbLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [fbLogs]);
   useEffect(() => { threadsLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadsLogs]);
@@ -100,12 +106,12 @@ export default function AccountsPage() {
       if (!user) { setLoading(false); pushLog("ERROR", "Chưa đăng nhập!"); return; }
       setUserId(user.id);
       setUserEmail(user.email || null);
-      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links, target_channels").eq("id", user.id).single();
       if (!error && data) {
         setUserTier(data.tier || "free");
-        setFormData({ fb_cookie: data.fb_cookie || "", threads_cookie: data.threads_cookie || "", affiliate_links: data.affiliate_links || "", tele_chat_id: data.tele_chat_id || "" });
+        setFormData({ fb_cookie: data.fb_cookie || "", threads_cookie: data.threads_cookie || "", affiliate_links: data.affiliate_links || "", tele_chat_id: data.tele_chat_id || "", target_channels: data.target_channels || "" });
         setParsedLinks(data.parsed_affiliate_links || []);
-        pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`);
+        pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`, "global");
         if (data.fb_cookie) pushLog("INFO", "FB Cookie: Đã cấu hình ✓", "fb");
         if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓", "threads");
       }
@@ -161,6 +167,8 @@ export default function AccountsPage() {
         if (newLog.level === 'success' && newLog.bot_type === 'threads_post') {
           supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({data}) => { if (data) setThreadsPosts(data); });
         }
+      } else if (newLog.bot_type === 'parse_links') {
+        setGlobalLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
       } else {
         setFbLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
       }
@@ -178,18 +186,19 @@ export default function AccountsPage() {
     const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
     if (linkCount > maxLinks) { pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói!`); return; }
     setSaving(true);
-    pushLog("INFO", "Đang lưu cấu hình...");
+    pushLog("INFO", "Đang lưu cấu hình...", "global");
     const { error } = await supabase.from("profiles").update(formData).eq("id", userId);
-    if (error) { pushLog("ERROR", `Lưu thất bại: ${error.message}`); } else { pushLog("SUCCESS", "Cấu hình đã được lưu thành công."); }
+    if (error) { pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global"); } else { pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global"); }
     setSaving(false);
   };
 
   const handleTrigger = async (botType: string) => {
     const isThreads = botType.includes('threads');
-    const target = isThreads ? 'threads' : 'fb';
+    const isGlobal = botType === 'parse_links';
+    const target = isGlobal ? 'global' : (isThreads ? 'threads' : 'fb');
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
     if (isThreads && !formData.threads_cookie) { pushLog("WARN", "Thiếu Threads Cookie!", target); return; }
-    else if (!isThreads && !formData.fb_cookie) { pushLog("WARN", "Thiếu FB Cookie!", target); return; }
+    else if (!isThreads && !isGlobal && !formData.fb_cookie) { pushLog("WARN", "Thiếu FB Cookie!", target); return; }
     setTriggering(true);
     pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`, target);
     try {
@@ -281,25 +290,31 @@ export default function AccountsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Affiliate Link Pool</h3>
-                  <StatusDot active={!!formData.affiliate_links} />
+              <div className="space-y-6">
+                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[13px] font-semibold text-gray-900">Affiliate Link Pool</h3>
+                    <StatusDot active={!!formData.affiliate_links} />
+                  </div>
+                  <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-4`} />
+                  <button onClick={() => handleTrigger("parse_links")} disabled={triggering || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
+                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                    Đồng Bộ Tên & Sinh Comment AI
+                  </button>
                 </div>
-                <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-4`} />
-                <button onClick={() => handleTrigger("parse_links")} disabled={triggering || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
-                  {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                  Đồng Bộ Tên & Sinh Comment AI
-                </button>
+
+                <div className={`${cardClass} p-6 h-fit anim-fade-up anim-d2`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[13px] font-semibold text-gray-900">Telegram Notify</h3>
+                    <StatusDot active={!!formData.tele_chat_id} />
+                  </div>
+                  <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
+                  <p className="mt-3.5 text-[12px] text-gray-400 leading-relaxed">Nhận cảnh báo real-time khi bot post bài thành công, lỗi cookie, hoặc các thống kê crawl định kỳ.</p>
+                </div>
               </div>
 
-              <div className={`${cardClass} p-6 h-fit anim-fade-up anim-d2`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Telegram Notify</h3>
-                  <StatusDot active={!!formData.tele_chat_id} />
-                </div>
-                <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
-                <p className="mt-3.5 text-[12px] text-gray-400 leading-relaxed">Nhận cảnh báo real-time khi bot post bài thành công, lỗi cookie, hoặc các thống kê crawl định kỳ.</p>
+              <div className="h-[450px] anim-fade-up anim-d3">
+                <TerminalPanel logs={globalLogs} logEndRef={globalLogEndRef} onClear={() => setGlobalLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="global-live-logs.log" />
               </div>
             </div>
 
@@ -336,10 +351,16 @@ export default function AccountsPage() {
               </div>
               <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
                 <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[13px] font-semibold text-gray-900">Kênh Video Nguồn (Youtube/TikTok)</h3>
+                  <StatusDot active={!!formData.target_channels} />
+                </div>
+                <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-5`} />
+                
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[13px] font-semibold text-gray-900">FB Access Cookie</h3>
                   <StatusDot active={!!formData.fb_cookie} />
                 </div>
-                <textarea rows={4} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
+                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5`}>
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}

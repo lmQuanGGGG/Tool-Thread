@@ -11,10 +11,6 @@ const { fetchBotConfig, updateUsageStats, logToWeb } = require('./supabase_helpe
 
 puppeteer.use(StealthPlugin());
 
-const CHANNELS = [
-    "https://www.youtube.com/@RvPhim1Phut/shorts",
-    "https://www.youtube.com/@CutReviewPhim/shorts"
-];
 const OUTPUT_DIR = path.resolve(__dirname, 'reels_videos');
 const HISTORY_FILE = path.resolve(__dirname, 'reels_history.json');
 
@@ -37,9 +33,9 @@ if (fs.existsSync(HISTORY_FILE)) {
     } catch (e) { }
 }
 
-async function fetchLatestVideos() {
+async function fetchLatestVideos(channels) {
     let allVideos = [];
-    for (let channel of CHANNELS) {
+    for (let channel of channels) {
         console.log("🔍 Đang quét danh sách Videos từ:", channel);
         try {
             // Tăng số lượng quét lên 50 để tìm được nhiều video chưa đăng
@@ -51,7 +47,14 @@ async function fetchLatestVideos() {
                 if (!line) continue;
                 try {
                     let info = JSON.parse(line);
-                    if (info.id) allVideos.push({ id: info.id, title: info.title });
+                    if (info.id) {
+                        allVideos.push({ 
+                            id: info.id, 
+                            title: info.title, 
+                            url: info.url || info.webpage_url || channel,
+                            isTikTok: channel.includes('tiktok.com') 
+                        });
+                    }
                 } catch (e) { }
             }
         } catch (err) {
@@ -67,8 +70,21 @@ async function fetchLatestVideos() {
     try {
         dbConfig = await fetchBotConfig();
     } catch (e) {}
+    
+    // Đọc danh sách kênh từ DB, nếu không có thì fallback mặc định
+    let channels = [];
+    if (dbConfig?.target_channels) {
+        channels = dbConfig.target_channels.split('\n').map(c => c.trim()).filter(Boolean);
+    }
+    if (channels.length === 0) {
+        channels = [
+            "https://www.youtube.com/@RvPhim1Phut/shorts",
+            "https://www.youtube.com/@CutReviewPhim/shorts"
+        ];
+    }
+    
     const isPromax = dbConfig?.tier === 'promax';
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Khởi động tool YT to FB Reels... Tier: ${dbConfig?.tier}`, 'info');
+    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Khởi động tool FB Reels... Channels: ${channels.length}`, 'info');
 
     const pm2ProcessName = 'fb-reels-farmer';
     const manualFlagPath = path.resolve(__dirname, `${pm2ProcessName}.manual`);
@@ -85,10 +101,10 @@ async function fetchLatestVideos() {
         await delay(randomMinutes * 60 * 1000); // Đổi ra mili-giây
     }
     
-    console.log("🚀 KHỞI ĐỘNG TOOL: YOUTUBE SANG FB REELS (GITHUB ACTIONS)...");
+    console.log("🚀 KHỞI ĐỘNG TOOL: QUÉT VIDEO SANG FB REELS...");
 
     // 1. Lấy danh sách video
-    const videos = await fetchLatestVideos();
+    const videos = await fetchLatestVideos(channels);
     
     // Lọc ra tất cả các video chưa từng tải
     const unpostedVideos = videos.filter(vid => !postedIds.includes(vid.id));
@@ -101,37 +117,45 @@ async function fetchLatestVideos() {
     // Chọn NGẪU NHIÊN 1 video trong danh sách CHƯA TỪNG ĐĂNG
     const videoToProcess = unpostedVideos[Math.floor(Math.random() * unpostedVideos.length)];
 
-
     // 2. Tải video chất lượng cao nhất (Best Quality)
-    console.log(`\n⬇️ Đang tải từ YT: ${videoToProcess.title}`);
+    console.log(`\n⬇️ Đang tải video: ${videoToProcess.title}`);
     const outputPath = path.join(OUTPUT_DIR, `${videoToProcess.id}.mp4`);
 
     try {
-        const videoUrl = `https://www.youtube.com/watch?v=${videoToProcess.id}`;
-        
-        console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho video: ${videoUrl}`);
-        const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
-        const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
-        const jsonResp = JSON.parse(apiResponse);
+        if (videoToProcess.isTikTok) {
+            // Đối với TikTok, yt-dlp hỗ trợ tải trực tiếp không logo chất lượng cao
+            const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : `https://www.tiktok.com/@user/video/${videoToProcess.id}`;
+            console.log(`\n➡️ Dùng yt-dlp để tải TikTok video: ${videoUrl}`);
+            const downloadCmd = `${YTDLP_CMD} -o "${outputPath}" "${videoUrl}"`;
+            execSync(downloadCmd, { stdio: 'inherit' });
+        } else {
+            // Youtube dùng gendownload API để lấy link tải
+            const videoUrl = `https://www.youtube.com/watch?v=${videoToProcess.id}`;
+            
+            console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho Youtube: ${videoUrl}`);
+            const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
+            const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
+            const jsonResp = JSON.parse(apiResponse);
 
-        if (!jsonResp.formats || jsonResp.formats.length === 0) {
-            throw new Error("API gendownload không trả về formats nào.");
+            if (!jsonResp.formats || jsonResp.formats.length === 0) {
+                throw new Error("API gendownload không trả về formats nào.");
+            }
+
+            // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
+            let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
+            if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.label === '720p' && f.type === 'video');
+            if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.type === 'video'); 
+            
+            if (!bestFormat) {
+                throw new Error("Không tìm thấy format video hợp lệ từ API.");
+            }
+
+            console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
+            
+            // Tải file bằng curl (-L để theo dõi redirect, -# để hiện thanh trình diễn)
+            const downloadCmd = `curl -L -# -o "${outputPath}" "${bestFormat.url}"`;
+            execSync(downloadCmd, { stdio: 'inherit' });
         }
-
-        // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
-        let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
-        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.label === '720p' && f.type === 'video');
-        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.type === 'video'); 
-        
-        if (!bestFormat) {
-            throw new Error("Không tìm thấy format video hợp lệ từ API.");
-        }
-
-        console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
-        
-        // Tải file bằng curl (-L để theo dõi redirect, -# để hiện thanh trình diễn)
-        const downloadCmd = `curl -L -# -o "${outputPath}" "${bestFormat.url}"`;
-        execSync(downloadCmd, { stdio: 'inherit' });
     } catch (err) {
         console.error("❌ Lỗi tải video:", err.message);
         process.exit(1);
