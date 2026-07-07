@@ -218,63 +218,6 @@ async function runSinglePost() {
         }
     }
 
-    if (ninjaComment) {
-        await logToWeb(email, 'threads_post', `💬 Đang thêm bình luận chứa Link Affiliate chung vào Thread...`, 'info');
-        const addThreadClicked = await page.evaluate(() => {
-            const divs = Array.from(document.querySelectorAll('div'));
-            const add = divs.find(d => {
-                const t = (d.innerText || '').toLowerCase();
-                return t === 'add to thread' || t === 'thêm vào chuỗi';
-            });
-            if (add) {
-                add.click();
-                return true;
-            }
-            return false;
-        });
-
-        if (addThreadClicked) {
-            await delay(1500);
-            const textInputs = await page.$$(textInput); // Lấy danh sách các ô nhập chữ
-            if (textInputs.length > 1) {
-                await textInputs[textInputs.length - 1].click();
-                await delay(500);
-                const lines = ninjaComment.split('\n');
-                for (let line of lines) {
-                    await page.keyboard.type(line, { delay: 10 });
-                    await page.keyboard.down('Shift');
-                    await page.keyboard.press('Enter');
-                    await page.keyboard.up('Shift');
-                    await delay(100);
-                }
-                await logToWeb(email, 'threads_post', `✍️ Đã gõ xong bình luận Affiliate.`, 'info');
-                await delay(1000);
-            } else {
-                await logToWeb(email, 'threads_post', `⚠️ Không mở được hộp thoại bình luận, sẽ đăng bài không kèm link.`, 'error');
-            }
-        } else {
-            // Backup: Nếu không thấy nút Add to thread (VD do ngôn ngữ khác), ta thử tìm bằng cách lấy tất cả textboxes
-            // Có thể dùng phím Tab 3 lần
-            await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Add to thread. Thử dùng Tab...`, 'info');
-            await page.keyboard.press('Tab');
-            await page.keyboard.press('Tab');
-            await page.keyboard.press('Tab');
-            await page.keyboard.press('Enter');
-            await delay(1500);
-            const textInputs = await page.$$(textInput);
-            if (textInputs.length > 1) {
-                await textInputs[textInputs.length - 1].click();
-                const lines = ninjaComment.split('\n');
-                for (let line of lines) {
-                    await page.keyboard.type(line, { delay: 10 });
-                    await page.keyboard.down('Shift');
-                    await page.keyboard.press('Enter');
-                    await page.keyboard.up('Shift');
-                    await delay(100);
-                }
-            }
-        }
-    }
 
     // Bấm nút Post
     await logToWeb(email, 'threads_post', `🚀 Chuẩn bị ấn nút Đăng...`, 'info');
@@ -304,6 +247,94 @@ async function runSinglePost() {
 
     await delay(10000); // Chờ 10s cho bài đăng lên server hoàn tất
 
+    if (ninjaComment) {
+        await logToWeb(email, 'threads_post', `💬 Đang lấy link trang cá nhân để thả comment...`, 'info');
+        const profileUrl = await page.evaluate(() => {
+            const main = document.querySelector('main');
+            const allLinks = Array.from(document.querySelectorAll('a[href^="/@"]'));
+            const navProfileLink = allLinks.find(a => {
+                if (a.href.includes('/post/')) return false;
+                if (main && main.contains(a)) return false;
+                return true; 
+            });
+            return navProfileLink ? navProfileLink.href : null;
+        });
+
+        if (profileUrl) {
+            await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+            await delay(6000);
+            await logToWeb(email, 'threads_post', `🔎 Đang tìm nút Trả lời của bài đăng đầu tiên...`, 'info');
+
+            const replyBox = await page.evaluate(() => {
+                const svgs = [...document.querySelectorAll('svg')];
+                const replyIcons = svgs.filter(s => {
+                    const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                    return label === 'reply' || label === 'trả lời' || label === 'comment' || label === 'bình luận';
+                });
+                
+                if (replyIcons.length > 0) {
+                    const targetBtn = replyIcons[0]; // BÀI ĐẦU TIÊN
+                    const clickable = targetBtn.closest('div[role="button"], button') || targetBtn;
+                    const rect = clickable.getBoundingClientRect();
+                    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+                }
+                return null;
+            });
+
+            if (replyBox) {
+                await page.mouse.click(replyBox.x + replyBox.width / 2, replyBox.y + replyBox.height / 2);
+                await delay(3000);
+                await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
+                await page.click('div[contenteditable="true"]');
+                
+                const lines = ninjaComment.split('\n');
+                for (let line of lines) {
+                    await page.keyboard.type(line, { delay: 10 });
+                    await page.keyboard.down('Shift');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Shift');
+                    await delay(100);
+                }
+                await delay(2000); // Đợi type xong hẳn
+
+                const cmtPostBox = await page.evaluate(() => {
+                    const dialog = document.querySelector('div[role="dialog"]') || document;
+                    const svgs = Array.from(dialog.querySelectorAll('svg'));
+                    
+                    const submitSvgs = svgs.filter(s => {
+                        const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                        return label === 'câu trả lời' || label === 'reply' || label === 'post' || label === 'đăng';
+                    });
+                    
+                    if (submitSvgs.length > 0) {
+                        for (let i = submitSvgs.length - 1; i >= 0; i--) {
+                            const btn = submitSvgs[i].closest('div[role="button"], button') || submitSvgs[i];
+                            if (btn && !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true') {
+                                const rect = btn.getBoundingClientRect();
+                                return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+                });
+                
+                if (cmtPostBox) {
+                    await page.mouse.click(cmtPostBox.x + cmtPostBox.width / 2, cmtPostBox.y + cmtPostBox.height / 2);
+                } else {
+                    await page.keyboard.down('Meta');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Meta');
+                }
+                await delay(5000); // Chờ post cmt
+                await logToWeb(email, 'threads_post', `✅ Đã thả comment Affiliate thành công!`, 'success');
+            } else {
+                await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
+            }
+        } else {
+            await logToWeb(email, 'threads_post', `⚠️ Không trích xuất được link trang cá nhân từ DOM.`, 'warn');
+        }
+    }
 
 
     await browser.close();
