@@ -412,7 +412,7 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                 await page.keyboard.type(ninjaComment, { delay: 30 });
                 await delay(2000); // Đợi type xong hẳn
 
-                const cmtClicked = await page.evaluate(() => {
+                const postBox = await page.evaluate(() => {
                     const dialog = document.querySelector('div[role="dialog"]') || document;
                     const svgs = Array.from(dialog.querySelectorAll('svg'));
                     
@@ -423,18 +423,21 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                     
                     if (submitSvgs.length > 0) {
                         for (let i = submitSvgs.length - 1; i >= 0; i--) {
-                            const btn = submitSvgs[i].closest('div[role="button"], button');
+                            const btn = submitSvgs[i].closest('div[role="button"], button') || submitSvgs[i];
                             if (btn && !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true') {
-                                btn.click();
-                                return true;
+                                const rect = btn.getBoundingClientRect();
+                                return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
                             }
                         }
                     }
-                    return false;
+                    return null;
                 });
                 
-                if (!cmtClicked) {
-                    console.log("[WARN] Không bấm được nút Đăng comment bằng chuột, thử dùng phím tắt...");
+                if (postBox) {
+                    await page.mouse.click(postBox.x + postBox.width / 2, postBox.y + postBox.height / 2);
+                    console.log('[SUCCESS] Đã bắt được và click nút mũi tên (Send) bằng chuột thật!');
+                } else {
+                    console.log("[WARN] Không tìm thấy tọa độ nút Đăng, thử dùng phím tắt...");
                     await delay(1000);
                     await page.keyboard.down('Meta');
                     await page.keyboard.press('Enter');
@@ -444,8 +447,6 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                     await page.keyboard.press('Enter');
                     await page.keyboard.up('Control');
                     console.log('[INFO] Đã nhồi thêm phím tắt Cmd+Enter/Ctrl+Enter!');
-                } else {
-                    console.log('[SUCCESS] Đã bắt được và click nút mũi tên (Send)!');
                 }
 
                 await delay(15000); // Chờ comment gửi đi lên server (Tăng lên 15s để chắc chắn không ngắt ngang)
