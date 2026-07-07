@@ -1,0 +1,39 @@
+name: Threads Post Single Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Email của user"
+        required: true
+        type: string
+      post_id:
+        description: "ID của bài viết trong bảng crawl_data"
+        required: true
+        type: string
+
+jobs:
+  threads-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚀 Checkout code
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Cài đặt Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: 📦 Cài dependencies
+        run: cd "Tool Thread"/tele_bot && npm install
+
+      - name: 🤖 Chạy Bot Đăng Bài Threads (Single)
+        env:
+          USER_EMAIL: ${{ inputs.email }}
+          POST_ID: ${{ inputs.post_id }}
+          TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          cd "Tool Thread"/tele_bot
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 10_threads_post_single.js
