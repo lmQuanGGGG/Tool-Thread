@@ -42,7 +42,8 @@ async function fetchLatestVideos() {
     for (let channel of CHANNELS) {
         console.log("🔍 Đang quét danh sách Videos từ:", channel);
         try {
-            const cmd = `${YTDLP_CMD} --flat-playlist --dump-json --playlist-end 10 --extractor-args "youtube:player_client=android" "${channel}"`;
+            // Tăng số lượng quét lên 50 để tìm được nhiều video chưa đăng
+            const cmd = `${YTDLP_CMD} --flat-playlist --dump-json --playlist-end 50 --extractor-args "youtube:player_client=android" "${channel}"`;
             const output = execSync(cmd, { encoding: 'utf8' });
 
             const lines = output.trim().split('\n');
@@ -88,19 +89,18 @@ async function fetchLatestVideos() {
 
     // 1. Lấy danh sách video
     const videos = await fetchLatestVideos();
-    let videoToProcess = null;
-
-    for (let vid of videos) {
-        if (!postedIds.includes(vid.id)) {
-            videoToProcess = vid;
-            break; // Chỉ lấy 1 video mới nhất chưa từng đăng
-        }
-    }
-
-    if (!videoToProcess) {
-        console.log("🤷‍♂️ Không có video nào mới. Dừng hệ thống.");
+    
+    // Lọc ra tất cả các video chưa từng tải
+    const unpostedVideos = videos.filter(vid => !postedIds.includes(vid.id));
+    
+    if (unpostedVideos.length === 0) {
+        console.log("🤷‍♂️ Toàn bộ video trong tệp quét đã được đăng. Dừng hệ thống.");
         process.exit(0);
     }
+
+    // Chọn NGẪU NHIÊN 1 video trong danh sách CHƯA TỪNG ĐĂNG
+    const videoToProcess = unpostedVideos[Math.floor(Math.random() * unpostedVideos.length)];
+
 
     // 2. Tải video chất lượng cao nhất (Best Quality)
     console.log(`\n⬇️ Đang tải từ YT: ${videoToProcess.title}`);
