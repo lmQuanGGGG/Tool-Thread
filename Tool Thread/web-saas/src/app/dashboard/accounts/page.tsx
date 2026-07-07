@@ -87,7 +87,10 @@ export default function AccountsPage() {
 
   const pushFbLog = (level: LogEntry["level"], msg: string) => setFbLogs(prev => [...prev, { time: now(), level, msg }]);
   const pushThreadsLog = (level: LogEntry["level"], msg: string) => setThreadsLogs(prev => [...prev, { time: now(), level, msg }]);
-  const pushLog = (level: LogEntry["level"], msg: string) => { pushFbLog(level, msg); pushThreadsLog(level, msg); }; // Broadcast
+  const pushLog = (level: LogEntry["level"], msg: string, target: "fb" | "threads" | "both" = "both") => {
+    if (target === "fb" || target === "both") pushFbLog(level, msg);
+    if (target === "threads" || target === "both") pushThreadsLog(level, msg);
+  };
 
   useEffect(() => { fbLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [fbLogs]);
   useEffect(() => { threadsLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadsLogs]);
@@ -113,8 +116,8 @@ export default function AccountsPage() {
         });
         setParsedLinks(data.parsed_affiliate_links || []);
         pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`);
-        if (data.fb_cookie)      pushLog("INFO", "FB Cookie: Đã cấu hình ✓");
-        if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓");
+        if (data.fb_cookie)      pushLog("INFO", "FB Cookie: Đã cấu hình ✓", "fb");
+        if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓", "threads");
       }
       setLoading(false);
       // Fetch crawl data
@@ -198,12 +201,24 @@ export default function AccountsPage() {
   };
 
   const handleTrigger = async (botType: string) => {
-    if (!userId || !formData.fb_cookie) {
-      pushLog("WARN", "Thiếu FB Cookie! Lưu cookie trước khi chạy Bot.");
+    const isThreads = botType.includes('threads');
+    const target = isThreads ? 'threads' : 'fb';
+
+    if (!userId) {
+      pushLog("WARN", "Chưa đăng nhập!", target);
       return;
     }
+
+    if (isThreads && !formData.threads_cookie) {
+      pushLog("WARN", "Thiếu Threads Cookie! Lưu cookie trước khi chạy Bot.", target);
+      return;
+    } else if (!isThreads && !formData.fb_cookie) {
+      pushLog("WARN", "Thiếu FB Cookie! Lưu cookie trước khi chạy Bot.", target);
+      return;
+    }
+
     setTriggering(true);
-    pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`);
+    pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`, target);
     try {
       const res = await fetch("/api/trigger-bot", {
         method: "POST",
@@ -212,10 +227,10 @@ export default function AccountsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      pushLog("SUCCESS", `Bot [${botType.toUpperCase()}] đã được kích hoạt thành công!`);
-      pushLog("INFO", "Theo dõi tiến trình qua Telegram Bot của bạn.");
+      pushLog("SUCCESS", `Bot [${botType.toUpperCase()}] đã được kích hoạt thành công!`, target);
+      pushLog("INFO", "Theo dõi tiến trình qua Telegram Bot của bạn.", target);
     } catch (e: any) {
-      pushLog("ERROR", e.message || "Kích hoạt thất bại.");
+      pushLog("ERROR", e.message || "Kích hoạt thất bại.", target);
     } finally {
       setTriggering(false);
     }
