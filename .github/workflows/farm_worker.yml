@@ -66,7 +66,7 @@ jobs:
         run: |
           git config --global user.name "Máy Cày Auto [Bot]"
           git config --global user.email "bot@maycay.local"
-          git add -f account_state_1.json
+          git add -f "Tool Thread/tele_bot/account_state_1.json"
           git commit -m "💾 Auto-save trạng thái bài đăng Nick 1" || echo "Không có bài đăng mới, bỏ qua commit"
           # Vòng lặp chống conflict nếu 2 nick push cùng lúc
           for i in 1 2 3 4 5; do
@@ -148,7 +148,7 @@ jobs:
         run: |
           git config --global user.name "Máy Cày Auto [Bot]"
           git config --global user.email "bot@maycay.local"
-          git add -f account_state_3.json
+          git add -f "Tool Thread/tele_bot/account_state_3.json"
           git commit -m "💾 Auto-save trạng thái bài đăng Nick 3 (IG)" || echo "Không có bài đăng mới, bỏ qua commit"
           # Vòng lặp chống conflict nếu nhiều nick push cùng lúc
           for i in 1 2 3 4 5; do
@@ -169,7 +169,7 @@ jobs:
         run: |
           git config --global user.name "Máy Cày Auto [Bot]"
           git config --global user.email "bot@maycay.local"
-          git add -f account_state_2.json
+          git add -f "Tool Thread/tele_bot/account_state_2.json"
           git commit -m "💾 Auto-save trạng thái bài đăng Nick 2" || echo "Không có bài đăng mới, bỏ qua commit"
           # Vòng lặp chống conflict nếu 2 nick push cùng lúc
           for i in 1 2 3 4 5; do

@@ -151,7 +151,7 @@ async function fetchLatestVideos() {
     
     if (!cookies || cookies.length === 0) {
         console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config.");
-        return false;
+        process.exit(1);
     }
     console.log(`🍪 Đã load ${cookies.length} cookies cho Facebook.`);
 
