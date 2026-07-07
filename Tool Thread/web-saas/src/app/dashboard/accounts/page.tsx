@@ -127,6 +127,44 @@ export default function AccountsPage() {
     load();
   }, []);
 
+  // Các hàm quản lý Threads Post Editor
+  const handleUpdatePostText = (id: string, newText: string) => {
+    setThreadsPosts(prev => prev.map(p => p.id === id ? { ...p, text_content: newText } : p));
+  };
+
+  const handleRemovePostImage = (id: string, imgIdx: number) => {
+    setThreadsPosts(prev => prev.map(p => {
+      if (p.id === id) {
+         const newUrls = [...(p.image_urls || [])];
+         newUrls.splice(imgIdx, 1);
+         return { ...p, image_urls: newUrls };
+      }
+      return p;
+    }));
+  };
+
+  const handleSavePost = async (post: any) => {
+    pushLog("INFO", `Đang lưu bài viết...`, "threads");
+    const { error } = await supabase.from('crawl_data').update({
+      text_content: post.text_content,
+      image_urls: post.image_urls
+    }).eq('id', post.id);
+
+    if (error) {
+       pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads");
+       return false;
+    }
+    pushLog("SUCCESS", `Đã lưu bài viết thành công.`, "threads");
+    return true;
+  };
+
+  const handlePostToThreads = async (post: any) => {
+    const saved = await handleSavePost(post);
+    if (saved) {
+      handleTrigger("threads_post_" + post.id);
+    }
+  };
+
   // Lắng nghe log Realtime từ Bot (Github Actions) qua Supabase
   useEffect(() => {
     if (!userEmail) return;
@@ -378,19 +416,35 @@ export default function AccountsPage() {
 
             {/* Module: Crawl Data */}
             <ModuleCard label="Threads Crawl Poster" subtitle={threadsPosts.length + " bài khả dụng"} dotActive={threadsPosts.length > 0}>
-              <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+              <div className="max-h-[350px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
                 {threadsPosts.map((post, i) => (
-                  <div key={post.id} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3">
-                    <p className="text-[11px] text-zinc-300 whitespace-pre-wrap">{post.text_content}</p>
+                  <div key={post.id} className="bg-zinc-950/50 border border-zinc-800/80 rounded-lg p-3">
+                    <textarea 
+                      className="w-full bg-transparent border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded p-1 text-[11px] text-zinc-300 resize-none transition-all outline-none"
+                      rows={5}
+                      value={post.text_content}
+                      onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
+                    />
                     {post.image_urls && post.image_urls.length > 0 && (
-                       <div className="mt-2 flex gap-2 overflow-x-auto">
+                       <div className="mt-2 flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                           {post.image_urls.map((url: string, idx: number) => (
-                             <img key={idx} src={url} className="h-16 rounded object-cover border border-zinc-800" />
+                             <div key={idx} className="relative group shrink-0">
+                               <img src={url} className="h-20 w-auto rounded object-cover border border-zinc-800 transition-all group-hover:opacity-60" />
+                               <button 
+                                  onClick={() => handleRemovePostImage(post.id, idx)}
+                                  className="absolute top-1 right-1 bg-red-500/80 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                               >
+                                 <Trash2 className="w-3 h-3" />
+                               </button>
+                             </div>
                           ))}
                        </div>
                     )}
-                    <div className="mt-3 flex justify-end">
-                      <button onClick={() => handleTrigger("threads_post_" + post.id)} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold px-3 py-1.5 rounded transition-all">
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button onClick={() => handleSavePost(post)} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-[10px] font-bold px-3 py-1.5 rounded transition-all">
+                        Lưu Thay Đổi
+                      </button>
+                      <button onClick={() => handlePostToThreads(post)} className="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-400 text-[10px] font-bold px-4 py-1.5 rounded transition-all">
                         Post To Threads
                       </button>
                     </div>
