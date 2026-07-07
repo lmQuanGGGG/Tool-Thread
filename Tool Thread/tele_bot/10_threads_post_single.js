@@ -185,29 +185,31 @@ async function runSinglePost() {
       process.exit(1);
     }
 
+    // Tải ảnh trước khi gõ text (để tiết kiệm thời gian chờ trên giao diện)
+    let downloadedImages = [];
+    if (postData.image_urls && postData.image_urls.length > 0) {
+      await logToWeb(email, 'threads_post', `🖼️ Đang tải ${postData.image_urls.length} ảnh xuống máy chủ...`, 'info');
+      // Tải song song tất cả các ảnh cùng lúc
+      const downloadPromises = postData.image_urls.map(url => downloadImageFromUrl(url));
+      const results = await Promise.all(downloadPromises);
+      downloadedImages = results.filter(p => p !== null);
+    }
+
     const postText = postData.text_content || '';
     await page.click(textInput);
     await delay(500);
     await page.keyboard.type(postText, { delay: 10 });
     await logToWeb(email, 'threads_post', `✍️ Đã gõ xong nội dung chữ.`, 'info');
 
-    // Tải & đính kèm ảnh
-    let downloadedImages = [];
-    if (postData.image_urls && postData.image_urls.length > 0) {
-      await logToWeb(email, 'threads_post', `🖼️ Đang tải ${postData.image_urls.length} ảnh xuống máy chủ...`, 'info');
-      for (const url of postData.image_urls) {
-        const p = await downloadImageFromUrl(url);
-        if (p) downloadedImages.push(p);
-      }
-
-      if (downloadedImages.length > 0) {
-        await logToWeb(email, 'threads_post', `📎 Đang đính kèm ${downloadedImages.length} ảnh vào bài...`, 'info');
-        const [chooser] = await Promise.all([
-            page.waitForFileChooser({ timeout: 10000 }),
-            page.evaluate(() => {
-                const attachBtn = document.querySelector('svg[aria-label="Attach media"], svg[aria-label="Đính kèm phương tiện"]');
-                if (attachBtn) attachBtn.closest('[role="button"]').click();
-                else document.querySelector('input[type="file"]')?.click();
+    // Đính kèm ảnh
+    if (downloadedImages.length > 0) {
+      await logToWeb(email, 'threads_post', `📎 Đang đính kèm ${downloadedImages.length} ảnh vào bài...`, 'info');
+      const [chooser] = await Promise.all([
+          page.waitForFileChooser({ timeout: 10000 }),
+          page.evaluate(() => {
+              const attachBtn = document.querySelector('svg[aria-label="Attach media"], svg[aria-label="Đính kèm phương tiện"]');
+              if (attachBtn) attachBtn.closest('[role="button"]').click();
+              else document.querySelector('input[type="file"]')?.click();
             })
         ]);
         if (chooser) {
