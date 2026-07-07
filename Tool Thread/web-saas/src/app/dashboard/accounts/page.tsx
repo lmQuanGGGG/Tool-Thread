@@ -54,7 +54,7 @@ function ModuleCard({
   label, subtitle, dotActive, children
 }: { label: string; subtitle: string; dotActive: boolean; children: React.ReactNode }) {
   return (
-    <div className="bg-zinc-900/80 border border-zinc-700/60 rounded-2xl p-5 backdrop-blur-sm hover:border-zinc-600/80 transition-all">
+    <div className="glass-panel rounded-2xl p-6 transition-all hover:border-zinc-600/80 group">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <StatusDot active={dotActive} />
@@ -310,7 +310,9 @@ export default function AccountsPage() {
 
   return (
     /* Dark full-page wrapper — fit viewport */
-    <div className="h-screen bg-zinc-950 flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#050505] flex flex-col overflow-hidden relative">
+      <div className="bg-ambient-blob w-[500px] h-[500px] bg-emerald-500/10 rounded-full top-[-200px] left-[-200px]" />
+      <div className="bg-ambient-blob w-[600px] h-[600px] bg-blue-500/10 rounded-full bottom-[-100px] right-[-200px]" style={{animationDelay: "5s"}} />
       {/* ── TITLE BAR ── */}
       <div className="flex shrink-0 items-center justify-between px-6 py-4 border-b border-zinc-800/80 bg-zinc-900/60 z-10">
         <div className="flex items-center gap-3">
@@ -346,8 +348,8 @@ export default function AccountsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <ModuleCard label="Affiliate Link Pool" subtitle={"Giới hạn theo Tier"} dotActive={formData.affiliate_links.length > 0}>
-                <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-3" />
-                <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 w-fit">
+                <textarea rows={3} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className="w-full glass-input rounded-xl p-3 text-[11px] font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-all mb-3" />
+                <button onClick={() => handleTrigger("parse_links")} disabled={triggering || formData.affiliate_links.length === 0} className="flex items-center gap-2 btn-premium bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/50 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 hover:shadow-[0_0_15px_rgba(var(--color-amber-500),0.2)] w-fit">
                   {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                   Đồng bộ Tên & Sinh AI Comment
                 </button>
@@ -373,7 +375,7 @@ export default function AccountsPage() {
             
             <div className="lg:col-span-1">
               <ModuleCard label="Telegram Notify" subtitle="Real-time alerts" dotActive={!!formData.tele_chat_id}>
-                <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all" />
+                <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className="w-full glass-input rounded-xl p-3 text-[11px] font-mono text-sky-300 placeholder:text-zinc-600 focus:outline-none focus:border-sky-500/50 transition-all" />
               </ModuleCard>
             </div>
           </div>
@@ -383,16 +385,16 @@ export default function AccountsPage() {
             {/* Left Col: Core Engines */}
             <div className="space-y-6">
               <ModuleCard label="FB Reels Engine" subtitle="Bypass Cookie Auth v2.0" dotActive={!!formData.fb_cookie}>
-                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all mb-3" />
+                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className="w-full glass-input rounded-xl p-3 text-[11px] font-mono text-emerald-300 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none transition-all mb-3" />
                 {formData.fb_cookie && (
                   <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.5)]" /><span className="font-mono text-[10px] text-emerald-400">Cookie loaded — Ready to deploy</span></div>
                 )}
                 <div className="flex flex-wrap gap-2.5">
-                  <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                  <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 btn-premium bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/50 text-emerald-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 hover:shadow-[0_0_15px_rgba(var(--color-emerald-500),0.2)]">
                     {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                     Run FB Reels
                   </button>
-                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 text-purple-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className="flex items-center gap-2 btn-premium bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/50 text-purple-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 hover:shadow-[0_0_15px_rgba(var(--color-purple-500),0.2)]">
                     {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
                     Run FB Auto Comment
                   </button>
@@ -400,12 +402,12 @@ export default function AccountsPage() {
               </ModuleCard>
 
               <ModuleCard label="Threads AI Commenter" subtitle="Simulate Authentic Discourse" dotActive={!!formData.threads_cookie}>
-                <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all mb-3" />
+                <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className="w-full glass-input rounded-xl p-3 text-[11px] font-mono text-blue-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none transition-all mb-3" />
                 {formData.threads_cookie && (
                   <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-1.5 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]" /><span className="font-mono text-[10px] text-blue-400">Threads auth — Connected</span></div>
                 )}
                 <div className="flex flex-wrap gap-2.5">
-                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 text-blue-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40">
+                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className="flex items-center gap-2 btn-premium bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/50 text-blue-400 font-mono font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-full transition-all disabled:opacity-40 hover:shadow-[0_0_15px_rgba(var(--color-blue-500),0.2)]">
                     {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                     Run Threads Comment Bot
                   </button>
@@ -418,7 +420,7 @@ export default function AccountsPage() {
               <ModuleCard label="Threads Crawl Poster" subtitle={threadsPosts.length + " bài khả dụng"} dotActive={threadsPosts.length > 0}>
                 <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
                   {threadsPosts.map((post, i) => (
-                    <div key={post.id} className="bg-zinc-950/40 border border-zinc-800/80 hover:border-zinc-700/80 rounded-xl p-4 relative group/post transition-colors">
+                    <div key={post.id} className="glass-panel !bg-black/20 hover:!bg-black/40 rounded-xl p-4 relative group/post transition-colors">
                       <button 
                           onClick={() => handleDeletePost(post.id)}
                           className="absolute top-3 right-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10"
@@ -428,7 +430,7 @@ export default function AccountsPage() {
                       </button>
 
                       <textarea 
-                        className="w-full bg-zinc-900/30 border border-transparent focus:border-zinc-700 hover:border-zinc-800 rounded-lg p-3 pr-10 text-[12px] text-zinc-300 resize-none transition-all outline-none leading-relaxed"
+                        className="w-full glass-input rounded-lg p-3 pr-10 text-[12px] text-zinc-300 resize-none transition-all outline-none leading-relaxed"
                         rows={4}
                         value={post.text_content}
                         onChange={(e) => handleUpdatePostText(post.id, e.target.value)}
@@ -449,10 +451,10 @@ export default function AccountsPage() {
                          </div>
                       )}
                       <div className="mt-4 flex justify-end gap-3 border-t border-zinc-800/60 pt-4">
-                        <button onClick={() => handleSavePost(post)} className="bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold px-4 py-2 rounded-lg transition-all">
+                        <button onClick={() => handleSavePost(post)} className="btn-premium bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 text-[11px] font-bold px-4 py-2 rounded-lg transition-all">
                           Lưu Thay Đổi
                         </button>
-                        <button onClick={() => handlePostToThreads(post)} className="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-400 text-[11px] font-bold px-5 py-2 rounded-lg transition-all">
+                        <button onClick={() => handlePostToThreads(post)} className="btn-premium bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/50 text-blue-400 text-[11px] font-bold px-5 py-2 rounded-lg transition-all shadow-[0_0_10px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]">
                           Post To Threads
                         </button>
                       </div>
