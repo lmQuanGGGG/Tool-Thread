@@ -46,6 +46,7 @@ async function uploadToTelegram(imageUrl, chatId) {
         if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size < 100) return null;
         
         const form = new FormData();
+        if (!chatId) chatId = process.env.TELE_CHAT_ID || '-5396355060';
         form.append('chat_id', chatId);
         form.append('photo', fs.createReadStream(tempFile));
         
