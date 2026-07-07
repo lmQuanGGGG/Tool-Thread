@@ -247,47 +247,50 @@ async function runSinglePost() {
             });
 
             if (replied) {
+                console.log("[INFO] Đã click mở hộp thoại Reply...");
                 await delay(3000);
                 await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
                 await page.click('div[contenteditable="true"]');
                 await page.keyboard.type(ninjaComment, { delay: 30 });
                 await delay(2000);
 
-                const replyBtnRect = await page.evaluate(() => {
-                    const activeEl = document.activeElement;
-                    if (!activeEl) return null;
-                    let container = activeEl.parentElement;
-                    for (let i = 0; i < 6; i++) {
-                        if (!container) break;
-                        const btns = [...container.querySelectorAll('div[role="button"]')];
-                        const iconBtns = btns.filter(b => b.querySelector('svg'));
-                        if (iconBtns.length > 0) {
-                            const btn = iconBtns[iconBtns.length - 1];
-                            const rect = btn.getBoundingClientRect();
-                            if (rect.width > 0 && rect.height > 0) {
-                                return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                const cmtClicked = await page.evaluate(() => {
+                    const dialog = document.querySelector('div[role="dialog"]') || document;
+                    const svgs = Array.from(dialog.querySelectorAll('svg'));
+                    
+                    const submitSvgs = svgs.filter(s => {
+                        const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                        return label === 'câu trả lời' || label === 'reply' || label === 'post' || label === 'đăng';
+                    });
+                    
+                    if (submitSvgs.length > 0) {
+                        // Thử click từ dưới lên trên (vì nút gửi thường nằm cuối form)
+                        for (let i = submitSvgs.length - 1; i >= 0; i--) {
+                            const btn = submitSvgs[i].closest('div[role="button"], button');
+                            if (btn && !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true') {
+                                btn.click();
+                                return true;
                             }
                         }
-                        container = container.parentElement;
                     }
-                    return null;
+                    return false;
                 });
                 
-                if (replyBtnRect) {
-                    await page.mouse.click(replyBtnRect.x, replyBtnRect.y);
+                if (!cmtClicked) {
+                    console.log("[WARN] Không bấm được nút Đăng comment bằng chuột, thử dùng phím tắt...");
+                    await page.keyboard.down('Meta');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Meta');
+                    await page.keyboard.down('Control');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Control');
                 }
                 
-                await delay(1000);
-                await page.keyboard.down('Meta');
-                await page.keyboard.press('Enter');
-                await page.keyboard.up('Meta');
-                await page.keyboard.down('Control');
-                await page.keyboard.press('Enter');
-                await page.keyboard.up('Control');
-                
                 await delay(15000); // Chờ post cmt
+                console.log("✅ Đã thả comment Affiliate thành công!");
                 await logToWeb(email, 'threads_post', `✅ Đã thả comment Affiliate thành công!`, 'success');
             } else {
+                console.log("⚠️ Không tìm thấy nút Reply để thả comment.");
                 await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
             }
         } catch (e) {

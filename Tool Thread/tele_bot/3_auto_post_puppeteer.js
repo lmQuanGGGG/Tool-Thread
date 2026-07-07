@@ -412,49 +412,42 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
                 await page.keyboard.type(ninjaComment, { delay: 30 });
                 await delay(2000); // Đợi type xong hẳn
 
-                // Click nút mũi tên (Đăng/Send) dựa vào vị trí của ô nhập liệu (activeElement)
-                const replyBtnRect = await page.evaluate(() => {
-                    const activeEl = document.activeElement;
-                    if (!activeEl) return null;
+                const cmtClicked = await page.evaluate(() => {
+                    const dialog = document.querySelector('div[role="dialog"]') || document;
+                    const svgs = Array.from(dialog.querySelectorAll('svg'));
                     
-                    // Dò ngược lên các thẻ cha (khung reply) để tìm nút Send
-                    let container = activeEl.parentElement;
-                    for (let i = 0; i < 6; i++) {
-                        if (!container) break;
-                        const btns = [...container.querySelectorAll('div[role="button"]')];
-                        // Lọc các nút chứa SVG (Expand và Send)
-                        const iconBtns = btns.filter(b => b.querySelector('svg'));
-                        if (iconBtns.length > 0) {
-                            // Nút Send luôn là nút nằm ngoài cùng bên phải (cuối danh sách)
-                            const btn = iconBtns[iconBtns.length - 1];
-                            const rect = btn.getBoundingClientRect();
-                            if (rect.width > 0 && rect.height > 0) {
-                                return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                    const submitSvgs = svgs.filter(s => {
+                        const label = (s.getAttribute('aria-label') || '').toLowerCase();
+                        return label === 'câu trả lời' || label === 'reply' || label === 'post' || label === 'đăng';
+                    });
+                    
+                    if (submitSvgs.length > 0) {
+                        for (let i = submitSvgs.length - 1; i >= 0; i--) {
+                            const btn = submitSvgs[i].closest('div[role="button"], button');
+                            if (btn && !btn.hasAttribute('disabled') && btn.getAttribute('aria-disabled') !== 'true') {
+                                btn.click();
+                                return true;
                             }
                         }
-                        container = container.parentElement;
                     }
-                    return null;
+                    return false;
                 });
                 
-                if (replyBtnRect) {
-                    await page.mouse.click(replyBtnRect.x, replyBtnRect.y);
-                    console.log('[SUCCESS] Đã bắt được toạ độ và click nút mũi tên (Send)!');
+                if (!cmtClicked) {
+                    console.log("[WARN] Không bấm được nút Đăng comment bằng chuột, thử dùng phím tắt...");
+                    await delay(1000);
+                    await page.keyboard.down('Meta');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Meta');
+                    
+                    await page.keyboard.down('Control');
+                    await page.keyboard.press('Enter');
+                    await page.keyboard.up('Control');
+                    console.log('[INFO] Đã nhồi thêm phím tắt Cmd+Enter/Ctrl+Enter!');
                 } else {
-                    console.log('[WARN] Không tìm thấy toạ độ nút mũi tên Send, dùng phím tắt Cmd+Enter...');
+                    console.log('[SUCCESS] Đã bắt được và click nút mũi tên (Send)!');
                 }
 
-                // Dùng phím tắt Cmd+Enter (Mac) hoặc Ctrl+Enter (Win) làm phương án BẢO HIỂM
-                await delay(1000);
-                await page.keyboard.down('Meta');
-                await page.keyboard.press('Enter');
-                await page.keyboard.up('Meta');
-                
-                await page.keyboard.down('Control');
-                await page.keyboard.press('Enter');
-                await page.keyboard.up('Control');
-                
-                console.log('[INFO] Đã nhồi thêm phím tắt Cmd+Enter/Ctrl+Enter!');
                 await delay(15000); // Chờ comment gửi đi lên server (Tăng lên 15s để chắc chắn không ngắt ngang)
             } else {
                 console.log('[WARN] Không tìm thấy nút Reply (icon bong bóng) dưới bài viết!');
