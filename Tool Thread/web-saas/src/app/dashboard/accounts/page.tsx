@@ -195,11 +195,26 @@ export default function AccountsPage() {
     const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 1; };
     const maxLinks = getMaxLinks(userTier);
     const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
-    if (linkCount > maxLinks) { pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói!`); return; }
+    if (linkCount > maxLinks) { 
+        alert(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
+        pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global"); 
+        return; 
+    }
     setSaving(true);
     pushLog("INFO", "Đang lưu cấu hình...", "global");
+    pushLog("INFO", "Đang lưu cấu hình...", "fb");
+    pushLog("INFO", "Đang lưu cấu hình...", "threads");
+    
     const { error } = await supabase.from("profiles").update(formData).eq("id", userId);
-    if (error) { pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global"); } else { pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global"); }
+    if (error) { 
+        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global");
+        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "fb");
+        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "threads");
+    } else { 
+        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global"); 
+        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "fb"); 
+        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "threads"); 
+    }
     setSaving(false);
   };
 
