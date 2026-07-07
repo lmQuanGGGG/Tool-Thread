@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { 
-  Send, Bot, User, Shield, Terminal, Zap, RefreshCw, BarChart2, 
+  Send, Bot, User, Shield, Terminal, Zap, RefreshCw, BarChart2,
   Layers, MessageSquare, Play, CheckCircle, AlertTriangle, Cpu
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { supabase } from "../../utils/supabase";
+import { supabase } from "../utils/supabase";
 
 interface LogMessage {
   id: string;
