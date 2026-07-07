@@ -511,6 +511,12 @@ async function runFarm() {
 
     console.log(`📌 Đã bốc bài ID: ${selectedPost.post_id}`);
 
+    // Kéo cấu hình từ Supabase
+    let dbConfig = null;
+    try {
+        dbConfig = await fetchBotConfig();
+    } catch (e) {}
+
     // Chuẩn bị Text và Ninja Comment
     let postText = selectedPost.content.text || '';
     let isNinjaLink = false;
@@ -522,11 +528,23 @@ async function runFarm() {
     if (NICHE === 'quanao' && fashionDays.includes(day)) {
         postText += `\n\n${FASHION_DAY_LINKS[day]}`;
     }
+
     // === Ninja Comment Logic — tự động thả link xuống comment bài vừa đăng ===
-    // — Nick Drama: từ Ngày 14, pool = 30 link (17 drama + 13 uyên)
-    // — Nick Uyên: từ Ngày 20, pool = 13 link affiliate gốc
-    const ninjaThreshold = NICHE === 'drama' ? 14 : 20;
-    if (day >= ninjaThreshold && allProducts.length > 0) {
+    if (dbConfig?.affiliate_links_arr && dbConfig.affiliate_links_arr.length > 0) {
+        const catchphrases = [
+            "Cái này xài thích lắm á mn, tui ưng xỉu:",
+            "Mấy bà ơi gom lẹ deal này nha, xài bao êm:",
+            "Ai chưa thử cái này thì thử liền đi, khum hối hận đâu:",
+            "Eo ôi ưng cái bụng ghê, để lại link cho bà nào cần nè:",
+            "Góc rắc thính: Món này dạo này tui mê cực kì:",
+            "Hôm bữa ai hỏi tui xài gì thì link đây nha:",
+            "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"
+        ];
+        let randomThinh = catchphrases[Math.floor(Math.random() * catchphrases.length)];
+        let randomLink = dbConfig.affiliate_links_arr[Math.floor(Math.random() * dbConfig.affiliate_links_arr.length)];
+        isNinjaLink = true;
+        ninjaComment = `👉 ${randomThinh} ${randomLink}`;
+    } else if (allProducts.length > 0) {
         const pickedProduct = getRandomProductComment(NICHE);
         if (pickedProduct) {
             isNinjaLink = true;
@@ -559,11 +577,6 @@ async function runFarm() {
     }
 
     // PUPPETEER
-    // Kéo cấu hình từ Supabase
-    let dbConfig = null;
-    try {
-        dbConfig = await fetchBotConfig();
-    } catch (e) {}
 
     const cookieString = dbConfig?.threads_cookie || process.env[`COOKIE_ACC${NICK_INDEX}`];
 
