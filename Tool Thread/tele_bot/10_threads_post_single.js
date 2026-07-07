@@ -1,5 +1,29 @@
 require('dotenv').config();
 const { supabase, logToWeb } = require('./supabase_helper');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function downloadImageFromUrl(url) {
+    try {
+        const response = await axios({ url, method: 'GET', responseType: 'stream' });
+        const localPath = path.resolve(__dirname, `temp_th_single_${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`);
+        const writer = fs.createWriteStream(localPath);
+        response.data.pipe(writer);
+        return new Promise((resolve, reject) => {
+            writer.on('finish', () => resolve(localPath));
+            writer.on('error', reject);
+        });
+    } catch (error) {
+        console.error('[ERROR] Lỗi tải ảnh từ URL:', error.message);
+        return null;
+    }
+}
 
 async function runSinglePost() {
   const email = process.env.USER_EMAIL || 'admin@autofarm.com';
@@ -31,10 +55,166 @@ async function runSinglePost() {
     console.log(`✅ Đã lấy thành công nội dung bài viết: ${postData.post_id}`);
     await logToWeb(email, 'threads_post', `✅ Đã lấy nội dung chuẩn bị đăng...`, 'info');
 
-    // 2. Thực thi đăng bài bằng Puppeteer (Tạm thời giả lập thành công để sếp thấy luồng chạy)
-    // Sếp có thể copy hàm postToThreads từ 3_auto_post_puppeteer.js sang đây nhé.
+    // 1.5 Lấy cookie của user
+    const { data: profileData, error: profileErr } = await supabase
+      .from('profiles')
+      .select('threads_cookie')
+      .eq('email', email)
+      .single();
+
+    if (profileErr || !profileData?.threads_cookie) {
+      console.error("❌ Lỗi lấy Cookie:", profileErr?.message);
+      await logToWeb(email, 'threads_post', `❌ Không tìm thấy Threads Cookie. Vui lòng cập nhật trên Web.`, 'error');
+      process.exit(1);
+    }
+
     console.log("⏳ Đang gọi Puppeteer mở Chrome ẩn danh và đăng bài...");
-    await new Promise(r => setTimeout(r, 5000)); // Giả lập chờ 5 giây
+    await logToWeb(email, 'threads_post', `⏳ Khởi động Chrome ẩn danh...`, 'info');
+
+    // Parse Cookies
+    let cookies = [];
+    try {
+      const raw = JSON.parse(profileData.threads_cookie);
+      let c = { ...raw };
+      if (c.sameSite === 'no_restriction') c.sameSite = 'None';
+      delete c.storeId; delete c.id; delete c.hostOnly; delete c.session;
+      cookies.push({ ...c, domain: '.instagram.com' });
+      cookies.push({ ...c, domain: '.threads.net' });
+      cookies.push({ ...c, domain: '.threads.com' });
+    } catch (e) {
+      console.log("Cookie có thể là mảng...");
+      try {
+        const rawArr = JSON.parse(profileData.threads_cookie);
+        if (Array.isArray(rawArr)) {
+          cookies = rawArr;
+        }
+      } catch (err) {
+        await logToWeb(email, 'threads_post', `❌ Lỗi định dạng Cookie.`, 'error');
+        process.exit(1);
+      }
+    }
+
+    // 2. Thực thi đăng bài bằng Puppeteer
+    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setCookie(...cookies);
+
+    console.log('[INFO] Đang mở Threads...');
+    await page.goto('https://www.threads.net/', { waitUntil: 'networkidle2', timeout: 30000 });
+    await delay(3000);
+
+    // Kiểm tra đăng nhập
+    if (page.url().includes('login')) {
+      await logToWeb(email, 'threads_post', `❌ Cookie hết hạn hoặc không hợp lệ (Bị đẩy ra Login)`, 'error');
+      await browser.close();
+      process.exit(1);
+    }
+
+    // Click nút Viết bài
+    await logToWeb(email, 'threads_post', `✏️ Đang click nút Viết bài...`, 'info');
+    const writeClicked = await page.evaluate(() => {
+        const nav = document.querySelector('nav') || document.body;
+        const btns = [...nav.querySelectorAll('div[role="button"], a, svg')];
+        const writeBtn = btns.find(b => {
+            const label = (b.getAttribute('aria-label') || '').toLowerCase();
+            return label === 'write' || label === 'tạo' || label === 'create' || label === 'new thread';
+        });
+        if (writeBtn) {
+            (writeBtn.closest('[role="button"]') || writeBtn).click();
+            return true;
+        }
+        return false;
+    });
+
+    if (!writeClicked) {
+      await logToWeb(email, 'threads_post', `❌ Không tìm thấy nút Tạo bài!`, 'error');
+      await page.screenshot({ path: `debug_single_err_${Date.now()}.png`});
+      await browser.close();
+      process.exit(1);
+    }
+    await delay(3000);
+
+    // Điền text
+    const textSelectors = [
+        'div[contenteditable="true"][role="textbox"]',
+        'p[data-lexical-editor="true"]',
+        'div[data-lexical-editor="true"]',
+    ];
+    let textInput = null;
+    for (const sel of textSelectors) {
+        try { await page.waitForSelector(sel, { timeout: 3000 }); textInput = sel; break; } catch (e) {}
+    }
+    
+    if (!textInput) {
+      await logToWeb(email, 'threads_post', `❌ Không tìm thấy ô nhập nội dung!`, 'error');
+      await browser.close();
+      process.exit(1);
+    }
+
+    const postText = postData.text_content || '';
+    await page.click(textInput);
+    await delay(500);
+    await page.keyboard.type(postText, { delay: 10 });
+    await logToWeb(email, 'threads_post', `✍️ Đã gõ xong nội dung chữ.`, 'info');
+
+    // Tải & đính kèm ảnh
+    let downloadedImages = [];
+    if (postData.image_urls && postData.image_urls.length > 0) {
+      await logToWeb(email, 'threads_post', `🖼️ Đang tải ${postData.image_urls.length} ảnh xuống máy chủ...`, 'info');
+      for (const url of postData.image_urls) {
+        const p = await downloadImageFromUrl(url);
+        if (p) downloadedImages.push(p);
+      }
+
+      if (downloadedImages.length > 0) {
+        await logToWeb(email, 'threads_post', `📎 Đang đính kèm ${downloadedImages.length} ảnh vào bài...`, 'info');
+        const [chooser] = await Promise.all([
+            page.waitForFileChooser({ timeout: 10000 }),
+            page.evaluate(() => {
+                const attachBtn = document.querySelector('svg[aria-label="Attach media"], svg[aria-label="Đính kèm phương tiện"]');
+                if (attachBtn) attachBtn.closest('[role="button"]').click();
+                else document.querySelector('input[type="file"]')?.click();
+            })
+        ]);
+        if (chooser) {
+            await chooser.accept(downloadedImages.slice(0,9));
+            await delay(4000); // Chờ load ảnh
+        }
+      }
+    }
+
+    // Bấm nút Post
+    await logToWeb(email, 'threads_post', `🚀 Chuẩn bị ấn nút Đăng...`, 'info');
+    await delay(1000);
+    const postClicked = await page.evaluate(() => {
+        const dialog = document.querySelector('div[role="dialog"]') || document;
+        const btns = [...dialog.querySelectorAll('div[role="button"], button')];
+        const postBtns = btns.filter(b => {
+            const t = b.innerText?.trim();
+            return t === 'Post' || t === 'Đăng';
+        });
+        if (postBtns.length > 0) {
+            const postBtn = postBtns[postBtns.length - 1];
+            if (postBtn.hasAttribute('disabled') || postBtn.getAttribute('aria-disabled') === 'true') return false;
+            postBtn.click();
+            return true;
+        }
+        return false;
+    });
+
+    if (!postClicked) {
+      await logToWeb(email, 'threads_post', `❌ Nút Post bị vô hiệu hóa hoặc không tìm thấy!`, 'error');
+      await page.screenshot({ path: `debug_single_err_post_${Date.now()}.png`});
+      await browser.close();
+      process.exit(1);
+    }
+
+    await delay(8000); // Chờ Threads xử lý đăng bài
+    await browser.close();
+    
+    // Dọn dẹp ảnh tạm
+    downloadedImages.forEach(p => { if(fs.existsSync(p)) fs.unlinkSync(p); });
 
     // 3. Cập nhật trạng thái
     const { error: updateErr } = await supabase
