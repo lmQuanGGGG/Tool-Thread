@@ -338,17 +338,15 @@ async function postToThreads(page, postText, imagePaths, day, NICHE, FASHION_DAY
         
         console.log('[INFO] Đang lấy link Trang cá nhân từ thanh điều hướng để đi về...');
         const profileUrl = await page.evaluate(() => {
-            const main = document.querySelector('main'); // Bảng tin luôn nằm trong <main>
-            const allLinks = [...document.querySelectorAll('a[href^="/@"]')];
+            const main = document.querySelector('main');
+            const allLinks = Array.from(document.querySelectorAll('a[href^="/@"]'));
             
+            // Tìm thẻ <a> trỏ tới profile (không chứa /post/ và không nằm trong khu vực main feed)
             const navProfileLink = allLinks.find(a => {
-                // Tuyệt đối không lấy bất kỳ nút nào nằm trong bảng tin
+                if (a.href.includes('/post/')) return false;
                 if (main && main.contains(a)) return false;
-                
-                const label = (a.getAttribute('aria-label') || '').toLowerCase();
-                return label === 'profile' || label === 'trang cá nhân';
+                return true; // Đây chắc chắn là link tới trang cá nhân trên sidebar!
             });
-            
             return navProfileLink ? navProfileLink.href : null;
         });
 
@@ -525,12 +523,12 @@ async function runFarm() {
     }
 
     // === Ninja Comment Logic — tự động thả link xuống comment bài vừa đăng ===
-    if (dbConfig?.affiliate_links_arr && dbConfig.affiliate_links_arr.length > 0) {
+    if (dbConfig?.parsed_affiliate_links && dbConfig.parsed_affiliate_links.length > 0) {
         const catchphrases = [
             "Cái này xài thích lắm á mn, tui ưng xỉu:",
             "Mấy bà ơi gom lẹ deal này nha, xài bao êm:",
             "Ai chưa thử cái này thì thử liền đi, khum hối hận đâu:",
-            "Eo ôi ưng cái bụng ghê, để lại link cho bà nào cần nè:",
+            "Eo ôi ưng the bụng ghê, để lại link cho bà nào cần nè:",
             "Góc rắc thính: Món này dạo này tui mê cực kì:",
             "Hôm bữa ai hỏi tui xài gì thì link đây nha:",
             "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"

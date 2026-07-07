@@ -58,7 +58,7 @@ async function runSinglePost() {
     // 1.5 Lấy cookie và link affiliate của user
     const { data: profileData, error: profileErr } = await supabase
       .from('profiles')
-      .select('threads_cookie, affiliate_links')
+      .select('threads_cookie, parsed_affiliate_links')
       .eq('email', email)
       .single();
 
@@ -72,8 +72,20 @@ async function runSinglePost() {
     await logToWeb(email, 'threads_post', `⏳ Khởi động Chrome ẩn danh...`, 'info');
 
     let ninjaComment = '';
-    const affiliateLinks = (profileData.affiliate_links || '').split('\n').map(l => l.trim()).filter(Boolean);
-    if (affiliateLinks.length > 0) {
+    
+    // Ưu tiên lấy data cào từ DB của user, nếu chưa có thì lấy tạm data gốc mẫu
+    let products = profileData?.parsed_affiliate_links || [];
+    if (products.length === 0) {
+        const productsPath = path.resolve(__dirname, 'fb_bot', 'shopee_data.json');
+        if (fs.existsSync(productsPath)) {
+            products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+        }
+    }
+
+    let validProducts = products.filter(p => p.tele_file_id && (p.suggested_comment || p.title));
+    
+    if (validProducts.length > 0) {
+        let pickedProduct = validProducts[Math.floor(Math.random() * validProducts.length)];
         const catchphrases = [
             "Cái này xài thích lắm á mn, tui ưng xỉu:",
             "Mấy bà ơi gom lẹ deal này nha, xài bao êm:",
@@ -84,8 +96,8 @@ async function runSinglePost() {
             "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"
         ];
         let randomThinh = catchphrases[Math.floor(Math.random() * catchphrases.length)];
-        let randomLink = affiliateLinks[Math.floor(Math.random() * affiliateLinks.length)];
-        ninjaComment = `👉 ${randomThinh} ${randomLink}`;
+        // Gộp nội dung y chang như pm2 bot
+        ninjaComment = `✨ ${pickedProduct.title}\n\n👉 ${randomThinh} ${pickedProduct.aff_link}`;
     }
 
     // Parse Cookies
@@ -241,12 +253,16 @@ async function runSinglePost() {
         await logToWeb(email, 'threads_post', `💬 Đang thả comment chứa link Affiliate...`, 'info');
         
         try {
-            // Lấy link trang cá nhân (Profile)
+            // Lấy link trang cá nhân (Profile) từ thanh điều hướng bên trái
             const profileUrl = await page.evaluate(() => {
-                const allLinks = [...document.querySelectorAll('a[href^="/@"]')];
+                const main = document.querySelector('main');
+                const allLinks = Array.from(document.querySelectorAll('a[href^="/@"]'));
+                
+                // Tìm thẻ <a> trỏ tới profile (không chứa /post/ và không nằm trong khu vực main feed)
                 const navProfileLink = allLinks.find(a => {
-                    const label = (a.getAttribute('aria-label') || '').toLowerCase();
-                    return label === 'profile' || label === 'trang cá nhân';
+                    if (a.href.includes('/post/')) return false;
+                    if (main && main.contains(a)) return false;
+                    return true; // Đây chắc chắn là link tới trang cá nhân trên sidebar!
                 });
                 return navProfileLink ? navProfileLink.href : null;
             });
