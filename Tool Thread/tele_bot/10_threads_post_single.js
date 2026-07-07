@@ -74,24 +74,25 @@ async function runSinglePost() {
     // Parse Cookies
     let cookies = [];
     try {
-      const raw = JSON.parse(profileData.threads_cookie);
-      let c = { ...raw };
-      if (c.sameSite === 'no_restriction') c.sameSite = 'None';
-      delete c.storeId; delete c.id; delete c.hostOnly; delete c.session;
-      cookies.push({ ...c, domain: '.instagram.com' });
-      cookies.push({ ...c, domain: '.threads.net' });
-      cookies.push({ ...c, domain: '.threads.com' });
-    } catch (e) {
-      console.log("Cookie có thể là mảng...");
-      try {
-        const rawArr = JSON.parse(profileData.threads_cookie);
-        if (Array.isArray(rawArr)) {
-          cookies = rawArr;
-        }
-      } catch (err) {
-        await logToWeb(email, 'threads_post', `❌ Lỗi định dạng Cookie.`, 'error');
-        process.exit(1);
+      const rawArr = JSON.parse(profileData.threads_cookie);
+      if (Array.isArray(rawArr)) {
+        cookies = rawArr.map(c => {
+          let cNew = { ...c };
+          if (cNew.sameSite === 'no_restriction' || cNew.sameSite === 'unspecified') cNew.sameSite = 'None';
+          // Puppeteer không hỗ trợ các field này trong setCookie
+          delete cNew.storeId; 
+          delete cNew.id; 
+          delete cNew.hostOnly; 
+          delete cNew.session;
+          return cNew;
+        });
+      } else {
+        throw new Error("Cookie không phải là một mảng JSON");
       }
+    } catch (err) {
+      console.error("❌ Lỗi Parse Cookie:", err.message);
+      await logToWeb(email, 'threads_post', `❌ Lỗi định dạng Cookie (Yêu cầu JSON Array).`, 'error');
+      process.exit(1);
     }
 
     // 2. Thực thi đăng bài bằng Puppeteer
