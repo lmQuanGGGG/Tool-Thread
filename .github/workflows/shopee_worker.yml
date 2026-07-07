@@ -28,7 +28,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
+        cd "Tool Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
 
     - name: Run FB Shopee Post Story Bot with Xvfb
       env:

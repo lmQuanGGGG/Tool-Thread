@@ -1,12 +1,14 @@
-name: Threads Auto Comment Bot
+name: Facebook Auto Comment Bot
 
 on:
+  schedule:
+    - cron: '15 4,7,9,13,15 * * 1-5' # Chạy giờ UTC (tương đương 11:15, 14:15, 16:15, 20:15, 22:15 VN)
   workflow_dispatch:
     inputs:
       nick_index:
-        description: 'Chỉ định bot (1 hoặc 2)'
+        description: 'Chỉ định bot (mặc định fb)'
         required: false
-        default: '1'
+        default: 'fb'
       email:
         description: 'Email khách hàng'
         required: false
@@ -16,7 +18,7 @@ permissions:
   contents: write
 
 jobs:
-  run-threads-bot:
+  run-fb-bot:
     runs-on: ubuntu-latest
     
     steps:
@@ -30,14 +32,14 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+        cd "Tool Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
 
-    - name: Run Threads Bot with Xvfb
+    - name: Run FB Bot with Xvfb
       env:
-        NICK_INDEX: ${{ github.event.inputs.nick_index }}
+        FB_COOKIE: ${{ secrets.FB_COOKIE }}
         USER_EMAIL: ${{ github.event.inputs.email }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       run: |
-        # Xvfb giả lập màn hình để lách thuật toán Headless
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 8_threads_auto_comment.js
+        # Xvfb giả lập màn hình để lách thuật toán Headless của FB
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/1_fb_puppeteer.js

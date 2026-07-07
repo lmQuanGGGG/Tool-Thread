@@ -72,7 +72,7 @@ jobs:
 
     - name: Cài đặt thư viện Node.js
       run: |
-        cd tele_bot && npm install && npm install @supabase/supabase-js
+        cd "Tool Thread"/tele_bot && npm install && npm install @supabase/supabase-js
         npm install puppeteer-extra puppeteer-extra-plugin-stealth axios form-data dotenv
 
     - name: Chạy Script Tải & Đăng Reels với Xvfb
