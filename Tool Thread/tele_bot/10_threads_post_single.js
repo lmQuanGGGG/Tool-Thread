@@ -231,40 +231,36 @@ async function runSinglePost() {
       process.exit(1);
     }
 
-    await delay(5000); // Chờ Threads xử lý đăng bài và hiện thông báo Toast
+    await delay(10000); // Chờ 10s cho bài đăng lên server hoàn tất
 
-    // Cố gắng tìm nút "Xem" hoặc "View" trên thông báo Toast để vào bài viết vừa đăng
-    const viewClicked = await page.evaluate(() => {
-        // Tìm tất cả các link hoặc nút có chữ "Xem" hoặc "View"
-        const elements = Array.from(document.querySelectorAll('a, div[role="button"], button'));
-        for (const el of elements) {
-            const text = (el.innerText || '').trim().toLowerCase();
-            if (text === 'xem' || text === 'view') {
-                el.click();
-                return true;
-            }
-        }
-        // Fallback: Tìm link nào mới xuất hiện chứa '/post/'
-        const postLinks = Array.from(document.querySelectorAll('a[href*="/post/"]'));
-        if (postLinks.length > 0) {
-            postLinks[0].click();
-            return true;
-        }
-        return false;
-    });
-
-    if (viewClicked) {
-        console.log("✅ Đã bấm vào nút Xem bài viết mới đăng!");
-        await delay(3000); // Chờ load trang bài viết chi tiết
+    if (!ninjaComment) {
+        console.log("⚠️ Tài khoản này chưa cài đặt Affiliate Links trong Database! Bỏ qua bước cmt dạo.");
+        await logToWeb(email, 'threads_post', `⚠️ Tài khoản chưa có Affiliate Link, bỏ qua bước thả Ninja Comment.`, 'warn');
     } else {
-        console.log("⚠️ Không tìm thấy nút Xem trên thông báo, cmt có thể bị thả nhầm chỗ!");
-    }
-
-    if (ninjaComment) {
         console.log("💬 Đang tiến hành thả Ninja Comment (Affiliate Link)...");
         await logToWeb(email, 'threads_post', `💬 Đang thả comment chứa link Affiliate...`, 'info');
+        
         try {
-            await delay(5000); // Chờ bài đăng hiện lên
+            // Lấy link trang cá nhân (Profile)
+            const profileUrl = await page.evaluate(() => {
+                const allLinks = [...document.querySelectorAll('a[href^="/@"]')];
+                const navProfileLink = allLinks.find(a => {
+                    const label = (a.getAttribute('aria-label') || '').toLowerCase();
+                    return label === 'profile' || label === 'trang cá nhân';
+                });
+                return navProfileLink ? navProfileLink.href : null;
+            });
+
+            if (profileUrl) {
+                console.log(`✅ Chuyển hướng sang trang cá nhân: ${profileUrl} để thả cmt vào bài mới nhất...`);
+                await page.goto(profileUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+                await delay(6000); // Chờ trang cá nhân tải
+            } else {
+                console.log("⚠️ Không tìm thấy link trang cá nhân, đành tìm nút Reply trên màn hình hiện tại...");
+                await delay(3000);
+            }
+
+            // Click nút Reply của bài đầu tiên (mới nhất)
             const replyBox = await page.evaluate(() => {
                 const svgs = Array.from(document.querySelectorAll('svg[aria-label="Reply"], svg[aria-label="Trả lời"], svg[aria-label="Comment"], svg[aria-label="Bình luận"]'));
                 if (svgs.length > 0) {
