@@ -675,6 +675,10 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-500"></div>
                 <div className="rounded-[24px] overflow-hidden bg-zinc-950 aspect-[16/10] relative shadow-inner">
                   <video 
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
                     controls 
                     className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
                     poster="/0709-poster.jpg"
