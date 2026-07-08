@@ -393,7 +393,6 @@ export default function Home() {
           <a href="#pricing" className="hover:text-zinc-900 transition-colors">Bảng giá</a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="hidden sm:block text-[14px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Đăng nhập</Link>
           <Link href="/login" className="bg-zinc-900 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full hover:bg-black transition-colors flex items-center gap-1.5">
             Bắt đầu <ArrowRight className="w-3.5 h-3.5" />
           </Link>
