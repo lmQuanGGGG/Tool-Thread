@@ -177,11 +177,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.name}
                   onClick={() => setPricingOpen(true)}
                   title={collapsed ? item.name : undefined}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50 ${
-                    collapsed ? "justify-center !px-0 w-9 h-9 mx-auto" : ""
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50 ${
+                    collapsed ? "justify-center !px-0 w-10 h-10 mx-auto" : ""
                   }`}
                 >
-                  <item.icon className="w-4 h-4 shrink-0" />
+                  <item.icon className="w-5 h-5 shrink-0" strokeWidth={2} />
                   {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
                 </button>
               );
@@ -193,15 +193,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href={item.href}
                 prefetch={true}
                 title={collapsed ? item.name : undefined}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
-                  collapsed ? "justify-center !px-0 w-9 h-9 mx-auto" : ""
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  collapsed ? "justify-center !px-0 w-10 h-10 mx-auto" : ""
                 } ${
                   isActive
-                    ? "text-blue-600 bg-blue-50 font-semibold"
+                    ? "text-blue-600 bg-blue-50/80"
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <item.icon className="w-4 h-4 shrink-0" />
+                <item.icon className={`shrink-0 ${isActive ? "w-5 h-5" : "w-5 h-5"}`} strokeWidth={isActive ? 2.5 : 2} />
                 {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
               </Link>
             );
