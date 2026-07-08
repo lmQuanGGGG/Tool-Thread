@@ -572,7 +572,7 @@ export default function Home() {
               desc: "Gói cơ bản phù hợp cho cá nhân kinh doanh online nhỏ lẻ.",
               btn1: "Đăng ký Lite", btn1Class: "bg-[#161618] text-white hover:bg-black",
               btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
-              featuresTitle: "Bao gồm Free, cộng thêm:",
+              featuresTitle: "Gói bao gồm:",
               features: [
                 "3 Reels, 3 FB, 3 Threads", "30 Cmt Threads", "2 Crawl Data", "Chia 3 khung giờ chạy"
               ]
@@ -583,7 +583,7 @@ export default function Home() {
               desc: "Dành cho các shop cần duy trì nội dung tương tác đều đặn hàng ngày.",
               btn1: "Đăng ký Plus", btn1Class: "bg-[#161618] text-white hover:bg-black",
               btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
-              featuresTitle: "Bao gồm Lite, cộng thêm:",
+              featuresTitle: "Gói bao gồm:",
               features: [
                 "6 Reels, 5 FB, 6 Threads", "80 Cmt Threads", "3 Crawl Data", "Auto max 50% comment"
               ]
@@ -593,9 +593,9 @@ export default function Home() {
               name: "Pro", price: "199.000đ / tháng", 
               desc: "Tối ưu hóa khả năng tiếp cận với giới hạn cao nhất của nền tảng.",
               btn1: "Đăng ký Pro", btn1Class: "bg-[#161618] text-white hover:bg-black",
-              featuresTitle: "Bao gồm Plus, cộng thêm:",
+              featuresTitle: "Gói bao gồm:",
               features: [
-                "12 Reels, 10 FB, 12 Threads", "160 Cmt Threads", "4 Crawl Data", "Tối ưu hóa chạy 24/7"
+                "12 Reels, 10 FB, 12 Threads", "160 Cmt Threads", "4 Crawl Data", "Chạy auto 24/7 liên tục", "Tối đa 10 luồng auto chạy song song"
               ]
             }
           ].map((plan, idx) => (
