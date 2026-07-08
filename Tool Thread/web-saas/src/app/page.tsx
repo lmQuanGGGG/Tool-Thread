@@ -21,11 +21,11 @@ function useScrollReveal(threshold = 0.15) {
 }
 
 const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) => {
-  const { ref, visible } = useScrollReveal(0.1);
+  const { ref, visible } = useScrollReveal(0.08);
   return (
     <div
       ref={ref}
-      className={`transition-all duration-[900ms] ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"} ${className}`}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? "opacity-100 translate-y-0 blur-0" : "opacity-0 translate-y-10 blur-[2px]"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -34,40 +34,131 @@ const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; 
 };
 
 /* ═══════════════════════════════════════════════
-   Spiral Confetti — xoắn ốc đa sắc
+   Canvas Confetti — mouse-reactive, multi-shape
    ═══════════════════════════════════════════════ */
-const SpiralConfetti = () => {
-  const particles = useMemo(() => {
-    const colors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800"];
-    const dots: { id: number; x: number; y: number; size: number; color: string; delay: number; dur: number }[] = [];
-    for (let i = 0; i < 120; i++) {
-      const angle = (i / 120) * Math.PI * 6;
-      const radius = 3 + (i / 120) * 38;
-      dots.push({
-        id: i,
-        x: 50 + Math.cos(angle) * radius + (Math.random() - 0.5) * 8,
-        y: 42 + Math.sin(angle) * radius * 0.6 + (Math.random() - 0.5) * 8,
-        size: Math.random() * 4.5 + 1.5,
-        color: colors[i % colors.length],
-        delay: Math.random() * 3,
-        dur: 4 + Math.random() * 4,
+type Particle = {
+  x: number; y: number; baseX: number; baseY: number;
+  size: number; color: string; shape: number; // 0=circle, 1=rect, 2=line
+  angle: number; speed: number; depth: number; rotation: number; rotSpeed: number;
+};
+
+const ConfettiCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const particlesRef = useRef<Particle[]>([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const colors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800", "#A855F7", "#06B6D4"];
+    let w = 0, h = 0;
+
+    const resize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Tạo hạt ban đầu
+    const count = Math.min(150, Math.floor(w * h / 8000));
+    const pts: Particle[] = [];
+    for (let i = 0; i < count; i++) {
+      const depth = 0.3 + Math.random() * 0.7; // depth 0.3–1.0 dùng cho parallax
+      pts.push({
+        x: Math.random() * w, y: Math.random() * h,
+        baseX: Math.random() * w, baseY: Math.random() * h,
+        size: (2 + Math.random() * 4) * depth,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        shape: Math.floor(Math.random() * 3),
+        angle: Math.random() * Math.PI * 2,
+        speed: 0.15 + Math.random() * 0.3,
+        depth,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.02,
       });
     }
-    return dots;
+    particlesRef.current = pts;
+
+    const onMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX / w, y: e.clientY / h };
+    };
+    window.addEventListener("mousemove", onMove);
+
+    let raf: number;
+    let t = 0;
+    const draw = () => {
+      t += 0.005;
+      ctx.clearRect(0, 0, w, h);
+
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+
+      for (const p of pts) {
+        // Parallax offset dựa theo depth + vị trí chuột
+        const parallaxX = (mx - 0.5) * 60 * p.depth;
+        const parallaxY = (my - 0.5) * 40 * p.depth;
+
+        // Drift nhẹ để hạt ko đứng yên
+        p.baseX += Math.cos(p.angle) * p.speed * 0.3;
+        p.baseY += Math.sin(p.angle) * p.speed * 0.3;
+
+        // Wrap around
+        if (p.baseX < -20) p.baseX = w + 20;
+        if (p.baseX > w + 20) p.baseX = -20;
+        if (p.baseY < -20) p.baseY = h + 20;
+        if (p.baseY > h + 20) p.baseY = -20;
+
+        p.x = p.baseX + parallaxX + Math.sin(t * 2 + p.angle) * 8;
+        p.y = p.baseY + parallaxY + Math.cos(t * 1.5 + p.angle) * 6;
+        p.rotation += p.rotSpeed;
+
+        const alpha = 0.25 + p.depth * 0.35;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+
+        if (p.shape === 0) {
+          // Circle
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.shape === 1) {
+          // Rounded rect
+          const s = p.size * 1.8;
+          ctx.beginPath();
+          ctx.roundRect(-s / 2, -p.size / 2, s, p.size, p.size * 0.3);
+          ctx.fill();
+        } else {
+          // Line/dash
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = Math.max(1.5, p.size * 0.5);
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(-p.size * 1.5, 0);
+          ctx.lineTo(p.size * 1.5, 0);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove);
+    };
   }, []);
 
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map((p) => (
-        <div key={p.id} className="absolute rounded-full" style={{
-          left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size,
-          backgroundColor: p.color, opacity: 0.55,
-          animation: `spiralFloat ${p.dur}s ease-in-out infinite alternate`,
-          animationDelay: `${p.delay}s`,
-        }} />
-      ))}
-    </div>
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />;
 };
 
 /* ═══════════════════════════════════════════════
@@ -180,11 +271,6 @@ export default function Home() {
     <div className="min-h-screen bg-[#f8f9fa] text-zinc-900 font-sans selection:bg-blue-100 relative overflow-x-hidden">
       {/* Global keyframes */}
       <style jsx global>{`
-        @keyframes spiralFloat {
-          0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
-          50%  { transform: translate(6px, -8px) scale(1.15); opacity: 0.65; }
-          100% { transform: translate(-4px, 5px) scale(0.9); opacity: 0.4; }
-        }
         @keyframes orbSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes orbDot {
           0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
@@ -192,7 +278,7 @@ export default function Home() {
         }
       `}</style>
 
-      <SpiralConfetti />
+      <ConfettiCanvas />
 
       {/* ── Nav ── */}
       <nav className="relative z-50 flex items-center justify-between px-6 md:px-10 py-5 max-w-[1280px] mx-auto">
@@ -399,10 +485,10 @@ export default function Home() {
           <div className="rounded-[32px] bg-[#0d1117] px-8 md:px-16 py-16 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-25 pointer-events-none">
               {Array.from({ length: 40 }).map((_, i) => (
-                <div key={i} className="absolute rounded-full bg-blue-500" style={{
+                <div key={i} className="absolute rounded-full bg-blue-500 animate-pulse" style={{
                   width: 2 + Math.random() * 3, height: 2 + Math.random() * 3,
                   left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-                  animation: `spiralFloat ${5 + Math.random() * 5}s ease-in-out infinite alternate`,
+                  animationDuration: `${2 + Math.random() * 3}s`,
                   animationDelay: `${Math.random() * 3}s`,
                 }} />
               ))}
