@@ -82,6 +82,11 @@ async function run() {
     const email = process.env.USER_EMAIL || 'admin@autofarm.com';
     console.log(`🤖 Bắt đầu cào profile Threads cho user: ${email}`);
 
+    if (!supabase) {
+        console.error("❌ Không thể kết nối Supabase (supabase client is null)! Vui lòng kiểm tra biến môi trường SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY.");
+        process.exit(1);
+    }
+
     // Lấy config từ DB
     const { data: profiles, error } = await supabase
         .from('profiles')
