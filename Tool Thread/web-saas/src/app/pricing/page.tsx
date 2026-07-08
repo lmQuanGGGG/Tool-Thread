@@ -31,7 +31,7 @@ const TIERS: Tier[] = [
     price: 0,
     icon: Activity,
     tone: "zinc",
-    quota: { reels: "2", fbPost: "1", threads: "10", threadsPost: "∞", crawl: "1", links: "2" },
+    quota: { reels: "2", fbPost: "1", threads: "10", threadsPost: "2", crawl: "1", links: "2" },
     perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Dùng thử luồng bot", "Phù hợp test nhanh"],
   },
   {
@@ -40,7 +40,7 @@ const TIERS: Tier[] = [
     price: 59000,
     icon: Zap,
     tone: "emerald",
-    quota: { reels: "3", fbPost: "3", threads: "30", threadsPost: "∞", crawl: "2", links: "4" },
+    quota: { reels: "3", fbPost: "3", threads: "30", threadsPost: "3", crawl: "2", links: "4" },
     perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
@@ -50,7 +50,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "blue",
     badge: "Phổ biến",
-    quota: { reels: "6", fbPost: "5", threads: "80", threadsPost: "∞", crawl: "3", links: "10" },
+    quota: { reels: "6", fbPost: "5", threads: "80", threadsPost: "6", crawl: "3", links: "10" },
     perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 3 Reels, 1 Post (19h)", "Đủ dùng bán hàng đều"],
   },
   {
@@ -60,7 +60,7 @@ const TIERS: Tier[] = [
     icon: Crown,
     tone: "amber",
     badge: "Đề xuất",
-    quota: { reels: "12", fbPost: "10", threads: "160", threadsPost: "∞", crawl: "4", links: "20" },
+    quota: { reels: "12", fbPost: "10", threads: "160", threadsPost: "12", crawl: "4", links: "20" },
     perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 5 Reels, 3 Posts rải đều", "Tối ưu cho vận hành thật"],
   },
   {
