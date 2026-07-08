@@ -33,7 +33,7 @@ const TIERS = [
     tone: "blue",
     badge: "Phổ biến",
     quota: { reels: "6", fbPost: "5", threads: "80", threadsPost: "6", crawl: "3", links: "10" },
-    perks: ["Auto đăng 2 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 3 Reels, 2 FB Posts (rải đều)", "Đủ dùng bán hàng đều"],
+    perks: ["Auto đăng 6 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 6 Reels, 5 FB Posts (rải đều)", "Đủ dùng bán hàng đều"],
   },
   {
     key: "pro" as TierKey,
@@ -43,7 +43,7 @@ const TIERS = [
     tone: "amber",
     badge: "Đề xuất",
     quota: { reels: "12", fbPost: "10", threads: "160", threadsPost: "12", crawl: "4", links: "20" },
-    perks: ["Auto đăng 4 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 5 Reels, 4 FB Posts (rải đều)", "Tối ưu cho vận hành thật"],
+    perks: ["Auto đăng 12 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 12 Reels, 10 FB Posts (rải đều)", "Tối ưu cho vận hành thật"],
   },
   {
     key: "promax" as TierKey,
