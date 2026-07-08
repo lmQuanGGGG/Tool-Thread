@@ -237,7 +237,7 @@ export default function DashboardPage() {
               <p className="text-xs text-zinc-600 mb-4 leading-relaxed">
                 Cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên Chrome.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/dngbhinkhndcnofkgioigijbbnhlhgho" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
                 <Download className="w-3.5 h-3.5" />
                 Tải EditThisCookie
               </a>

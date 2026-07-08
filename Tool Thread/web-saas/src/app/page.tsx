@@ -69,7 +69,7 @@ export default function Home() {
               <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
                 Tải và cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên trình duyệt Chrome hoặc Cốc Cốc của bạn.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/dngbhinkhndcnofkgioigijbbnhlhgho" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors">
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors">
                 <Download className="w-4 h-4" />
                 Cài EditThisCookie
               </a>
