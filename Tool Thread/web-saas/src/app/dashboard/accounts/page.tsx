@@ -376,79 +376,90 @@ export default function AccountsPage() {
               </div>
             </div>
 
-            {parsedLinks.length > 0 && (
-              <div className={`${cardClass} p-6 flex flex-col max-h-[700px] anim-fade-up anim-d3`}>
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Shopee Data (Sẵn sàng đăng Story)</h3>
-                  <span className="px-2.5 py-1 rounded-md bg-sky-50 border border-sky-100 text-[11px] font-mono text-sky-600 font-semibold">{parsedLinks.length} items</span>
-                </div>
-                <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
-                  {parsedLinks.map((p, i) => (
-                    <div key={i} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
-                      <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
-                      <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
-                      
-                      <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
-                      
-                      <div className="mt-3 flex items-center gap-3">
-                        <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end gap-2">
-                        <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </div>
         )}
 
         {/* ═══ FACEBOOK ═══ */}
         {activeTab === "fb" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 anim-fade-up">
-            <div className="space-y-5">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Facebook Engine</h1>
-                <p className="text-sm text-gray-500">Thiết lập Cookie và chạy tiến trình Facebook.</p>
+          <div className="space-y-7 anim-fade-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <div className="space-y-5">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Facebook Engine</h1>
+                  <p className="text-sm text-gray-500">Thiết lập Cookie và chạy tiến trình Facebook.</p>
+                </div>
+                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[13px] font-semibold text-gray-900">Kênh Video Nguồn (Youtube/TikTok)</h3>
+                    <StatusDot active={!!formData.target_channels} />
+                  </div>
+                  <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-1`} />
+                  <p className="text-[11px] text-gray-500 mb-5 leading-relaxed">
+                    💡 Hỗ trợ quét và lấy video 1080p đa nền tảng: <span className="font-medium text-blue-600">YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels, Twitter</span>.
+                  </p>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[13px] font-semibold text-gray-900">FB Access Cookie</h3>
+                    <StatusDot active={!!formData.fb_cookie} />
+                  </div>
+                  <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5`}>
+                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                      FB Reels
+                    </button>
+                    <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all shadow-sm bg-purple-500 hover:bg-purple-600">
+                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
+                      FB Story
+                    </button>
+                    <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5 col-span-2`}>
+                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+                      Auto Comment
+                    </button>
+                  </div>
+                </div>
+                <div className="h-[350px] anim-fade-up anim-d2">
+                  <TerminalPanel logs={fbLogs} logEndRef={fbLogEndRef} onClear={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="fb-live-logs.log" />
+                </div>
               </div>
-              <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Kênh Video Nguồn (Youtube/TikTok)</h3>
-                  <StatusDot active={!!formData.target_channels} />
+
+              {/* Mảng Data Shopee cho Story */}
+              {parsedLinks.length > 0 ? (
+                <div className={`${cardClass} p-6 flex flex-col h-[700px] anim-fade-up anim-d3`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-[13px] font-semibold text-gray-900">FB Story Poster (Shopee Data)</h3>
+                    <span className="px-2.5 py-1 rounded-md bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
+                    {parsedLinks.map((p, i) => (
+                      <div key={i} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
+                        <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
+                        <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
+                        
+                        <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
+                        
+                        <div className="mt-3 flex items-center gap-3">
+                          <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
+                        </div>
+                        
+                        <div className="mt-4 flex justify-end gap-2">
+                          <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-1`} />
-                <p className="text-[11px] text-gray-500 mb-5 leading-relaxed">
-                  💡 Hỗ trợ quét và lấy video 1080p đa nền tảng: <span className="font-medium text-blue-600">YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels, Twitter</span>.
-                </p>
-                
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[13px] font-semibold text-gray-900">FB Access Cookie</h3>
-                  <StatusDot active={!!formData.fb_cookie} />
+              ) : (
+                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[700px] anim-fade-up anim-d3 text-center`}>
+                  <Image className="w-10 h-10 text-gray-300 mb-3" />
+                  <p className="text-[13px] font-medium text-gray-600">Chưa có Data Shopee</p>
+                  <p className="text-[11px] text-gray-400 mt-1 max-w-[250px]">Hãy sang tab Cấu Hình Chung, dán link Affiliate và nhấn Đồng bộ để lấy dữ liệu nhé!</p>
                 </div>
-                <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    FB Reels
-                  </button>
-                  <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5 bg-purple-500 hover:bg-purple-600 text-white border-purple-600/20`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
-                    FB Story
-                  </button>
-                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5 col-span-2`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-                    Auto Comment
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="h-[500px] anim-fade-up anim-d2">
-              <TerminalPanel logs={fbLogs} logEndRef={fbLogEndRef} onClear={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="fb-live-logs.log" />
+              )}
             </div>
           </div>
         )}
