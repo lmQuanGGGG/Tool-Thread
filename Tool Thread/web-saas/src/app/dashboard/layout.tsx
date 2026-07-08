@@ -83,8 +83,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           .then(({ data }) => setLimits(normalizeLimits(data)));
       });
 
-      // Lắng nghe realtime
-      channel = supabase.channel('realtime_usage_profile')
+      // Lắng nghe realtime — dùng tên channel động để tránh lỗi trùng khi Strict Mode re-mount
+      const channelName = `realtime_usage_profile_${user.id}_${Date.now()}`;
+      channel = supabase.channel(channelName)
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
