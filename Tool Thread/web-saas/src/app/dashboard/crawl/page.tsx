@@ -388,31 +388,48 @@ export default function CrawlPage() {
                 </div>
               </div>
 
-              {/* Script box */}
+              {/* JSON Template box */}
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
                   <div className="flex items-center gap-2">
-                    <Terminal className="w-4 h-4 text-emerald-400" />
-                    <span className="font-mono text-sm text-zinc-300">crawl_threads.js (Manual)</span>
+                    <Terminal className="w-4 h-4 text-sky-400" />
+                    <span className="font-mono text-sm text-zinc-300">Mẫu cấu trúc JSON (Tự tải lên)</span>
                   </div>
-                  <button onClick={copyScript} disabled={!canUseCrawl}
+                  <button onClick={() => {
+                    navigator.clipboard.writeText(`[\n  {\n    "post_id": "123456789_0000",\n    "timestamp": 1700000000,\n    "post_url": "https://www.threads.net/@user/post/123",\n    "author": { "username": "username", "full_name": "Full Name" },\n    "content": {\n      "text": "Nội dung bài viết",\n      "media": [\n        { "type": "image", "url": "https://link_anh.jpg" }\n      ]\n    },\n    "stats": { "likes": 120, "replies": 5 }\n  }\n]`);
+                    setCopied(true); setTimeout(() => setCopied(false), 2500);
+                  }} disabled={!canUseCrawl}
                     className={`flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-lg border transition-all
                       ${canUseCrawl
-                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20"
+                        ? "bg-sky-500/10 border-sky-500/40 text-sky-400 hover:bg-sky-500/20"
                         : "bg-zinc-800 border-zinc-700 text-zinc-600 cursor-not-allowed"}`}>
                     {copied ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? "Đã copy!" : "Copy Script"}
+                    {copied ? "Đã copy!" : "Copy JSON"}
                   </button>
                 </div>
                 <div className="p-4 max-h-48 overflow-y-auto">
                   {canUseCrawl ? (
-                    <pre className="text-[10px] font-mono text-emerald-300/70 whitespace-pre-wrap leading-relaxed">
-                      {CRAWL_SCRIPT.substring(0, 400)}...
+                    <pre className="text-[10px] font-mono text-sky-300/70 whitespace-pre-wrap leading-relaxed">
+{`[
+  {
+    "post_id": "123456789_0000",
+    "timestamp": 1700000000,
+    "post_url": "https://www.threads.net/@user/post/123",
+    "author": { "username": "username", "full_name": "Full Name" },
+    "content": {
+      "text": "Nội dung bài viết",
+      "media": [
+        { "type": "image", "url": "https://link_anh.jpg" }
+      ]
+    },
+    "stats": { "likes": 120, "replies": 5 }
+  }
+]`}
                     </pre>
                   ) : (
                     <div className="text-center py-8">
                       <AlertCircle className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                      <p className="text-zinc-500 text-sm font-mono">Nâng cấp lên gói Plus để nhận script</p>
+                      <p className="text-zinc-500 text-sm font-mono">Nâng cấp lên gói Plus để xem mẫu</p>
                     </div>
                   )}
                 </div>
