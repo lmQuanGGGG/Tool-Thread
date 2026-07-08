@@ -221,19 +221,39 @@ async function run() {
     }
 
     extractFullData(rawThreadsData);
-    const uniqueData = Array.from(new Map(cleanData.map(item => [item.post_id, item])).values());
+    let uniqueData = Array.from(new Map(cleanData.map(item => [item.post_id, item])).values());
     
     // Sắp xếp cũ nhất lên trước hoặc mới nhất lên trước tuỳ nhu cầu.
     // Ở đây ta cứ xếp mới nhất trước
     uniqueData.sort((a, b) => b.timestamp - a.timestamp);
-    console.log(`🎉 Bóc được ${uniqueData.length} bài đăng duy nhất!`);
+    console.log(`🎉 Bóc được ${uniqueData.length} bài đăng duy nhất từ trang!`);
 
-    console.log("⬆️ Đang Upload ảnh lên Telegram và Đẩy chữ vào Supabase...");
+    // CHỐNG TRÙNG VÀ GIỚI HẠN SỐ LƯỢNG (Chỉ xử lý bài chưa từng cào)
+    const MAX_POSTS_TO_SAVE = 25;
+    const postIds = uniqueData.map(p => p.post_id.toString());
+    
+    const { data: existingPosts, error: existErr } = await supabase
+        .from('crawl_data')
+        .select('post_id')
+        .eq('user_id', dbConfig.id)
+        .in('post_id', postIds);
+
+    const existingIds = new Set((existingPosts || []).map(p => p.post_id));
+    
+    // Lọc bỏ bài đã có trong DB, và cắt đúng 25 bài
+    const newPosts = uniqueData.filter(p => !existingIds.has(p.post_id.toString())).slice(0, MAX_POSTS_TO_SAVE);
+
+    if (newPosts.length === 0) {
+        console.log("🛑 Tất cả các bài cào được đều đã tồn tại trong Database hoặc không có bài mới! Dừng tool.");
+        process.exit(0);
+    }
+
+    console.log(`🔥 Bắt đầu xử lý ${newPosts.length} bài viết MỚI (Bỏ qua ${existingIds.size} bài đã trùng)...`);
     let successCount = 0;
 
-    for (let i = 0; i < uniqueData.length; i++) {
-        const post = uniqueData[i];
-        console.log(`\n⏳ Đang xử lý post [${i+1}/${uniqueData.length}] - ID: ${post.post_id}`);
+    for (let i = 0; i < newPosts.length; i++) {
+        const post = newPosts[i];
+        console.log(`\n⏳ Đang xử lý post [${i+1}/${newPosts.length}] - ID: ${post.post_id}`);
         
         let image_file_ids = [];
         let image_urls = [];
@@ -277,7 +297,7 @@ async function run() {
         }
     }
 
-    console.log(`\n🎯 HOÀN TẤT! Cào thành công ${successCount}/${uniqueData.length} bài viết vào Database!`);
+    console.log(`\n🎯 HOÀN TẤT! Cào thành công ${successCount}/${newPosts.length} bài viết vào Database!`);
 }
 
 run().catch(console.error);
