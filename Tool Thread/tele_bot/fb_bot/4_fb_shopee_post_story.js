@@ -240,10 +240,46 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         console.log("🚀 Bấm Đăng (Post)...");
         await logToWeb(email, 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
         await page.evaluate(() => {
-            const btns = Array.from(document.querySelectorAll('div[role="button"]'));
-            const postBtn = btns.find(b => b.innerText === 'Đăng' || b.innerText === 'Post');
-            if(postBtn) postBtn.click();
+            const btns = Array.from(document.querySelectorAll('div[role="button"], div[aria-label="Đăng"], div[aria-label="Post"]'));
+            const postBtn = btns.find(b => {
+                const text = (b.innerText || '').trim();
+                const ariaLabel = b.getAttribute('aria-label') || '';
+                return text === 'Đăng' || text === 'Post' || ariaLabel === 'Đăng' || ariaLabel === 'Post';
+            });
+            if(postBtn) {
+                // Thử click bằng Javascript trước
+                postBtn.click();
+            }
         });
+        
+        // Dự phòng click bằng toạ độ (giống auto_post_puppeteer)
+        await delay(1000);
+        try {
+            const postBtnInfo = await page.evaluate(() => {
+                const btns = Array.from(document.querySelectorAll('div[role="button"], div[aria-label="Đăng"], div[aria-label="Post"]'));
+                const postBtn = btns.find(b => {
+                    const text = (b.innerText || '').trim();
+                    const ariaLabel = b.getAttribute('aria-label') || '';
+                    return text === 'Đăng' || text === 'Post' || ariaLabel === 'Đăng' || ariaLabel === 'Post';
+                });
+                if (postBtn) {
+                    const style = window.getComputedStyle(postBtn);
+                    if (postBtn.hasAttribute('disabled') || postBtn.getAttribute('aria-disabled') === 'true' || style.opacity !== '1') {
+                        return 'DISABLED';
+                    }
+                    const rect = postBtn.getBoundingClientRect();
+                    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                }
+                return 'NOT_FOUND';
+            });
+            
+            if (postBtnInfo !== 'NOT_FOUND' && postBtnInfo !== 'DISABLED') {
+                console.log('[INFO] Đã tìm thấy toạ độ nút Đăng, thử click bằng chuột thật...');
+                await page.mouse.click(postBtnInfo.x, postBtnInfo.y);
+            }
+        } catch (err) {
+            console.log("Lỗi khi click toạ độ:", err.message);
+        }
         
         console.log("⏳ Chờ 15s để bài viết lên tường...");
         await delay(15000);
