@@ -60,7 +60,7 @@ export default function LoginPage() {
           },
           body: JSON.stringify({ fingerprint }),
         });
-        if (!ipRes.ok) {
+        if (ipRes.status === 403) {
           const ipData = await ipRes.json();
           // Vượt giới hạn → kick ngay, không cho vào dashboard
           await supabase.auth.signOut();
