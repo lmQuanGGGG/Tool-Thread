@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
 
-const cardClass = "bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.05)] rounded-[32px]";
+const cardClass = "";
 
 const TIER_CONFIG: Record<string, {
   label: string;
@@ -191,7 +191,7 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 relative z-10">
 
       {/* Welcome Banner */}
-      <div className={`${cardClass} overflow-hidden relative border-none bg-gradient-to-br from-indigo-50/90 via-white/80 to-blue-50/90 p-8 md:p-12 shadow-[0_8px_32px_-12px_rgba(59,130,246,0.15)]`}>
+      <div className={`rounded-[32px] overflow-hidden relative border-none bg-gradient-to-br from-indigo-50/90 via-white/80 to-blue-50/90 p-8 md:p-12 shadow-[0_8px_32px_-12px_rgba(59,130,246,0.15)]`}>
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-400/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
