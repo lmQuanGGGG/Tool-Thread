@@ -3,10 +3,6 @@ name: Threads Profile Scraper Worker
 on:
   workflow_dispatch:
     inputs:
-      email:
-        description: "Email của user (ví dụ: admin@autofarm.com)"
-        required: true
-        default: "admin@autofarm.com"
       target_url:
         description: "Link profile Threads cần cào"
         required: true
@@ -38,7 +34,6 @@ jobs:
     - name: Chạy Script Cào Data với Xvfb
       working-directory: "Tool Thread/tele_bot"
       env:
-        USER_EMAIL: ${{ github.event.inputs.email }}
         PROFILE_URL: ${{ github.event.inputs.target_url }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -46,5 +41,5 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         MAX_SCROLLS: "15"
       run: |
-        echo "🔥 Đang chạy Bot Cào Profile Threads cho user: ${{ github.event.inputs.email }}"
+        echo "🔥 Đang chạy Bot Cào Profile Threads: ${{ github.event.inputs.target_url }}"
         xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js
