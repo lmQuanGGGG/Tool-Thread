@@ -670,7 +670,7 @@ export default function Home() {
                   controls 
                   className="w-full h-full object-cover"
                   poster="/0709-poster.jpg" // optional poster if available, or just omit
-                  src="/api/telegram-file/BQACAgUAAxkDAAIJ2mpOtOgsLCEgfD433iVU3FzWtN_OAAJfHQAC_iZ4Vvj-k40hYQKSPAQ"
+                  src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
                 >
                   Trình duyệt của bạn không hỗ trợ thẻ video.
                 </video>

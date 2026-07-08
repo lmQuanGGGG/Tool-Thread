@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request, { params }: { params: { file_id: string } }) {
-  const file_id = params.file_id;
+export async function GET(request: Request, { params }: { params: Promise<{ file_id: string }> }) {
+  const { file_id } = await params;
   if (!file_id) return NextResponse.json({ error: 'Missing file_id' }, { status: 400 });
 
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
