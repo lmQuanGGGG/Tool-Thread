@@ -2,10 +2,11 @@
 
 import {
   Save, Cookie, Link as LinkIcon, MessageCircle, AlertCircle,
-  Zap, Loader2, CheckCircle2, Bot, Settings, Play, Terminal, Trash2, Image
+  Zap, Loader2, CheckCircle2, Bot, Settings, Play, Terminal, Trash2, Image, Info, FileText, LogOut, ChevronRight, X, Image as ImageIcon
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../utils/supabase";
+import ThreadsCrawler from "@/components/ThreadsCrawler";
 
 /* ─── Types ─────────────────────────────────────────── */
 interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; target_channels: string; }
@@ -74,6 +75,7 @@ export default function AccountsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<string>("free");
+  const [userCredits, setUserCredits] = useState<number>(0);
   const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "", target_channels: "" });
   const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
   const [globalLogs, setGlobalLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Hệ thống sẵn sàng." }]);
@@ -102,15 +104,23 @@ export default function AccountsPage() {
   useEffect(() => { fbLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [fbLogs]);
   useEffect(() => { threadsLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadsLogs]);
 
+  const fetchThreadsPosts = async (uid: string) => {
+    const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('posted', false);
+    setThreadsTotalCount(count || 0);
+    const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', uid).eq('posted', false).order('created_at', { ascending: false }).limit(20);
+    if (cData) setThreadsPosts(cData);
+  };
+
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); pushLog("ERROR", "Chưa đăng nhập!"); return; }
       setUserId(user.id);
       setUserEmail(user.email || null);
-      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links, target_channels").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links, target_channels, credits").eq("id", user.id).single();
       if (!error && data) {
         setUserTier(data.tier || "free");
+        setUserCredits(data.credits || 0);
         setFormData({ fb_cookie: data.fb_cookie || "", threads_cookie: data.threads_cookie || "", affiliate_links: data.affiliate_links || "", tele_chat_id: data.tele_chat_id || "", target_channels: data.target_channels || "" });
         setParsedLinks(data.parsed_affiliate_links || []);
         pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`, "global");
@@ -118,10 +128,7 @@ export default function AccountsPage() {
         if (data.threads_cookie) pushLog("INFO", "Threads Cookie: Đã cấu hình ✓", "threads");
       }
       setLoading(false);
-      const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('posted', false);
-      setThreadsTotalCount(count || 0);
-      const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', user.id).eq('posted', false).order('created_at', { ascending: false }).limit(20);
-      if (cData) setThreadsPosts(cData);
+      await fetchThreadsPosts(user.id);
     }
     load();
   }, []);
@@ -349,6 +356,16 @@ export default function AccountsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-6">
+                
+                <ThreadsCrawler 
+                  userId={userId || ""} 
+                  tier={userTier} 
+                  credits={userCredits} 
+                  setCredits={setUserCredits}
+                  pushLog={pushLog}
+                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
+                />
+
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[13px] font-semibold text-gray-900">Affiliate Link Pool</h3>

@@ -20,7 +20,6 @@ const TIER_META: Record<string, { label: string; icon: React.ElementType; color:
 const NAV_ITEMS = [
   { name: "Dashboard",    href: "/dashboard",          icon: Grid },
   { name: "Bots & Config", href: "/dashboard/accounts", icon: Video },
-  { name: "Crawl Data",    href: "/dashboard/crawl",     icon: Search },
   { name: "Proxies",      href: "/dashboard/proxies",  icon: Network },
   { name: "Analytics",    href: "/dashboard/analytics", icon: BarChart },
   { name: "Pricing",      href: "/pricing",             icon: CreditCard },
