@@ -191,6 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={true}
                 title={collapsed ? item.name : undefined}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
                   collapsed ? "justify-center !px-0 w-9 h-9 mx-auto" : ""
