@@ -521,24 +521,26 @@ export default function Home() {
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { n: "1", t: "Cài Extension", d: "Thêm EditThisCookie vào Chrome.", href: "https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol", btn: "Tải EditThisCookie", Ic: Download },
-              { n: "2", t: "Đăng nhập", d: "Mở Threads.net / FB, login đúng nick.", href: "https://www.threads.net", btn: "Mở Threads.net", Ic: Link2 },
-              { n: "3", t: "Copy Cookie", d: 'Copy giá trị "sessionid" dán vào Dashboard.', href: null, btn: "Hoàn tất", Ic: CheckCircle2 },
-            ].map(({ n, t, d, href, btn, Ic }, idx) => (
+              { n: "1", t: "Cài Extension", d: "Thêm EditThisCookie vào Chrome.", links: [{ href: "https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol", btn: "Tải EditThisCookie", Ic: Download }] },
+              { n: "2", t: "Đăng nhập", d: "Mở Threads.net / FB, login đúng nick.", links: [{ href: "https://www.threads.net", btn: "Mở Threads", Ic: Link2 }, { href: "https://www.facebook.com", btn: "Mở Facebook", Ic: Link2 }] },
+              { n: "3", t: "Copy Cookie", d: 'Copy giá trị "sessionid" dán vào Dashboard.', links: [{ href: null, btn: "Hoàn tất", Ic: CheckCircle2 }] },
+            ].map(({ n, t, d, links }, idx) => (
               <Reveal key={n} delay={idx * 150}>
-                <div className="bg-[#f8f9fa] p-8 rounded-[24px] border border-zinc-200 relative pt-14 h-full">
+                <div className="bg-[#f8f9fa] p-8 rounded-[24px] border border-zinc-200 relative pt-14 h-full flex flex-col">
                   <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-lg">{n}</div>
                   <h4 className="font-bold text-zinc-900 text-center text-lg mb-2">{t}</h4>
-                  <p className="text-[13px] text-zinc-500 mb-6 text-center leading-relaxed">{d}</p>
-                  {href ? (
-                    <a href={href} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-zinc-700 bg-white hover:bg-zinc-100 border border-zinc-200 py-3 rounded-xl transition-colors">
-                      <Ic className="w-4 h-4" /> {btn}
-                    </a>
-                  ) : (
-                    <div className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 py-3 rounded-xl">
-                      <Ic className="w-4 h-4" /> {btn}
-                    </div>
-                  )}
+                  <p className="text-[13px] text-zinc-500 mb-6 text-center leading-relaxed flex-grow">{d}</p>
+                  <div className="flex flex-col gap-2 mt-auto w-full">
+                    {links.map((lnk, lidx) => lnk.href ? (
+                      <a key={lidx} href={lnk.href} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-zinc-700 bg-white hover:bg-zinc-100 border border-zinc-200 py-3 rounded-xl transition-colors">
+                        <lnk.Ic className="w-4 h-4" /> {lnk.btn}
+                      </a>
+                    ) : (
+                      <div key={lidx} className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 py-3 rounded-xl">
+                        <lnk.Ic className="w-4 h-4" /> {lnk.btn}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Reveal>
             ))}
