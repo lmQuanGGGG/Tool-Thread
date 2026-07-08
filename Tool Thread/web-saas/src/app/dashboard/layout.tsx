@@ -17,11 +17,13 @@ const TIER_META: Record<string, { label: string; icon: React.ElementType; color:
   promax: { label: "ProMax", icon: Crown,    color: "text-violet-600", bg: "bg-violet-50" },
 };
 
+const ADMIN_EMAIL = "lmquang.devops@gmail.com";
+
 const NAV_ITEMS = [
-  { name: "Dashboard",    href: "/dashboard",          icon: Grid },
-  { name: "Bots & Config", href: "/dashboard/accounts", icon: Video },
-  { name: "Analytics",    href: "/dashboard/analytics", icon: BarChart },
-  { name: "Pricing",      href: "/pricing",             icon: CreditCard },
+  { name: "Dashboard",    href: "/dashboard",          icon: Grid,       adminOnly: false },
+  { name: "Bots & Config", href: "/dashboard/accounts", icon: Video,      adminOnly: false },
+  { name: "Analytics",    href: "/dashboard/analytics", icon: BarChart,   adminOnly: true  },
+  { name: "Pricing",      href: "/pricing",             icon: CreditCard, adminOnly: false },
 ];
 
 const SIDEBAR_W = 256;
@@ -57,6 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [tier, setTier] = useState<string>("free");
   const [limits, setLimits] = useState<any>(null);
   const [used, setUsed] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -65,6 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       currentUser = user;
+      setIsAdmin(user.email === ADMIN_EMAIL);
       const today = todayLocalDate();
       Promise.all([
         supabase.from("usage_stats")
@@ -159,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
