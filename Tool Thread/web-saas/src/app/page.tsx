@@ -524,7 +524,7 @@ export default function Home() {
             <div>
               <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-5">AutoFarm Bot</h2>
               <p className="text-zinc-500 text-[15px] leading-relaxed mb-6">
-                Bot Telegram theo dõi hệ thống. Nhận báo cáo doanh thu, cảnh báo trạng thái cookie tự động — tất cả ngay trong Telegram.
+                Bot Telegram theo dõi hệ thống. Nhận thông báo tự động về tiến trình AutoFarm, cảnh báo trạng thái cookie — tất cả ngay trong Telegram.
               </p>
               <Link href="/login" className="inline-flex items-center gap-2 bg-[#eef0f3] hover:bg-[#e4e6ea] text-zinc-800 text-[14px] font-semibold px-6 py-3 rounded-full transition-colors">
                 Khám phá tính năng <ArrowRight className="w-4 h-4" />
