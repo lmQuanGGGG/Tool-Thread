@@ -148,7 +148,8 @@ export default function DashboardPage() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      channel = supabase.channel('realtime_usage_dashboard')
+      const channelName = `realtime_usage_dashboard_${user.id}_${Date.now()}`;
+      channel = supabase.channel(channelName)
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
