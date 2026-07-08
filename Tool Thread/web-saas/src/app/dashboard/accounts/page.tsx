@@ -557,7 +557,7 @@ export default function AccountsPage() {
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
-                            <div key={`shopee-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                            <div key={`shopee-${i}`} className="w-[85vw] md:w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
                               <div className="relative w-full aspect-[4/5] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
                                 <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-cover mix-blend-multiply" />
                                 <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
@@ -752,7 +752,7 @@ export default function AccountsPage() {
 		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
                           const hasImages = post.image_urls && post.image_urls.length > 0;
                           return (
-                            <div key={`threads-${post.id}-${i}`} className="w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                            <div key={`threads-${post.id}-${i}`} className="w-[85vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
                               {hasImages ? (
                                 <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
                                   {post.image_urls.length > 1 && (
