@@ -48,7 +48,7 @@ export default function AccountsPage() {
   const [fbLogs, setFbLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "FB System khởi động..." }]);
   const [threadsLogs, setThreadsLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Threads System khởi động..." }]);
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
+  const [activeTab, setActiveTab] = useState<"global" | "fb">("global");
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const threadsCarouselRef = useRef<HTMLDivElement>(null);
   const shopeeCarouselRef = useRef<HTMLDivElement>(null);
@@ -319,7 +319,7 @@ export default function AccountsPage() {
 
           {/* Tab bar */}
           <nav className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-1">
-            {(["global", "fb", "threads"] as const).map((t) => (
+            {(["global", "fb"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
@@ -329,7 +329,7 @@ export default function AccountsPage() {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
+                {t === "global" ? "Cấu Hình Chung" : "Facebook"}
               </button>
             ))}
           </nav>
@@ -366,8 +366,21 @@ export default function AccountsPage() {
                   credits={userCredits} 
                   setCredits={setUserCredits}
                   pushLog={pushLog}
-                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
+                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); }} 
                 />
+
+                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[13px] font-semibold text-gray-900">Threads Access Cookie</h3>
+                    <StatusDot active={!!formData.threads_cookie} />
+                  </div>
+                  <textarea rows={3} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-4 focus:border-violet-500 focus:ring-violet-500/10`} />
+                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
+                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                    Khởi động AI Commenter
+                  </button>
+                </div>
+
 
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
                   <div className="flex items-center justify-between mb-4">
@@ -421,7 +434,7 @@ export default function AccountsPage() {
                             <div className="mt-3 flex gap-2 overflow-x-auto pb-2 shrink-0">
                               {post.image_urls.map((url: string, idx: number) => (
                                 <div key={idx} className="relative group shrink-0">
-                                  <img src={url} className="h-20 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
+                                  <img src={url} className="h-40 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
                                   <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -474,7 +487,7 @@ export default function AccountsPage() {
                             <textarea className="w-full flex-1 bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[100px] placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
                             
                             <div className="mt-3 flex items-center gap-3 shrink-0">
-                              <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
+                              <img src={p.image_url} alt="" className="h-40 w-auto rounded-lg object-cover border border-gray-200" />
                             </div>
                             
                             <div className="mt-4 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-4">
@@ -555,7 +568,7 @@ export default function AccountsPage() {
                         <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
                         
                         <div className="mt-3 flex items-center gap-3">
-                          <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
+                          <img src={p.image_url} alt="" className="h-40 w-auto rounded-lg object-cover border border-gray-200" />
                         </div>
                         
                         <div className="mt-4 flex justify-end gap-2">
@@ -576,33 +589,7 @@ export default function AccountsPage() {
           </div>
         )}
 
-        {/* ═══ THREADS ═══ */}
-        {activeTab === "threads" && (
-          <div className="space-y-7 anim-fade-up">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              <div className="space-y-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Threads Engine</h1>
-                  <p className="text-sm text-gray-500">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
-                </div>
-                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Threads Access Cookie</h3>
-                    <StatusDot active={!!formData.threads_cookie} />
-                  </div>
-                  <textarea rows={4} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-5 focus:border-violet-500 focus:ring-violet-500/10`} />
-                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    Khởi động AI Commenter
-                  </button>
-                </div>
-                
-              </div>
 
-              
-            </div>
-          </div>
-        )}
       </main>
 
       {/* VS Code Style Terminal Panel */}
