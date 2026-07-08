@@ -43,8 +43,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         supabase.from("usage_stats")
           .select("reels_posted, threads_commented, fb_posts_count")
           .eq("user_id", user.id).eq("date", today).single(),
-      ]).then(([statsRes]) => {
-        const t = "promax";
+        supabase.from("profiles")
+          .select("tier")
+          .eq("id", user.id).single()
+      ]).then(([statsRes, profileRes]) => {
+        const t = profileRes.data?.tier || "free";
         setTier(t);
         setUsed(statsRes.data || { reels_posted: 0, threads_commented: 0, fb_posts_count: 0 });
         supabase.from("tier_limits")
