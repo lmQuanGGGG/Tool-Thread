@@ -43,9 +43,7 @@ async function run() {
     }
 
     const { data: profiles, error } = await supabase.from('profiles')
-        .select('email, tier, fb_cookie')
-        .not('fb_cookie', 'is', null)
-        .neq('fb_cookie', '');
+        .select('email, tier, fb_cookie, threads_cookie');
 
     if (error) {
         console.error("Error fetching profiles:", error);
@@ -54,25 +52,39 @@ async function run() {
 
     for (const p of profiles) {
         if (!p.email || !p.tier) continue;
+        const hasFb = p.fb_cookie && p.fb_cookie.trim() !== '';
+        const hasThreads = p.threads_cookie && p.threads_cookie.trim() !== '';
+
+        if (!hasFb && !hasThreads) continue;
+
         const isPlus = p.tier === 'plus';
         const isProOrMax = p.tier === 'pro' || p.tier === 'promax';
 
         if (!isPlus && !isProOrMax) continue;
 
-        if (vnHour === 8 || vnHour === 13) {
-            // 8h, 13h: Plus -> Reels, Pro -> Reels + Post
-            if (isPlus || isProOrMax) await dispatchWorkflow('reels_worker.yml', p.email);
-            if (isProOrMax) await dispatchWorkflow('fb_worker.yml', p.email);
-        }
-        else if (vnHour === 11 || vnHour === 16) {
-            // 11h, 16h: Plus -> None, Pro -> Reels
-            if (isProOrMax) await dispatchWorkflow('reels_worker.yml', p.email);
-        }
-        else if (vnHour === 19) {
-            // 19h: Plus -> Reels + Post, Pro -> Reels + Post
-            if (isPlus || isProOrMax) {
+        // Plus Logic
+        if (isPlus) {
+            if (hasFb && [8, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasThreads && [13, 19].includes(vnHour)) {
+                await dispatchWorkflow('threads_post_worker.yml', p.email);
+            }
+        }
+
+        // Pro/ProMax Logic
+        if (isProOrMax) {
+            if (hasFb && [8, 11, 13, 16, 19].includes(vnHour)) {
+                await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [8, 11, 13, 19].includes(vnHour)) {
+                await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasThreads && [8, 11, 13, 19].includes(vnHour)) {
+                await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
         
