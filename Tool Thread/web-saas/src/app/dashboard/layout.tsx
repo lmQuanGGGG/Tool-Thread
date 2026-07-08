@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Network, LineChart, Rocket, CircleDollarSign, Bot,
-  Crown, Zap, Activity, ChevronRight, ChevronLeft, PanelLeft, Search, LogOut
+  Crown, Zap, Activity, ChevronRight, ChevronLeft, PanelLeft, Search, LogOut, X
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PricingModal from "../../components/PricingModal";
@@ -140,17 +140,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Aurora */}
       <div className="aurora-bg opacity-30"><div className="aurora-blob-3" /></div>
 
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
       {/* ===== SIDEBAR ===== */}
       <aside
-        className={`fixed top-0 left-0 h-screen z-50 flex flex-col bg-white/95 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300 w-[280px] max-md:shadow-2xl ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"} ${collapsed ? "md:w-[64px]" : "md:w-[256px]"}`}
+        className={`fixed top-0 left-0 h-screen z-50 flex flex-col bg-white/95 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300 max-md:w-full max-md:shadow-2xl ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"} ${collapsed ? "md:w-[64px]" : "md:w-[256px]"}`}
       >
         <button 
           onClick={() => setCollapsed(!collapsed)} 
@@ -159,8 +151,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {collapsed ? <ChevronRight className="w-3.5 h-3.5 ml-0.5" /> : <ChevronLeft className="w-3.5 h-3.5 pr-0.5" />}
         </button>
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px] hover:opacity-80 transition-opacity">
+        {/* Mobile Header (full-screen sidebar) */}
+        <div className="md:hidden flex items-center justify-between px-5 pt-5 pb-3">
+          <span className="font-bold text-base text-gray-900 tracking-tight">Menu</span>
+          <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Logo (desktop only) */}
+        <Link href="/" className="hidden md:flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px] hover:opacity-80 transition-opacity">
           <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "md:w-0 md:opacity-0 md:hidden" : "w-full opacity-100"}`}>
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
               <Rocket className="w-4 h-4" />
@@ -184,12 +184,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               return (
                 <button
                   key={item.name}
-                  onClick={() => setPricingOpen(true)}
+                  onClick={() => { setPricingOpen(true); setMobileOpen(false); }}
                   title={collapsed ? item.name : undefined}
-                  className={`flex items-center w-full px-3 py-2.5 rounded-xl transition-all duration-200 group text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900`}
+                  className={`flex items-center w-full px-4 py-3.5 md:px-3 md:py-2.5 rounded-xl transition-all duration-200 group text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900`}
                 >
-                  <item.icon className="w-[18px] h-[18px] shrink-0" />
-                  <span className={`ml-3 font-medium text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "md:opacity-0 md:w-0 md:hidden" : "opacity-100"}`}>
+                  <item.icon className="w-5 h-5 md:w-[18px] md:h-[18px] shrink-0" />
+                  <span className={`ml-3 font-medium text-[15px] md:text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "md:opacity-0 md:w-0 md:hidden" : "opacity-100"}`}>
                     {item.name}
                   </span>
                 </button>
@@ -201,11 +201,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.name : undefined}
-                className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${active ? "bg-blue-50 text-blue-700 font-semibold shadow-sm border border-blue-100/50" : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900 font-medium"}`}
+                className={`flex items-center px-4 py-3.5 md:px-3 md:py-2.5 rounded-xl transition-all duration-200 group ${active ? "bg-blue-50 text-blue-700 font-semibold shadow-sm border border-blue-100/50" : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900 font-medium"}`}
               >
-                <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600"}`} />
-                <span className={`ml-3 text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "md:opacity-0 md:w-0 md:hidden" : "opacity-100"}`}>
+                <item.icon className={`w-5 h-5 md:w-[18px] md:h-[18px] shrink-0 ${active ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600"}`} />
+                <span className={`ml-3 text-[15px] md:text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "md:opacity-0 md:w-0 md:hidden" : "opacity-100"}`}>
                   {item.name}
                 </span>
                 {active && !collapsed && (
