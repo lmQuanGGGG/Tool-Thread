@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Grid, Network, BarChart, Rocket, CreditCard, Video,
-  Crown, Zap, Activity, ChevronRight, PanelLeft, Search, LogOut
+  Crown, Zap, Activity, ChevronRight, ChevronLeft, PanelLeft, Search, LogOut
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PricingModal from "../../components/PricingModal";
