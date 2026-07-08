@@ -198,7 +198,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
     // Nếu là email thì resolve sang UUID
     if (userIdOrEmail.includes('@')) {
       const { data: profile } = await supabase
-        .from('profiles').select('id').eq('email', userIdOrEmail).single();
+        .from('profiles').select('id').eq('email', userIdOrEmail).maybeSingle();
       if (!profile) return;
       userId = profile.id;
     }
@@ -209,7 +209,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
       .select('id, ' + type)
       .eq('user_id', userId)
       .eq('date', today)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       await supabase.from('usage_stats')
