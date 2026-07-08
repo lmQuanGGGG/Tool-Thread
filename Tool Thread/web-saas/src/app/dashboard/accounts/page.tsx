@@ -287,7 +287,22 @@ export default function AccountsPage() {
         supabase.from("profiles").select("parsed_affiliate_links").eq("email", userEmail).single().then(({data}) => { if (data && data.parsed_affiliate_links) setParsedLinks(data.parsed_affiliate_links); });
       }
     }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    
+    // Realtime lắng nghe dữ liệu crawl mới nhất
+    const crawlChannel = supabase.channel('realtime_crawl_data')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crawl_data', filter: `user_id=eq.${userId}` }, (payload) => {
+          setThreadsPosts(prev => {
+              // Bỏ qua nếu đã tồn tại
+              if (prev.find(p => p.id === payload.new.id)) return prev;
+              return [payload.new, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
+          });
+          setThreadsTotalCount(prev => prev + 1);
+      }).subscribe();
+
+    return () => { 
+        supabase.removeChannel(channel); 
+        supabase.removeChannel(crawlChannel);
+    };
   }, [userEmail, userId]);
 
   const handleSave = async () => {
