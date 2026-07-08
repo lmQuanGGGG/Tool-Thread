@@ -510,7 +510,13 @@ export default function AccountsPage() {
                       tone="emerald"
                     />
                   </div>
-                  <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
+                  <input type="text" value={formData.tele_chat_id} onChange={(e) => {
+                    if (userTier === "free" || userTier === "lite") {
+                      alert("Gói Free và Lite không hỗ trợ nhận thông báo qua Telegram. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
+                      return;
+                    }
+                    setFormData({ ...formData, tele_chat_id: e.target.value })
+                  }} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
                   <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3.5 py-3 text-[12px] text-emerald-700 leading-relaxed">
                     Bot sẽ gửi thông báo realtime khi đăng bài thành công, lỗi cookie hoặc hoàn tất crawl định kỳ.
                   </div>

@@ -40,7 +40,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "emerald",
     quota: { reels: "3", fbPost: "3", threads: "30", crawl: "2", links: "4" },
-    perks: ["Thông báo Telegram", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
+    perks: ["Chạy thủ công", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
     key: "plus",
