@@ -127,13 +127,13 @@ const ConfettiCanvas = () => {
           // Sử dụng p.angle và p.depth để mỗi hạt có một quỹ đạo riêng biệt, trải dài từ gần đến rất xa
           const RING_RADIUS = 50 + (p.angle * 60) + (p.depth * 400); 
           
-          // Lực kéo/đẩy để duy trì bán kính RING_RADIUS
-          const force = (dist - RING_RADIUS) * 0.0005 * p.depth;
+          // Lực kéo/đẩy để duy trì bán kính RING_RADIUS (nhẹ nhàng hơn)
+          const force = (dist - RING_RADIUS) * 0.0002 * p.depth;
           p.vx += dx * force;
           p.vy += dy * force;
           
-          // Lực xoáy (orbit) nhẹ để các hạt bơi vòng quanh tâm chuột như một cơn lốc
-          const orbitForce = 0.015 * p.depth;
+          // Lực xoáy (orbit) trôi bồng bềnh siêu chậm
+          const orbitForce = 0.003 * p.depth;
           p.vx += dy * orbitForce;
           p.vy -= dx * orbitForce;
         } else {
