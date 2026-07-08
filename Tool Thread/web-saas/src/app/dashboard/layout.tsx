@@ -210,8 +210,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Bottom */}
         <div className="p-3 pb-4 space-y-2 shrink-0">
           {collapsed ? (
-            <button onClick={() => setCollapsed(false)} className="w-9 h-9 mx-auto rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
-              <PanelLeft className="w-4 h-4 rotate-180" />
+            <button 
+              onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
+              className="w-9 h-9 mx-auto rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-all"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           ) : (
             <>
@@ -292,11 +296,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 flex flex-col min-h-screen relative z-10 transition-all duration-300" style={{ marginLeft: collapsed ? 64 : SIDEBAR_W }}>
         {/* Dot grid */}
         <div className="absolute inset-0 pointer-events-none z-0 opacity-40" style={{ backgroundImage: "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        {collapsed && (
-          <button onClick={() => setCollapsed(false)} className="fixed top-5 z-40 w-7 h-7 rounded-md bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-700 transition-all" style={{ left: 72 }}>
-            <PanelLeft className="w-3.5 h-3.5 rotate-180" />
-          </button>
-        )}
         <div className="flex-1 z-10 overflow-hidden">{children}</div>
       </main>
     </div>
