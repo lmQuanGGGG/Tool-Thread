@@ -7,6 +7,10 @@ on:
         description: "Email của user (ví dụ: admin@autofarm.com)"
         required: true
         default: "admin@autofarm.com"
+      target_url:
+        description: "Link profile Threads cần cào"
+        required: true
+        default: "https://www.threads.net/@zuck"
 
 jobs:
   scrape_threads:
@@ -35,6 +39,7 @@ jobs:
       working-directory: "Tool Thread/tele_bot"
       env:
         USER_EMAIL: ${{ github.event.inputs.email }}
+        PROFILE_URL: ${{ github.event.inputs.target_url }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}

@@ -95,10 +95,10 @@ async function run() {
     }
 
     const dbConfig = profiles[0];
-    const targetUrl = process.env.PROFILE_URL || dbConfig.threads_scrape_targets;
+    const targetUrl = process.env.PROFILE_URL;
 
     if (!targetUrl || !targetUrl.includes('threads.net')) {
-        console.error("❌ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào threads_scrape_targets)");
+        console.error("❌ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào Github Action input 'target_url')");
         process.exit(1);
     }
 
@@ -235,40 +235,42 @@ async function run() {
         const post = uniqueData[i];
         console.log(`\n⏳ Đang xử lý post [${i+1}/${uniqueData.length}] - ID: ${post.post_id}`);
         
+        let image_file_ids = [];
+        let image_urls = [];
+
         // 1. Upload Media to Telegram
         if (post.media && post.media.length > 0) {
             for (let j = 0; j < post.media.length; j++) {
                 if (post.media[j].url) {
+                    image_urls.push(post.media[j].url);
                     const file_id = await uploadToTelegram(post.media[j].url);
                     if (file_id) {
-                        post.media[j].file_id = file_id;
+                        image_file_ids.push(file_id);
                     }
                     await delay(1000); // Rate limit protection
                 }
             }
         }
         
-        // 2. Insert to Supabase DB
+        // 2. Insert to Supabase DB (crawl_data)
         try {
             const { error: insertErr } = await supabase
-                .from('scraped_posts')
+                .from('crawl_data')
                 .upsert({
-                    user_email: email,
-                    platform: 'threads',
+                    user_id: dbConfig.id,
                     post_id: post.post_id.toString(),
-                    post_url: post.post_url,
-                    timestamp: post.timestamp,
-                    author: post.author,
-                    content: post.content,
-                    media: post.media,
-                    stats: post.stats
-                }, { onConflict: 'user_email,platform,post_id' });
+                    source_url: post.post_url,
+                    text_content: post.content,
+                    image_urls: image_urls,
+                    image_file_ids: image_file_ids,
+                    posted: false
+                }, { onConflict: 'user_id,post_id' });
 
             if (insertErr) {
                 console.error(`❌ Lỗi insert Supabase post ${post.post_id}:`, insertErr.message);
             } else {
                 successCount++;
-                console.log(`✅ Lưu thành công post ${post.post_id} vào Database.`);
+                console.log(`✅ Lưu thành công post ${post.post_id} vào Database (crawl_data).`);
             }
         } catch (dbErr) {
             console.error(`❌ Lỗi kết nối Supabase post ${post.post_id}:`, dbErr.message);
