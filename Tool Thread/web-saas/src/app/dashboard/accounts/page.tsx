@@ -210,12 +210,20 @@ export default function AccountsPage() {
     setThreadsPosts(prev => prev.map(p => p.id === id ? { ...p, text_content: newText } : p));
   };
   const handleRemovePostImage = (id: string, imgIdx: number) => {
+    if (userTier === "free") {
+      alert("Tài khoản Free không hỗ trợ chỉnh sửa. Vui lòng nâng cấp lên gói Lite hoặc cao hơn.");
+      return;
+    }
     setThreadsPosts(prev => prev.map(p => {
       if (p.id === id) { const newUrls = [...(p.image_urls || [])]; newUrls.splice(imgIdx, 1); return { ...p, image_urls: newUrls }; }
       return p;
     }));
   };
   const handleSavePost = async (post: any) => {
+    if (userTier === "free") {
+      alert("Tài khoản Free không hỗ trợ lưu thay đổi. Vui lòng nâng cấp lên gói Lite hoặc cao hơn.");
+      return false;
+    }
     pushLog("INFO", `Đang lưu bài viết...`, "threads");
     const { error } = await supabase.from('crawl_data').update({ text_content: post.text_content, image_urls: post.image_urls }).eq('id', post.id);
     if (error) { pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads"); return false; }
@@ -223,6 +231,10 @@ export default function AccountsPage() {
     return true;
   };
   const handleDeletePost = async (id: string) => {
+    if (userTier === "free") {
+      alert("Tài khoản Free không hỗ trợ xoá bài viết. Vui lòng nâng cấp lên gói Lite hoặc cao hơn.");
+      return;
+    }
     if (!confirm("Bạn có chắc chắn muốn xoá bài viết này không?")) return;
     pushLog("INFO", `Đang xoá bài viết...`, "threads");
     const { error } = await supabase.from('crawl_data').delete().eq('id', id);
@@ -241,6 +253,10 @@ export default function AccountsPage() {
     setParsedLinks(prev => prev.map((p, i) => i === index ? { ...p, suggested_comment: newText } : p));
   };
   const handleSaveParsedLink = async () => {
+    if (userTier === "free") {
+      alert("Tài khoản Free không hỗ trợ lưu thay đổi. Vui lòng nâng cấp lên gói Lite hoặc cao hơn.");
+      return false;
+    }
     pushLog("INFO", `Đang lưu thay đổi Shopee Data...`, "global");
     const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: parsedLinks }).eq('id', userId);
     if (error) { pushLog("ERROR", `Lỗi lưu Shopee Data: ${error.message}`, "global"); return false; }
@@ -248,6 +264,10 @@ export default function AccountsPage() {
     return true;
   };
   const handleDeleteParsedLink = async (index: number) => {
+    if (userTier === "free") {
+      alert("Tài khoản Free không hỗ trợ xoá dữ liệu. Vui lòng nâng cấp lên gói Lite hoặc cao hơn.");
+      return;
+    }
     if (!confirm("Xoá link này khỏi danh sách?")) return;
     pushLog("INFO", `Đang xoá link...`, "global");
     const updated = parsedLinks.filter((_, i) => i !== index);
