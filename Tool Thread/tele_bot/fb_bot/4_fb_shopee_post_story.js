@@ -350,6 +350,23 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         console.log("✅ Đã Share lên Story thành công!");
         await logToWeb(email, 'fb-story', '✅ Đã Share lên Story thành công!', 'success');
         await updateUsageStats(email, 'fb_posts_count', 1);
+        
+        // Xoá 2 bài đã đăng khỏi danh sách để không đăng trùng nữa
+        const remainingData = scrapedData.filter(item => item.aff_link !== product1.aff_link && item.aff_link !== product2.aff_link);
+        
+        // Cập nhật lên Supabase
+        const { supabase } = require('../supabase_helper');
+        if (dbConfig && dbConfig.id && supabase) {
+            await supabase.from('profiles').update({ parsed_affiliate_links: remainingData }).eq('id', dbConfig.id);
+            console.log(`🗑 Đã xoá 2 sản phẩm vừa đăng khỏi Database. Còn lại ${remainingData.length} sản phẩm chờ đăng.`);
+        }
+        
+        // Cập nhật file local (nếu dùng fallback local)
+        const dataFile = path.resolve(__dirname, 'shopee_data.json');
+        if (fs.existsSync(dataFile)) {
+            fs.writeFileSync(dataFile, JSON.stringify(remainingData, null, 2));
+        }
+
         await delay(5000);
 
     } catch (e) {
