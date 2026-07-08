@@ -141,9 +141,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className="fixed top-0 left-0 h-screen z-30 flex flex-col bg-white/70 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300"
         style={{ width: collapsed ? 64 : SIDEBAR_W }}
       >
+        {/* Toggle Sidebar Button */}
+        <button 
+          onClick={() => setCollapsed(!collapsed)} 
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-40 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-900 transition-all hover:scale-110"
+        >
+          {collapsed ? <ChevronRight className="w-3.5 h-3.5 ml-0.5" /> : <ChevronLeft className="w-3.5 h-3.5 pr-0.5" />}
+        </button>
+
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 pt-6 pb-6 shrink-0">
-          <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "w-0 opacity-0" : "w-full opacity-100"}`}>
+        <div className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px]">
+          <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "w-0 opacity-0 hidden" : "w-full opacity-100"}`}>
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
               <Rocket className="w-4 h-4" />
             </div>
@@ -153,14 +161,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           {collapsed && (
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm mx-auto">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm mx-auto shrink-0">
               <Rocket className="w-4 h-4" />
             </div>
-          )}
-          {!collapsed && (
-            <button onClick={() => setCollapsed(true)} className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all shrink-0">
-              <PanelLeft className="w-4 h-4" />
-            </button>
           )}
         </div>
 
