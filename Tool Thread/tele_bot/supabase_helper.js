@@ -164,7 +164,8 @@ async function checkQuota(email, type = 'reels_posted') {
     const limit = limits[limitKey];
     if (limit === -1) return true; // unlimited
 
-    const today = new Date().toISOString().split('T')[0];
+    const vnTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+    const today = vnTime.toISOString().split('T')[0];
     const { data: stat } = await supabase
       .from('usage_stats')
       .select(type)
@@ -191,7 +192,8 @@ async function checkQuota(email, type = 'reels_posted') {
 async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1) {
   if (!supabase) return;
 
-  const today = new Date().toISOString().split('T')[0];
+  const vnTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+  const today = vnTime.toISOString().split('T')[0];
 
   try {
     let userId = userIdOrEmail;
