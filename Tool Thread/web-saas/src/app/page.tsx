@@ -269,35 +269,15 @@ const ServerlessIllustration = () => {
   return (
     <div ref={ref} className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto flex items-center justify-center transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
       {/* Background glowing gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-indigo-50/50 rounded-full blur-3xl opacity-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/60 to-indigo-100/60 rounded-full blur-3xl opacity-60" />
       
-      {/* Connection lines (SVG) */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 400 400">
-        <circle cx="200" cy="200" r="130" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-blue-500" />
-      </svg>
-
-      {/* Central hub */}
-      <div className="relative z-10 w-24 h-24 bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-zinc-100 flex items-center justify-center" style={{ animation: 'float 6s ease-in-out infinite' }}>
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-inner">
-          <Cloud className="w-6 h-6" />
-        </div>
-      </div>
-
-      {/* Orbiting nodes */}
-      <div className="absolute inset-0" style={{ animation: 'orbSpin 30s linear infinite' }}>
-        {/* Node 1: GitHub */}
-        <div className="absolute top-[17.5%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
-          <GitBranch className="w-6 h-6 text-zinc-900" />
-        </div>
-        {/* Node 2: Database */}
-        <div className="absolute bottom-[27.5%] left-[21.5%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
-          <Database className="w-6 h-6 text-emerald-600" />
-        </div>
-        {/* Node 3: Telegram/Bot */}
-        <div className="absolute bottom-[27.5%] right-[21.5%] translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
-          <MessageSquare className="w-6 h-6 text-blue-500" />
-        </div>
-      </div>
+      {/* 3D Render Image */}
+      <img 
+        src="/serverless-3d.png" 
+        alt="Serverless 3D Illustration" 
+        className="relative z-10 w-full h-full object-contain drop-shadow-2xl" 
+        style={{ animation: 'float 6s ease-in-out infinite' }} 
+      />
     </div>
   );
 };
