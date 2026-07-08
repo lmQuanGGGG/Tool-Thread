@@ -18,6 +18,7 @@ create table if not exists public.tier_limits (
   reels_per_day integer default 0,
   threads_per_day integer default 0,
   fb_post_per_day integer default 0,
+  fb_comment_per_day integer default 0,
   max_links integer default 1,
   telegram_notify boolean default false,
   price_vnd integer default 0
@@ -25,18 +26,19 @@ create table if not exists public.tier_limits (
 
 -- BƯỚC 3: Nhập dữ liệu mặc định cho 5 gói
 insert into public.tier_limits 
-  (tier, auto_run, reels_per_day, threads_per_day, fb_post_per_day, max_links, telegram_notify, price_vnd) 
+  (tier, auto_run, reels_per_day, threads_per_day, fb_post_per_day, fb_comment_per_day, max_links, telegram_notify, price_vnd) 
 values
-  ('free',    false,  1,   10,  0,   1,  false,  0),
-  ('lite',    false,  3,   30,  1,   3,  true,   59000),
-  ('plus',    true,   6,   4,   4,   10, true,   129000),
-  ('pro',     true,   9,   6,   7,   20, true,   199000),
-  ('promax',  true,  -1,   -1, -1,  -1,  true,   499000)
+  ('free',    false,  2,   10,  1,   10,  2,   false,  0),
+  ('lite',    false,  3,   30,  3,   15,  4,   true,   59000),
+  ('plus',    true,   6,   80,  5,   35,  10,  true,   129000),
+  ('pro',     true,   12,  160, 10,  70,  20,  true,   199000),
+  ('promax',  true,  -1,   -1,  -1,  -1,  -1,  true,   499000)
 on conflict (tier) do update set
   auto_run = excluded.auto_run,
   reels_per_day = excluded.reels_per_day,
   threads_per_day = excluded.threads_per_day,
   fb_post_per_day = excluded.fb_post_per_day,
+  fb_comment_per_day = excluded.fb_comment_per_day,
   max_links = excluded.max_links,
   telegram_notify = excluded.telegram_notify,
   price_vnd = excluded.price_vnd;

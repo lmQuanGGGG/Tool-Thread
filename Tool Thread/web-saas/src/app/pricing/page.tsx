@@ -15,8 +15,9 @@ type Tier = {
   badge?: string;
   quota: {
     reels: string;
-    threads: string;
     fbPost: string;
+    fbCmt: string;
+    threads: string;
     links: string;
   };
   perks: string[];
@@ -29,7 +30,7 @@ const TIERS: Tier[] = [
     price: 0,
     icon: Activity,
     tone: "zinc",
-    quota: { reels: "1", threads: "10", fbPost: "0", links: "1" },
+    quota: { reels: "2", fbPost: "1", fbCmt: "10", threads: "10", links: "2" },
     perks: ["Chạy thủ công", "Dùng thử luồng bot", "Phù hợp test nhanh"],
   },
   {
@@ -38,7 +39,7 @@ const TIERS: Tier[] = [
     price: 59000,
     icon: Zap,
     tone: "emerald",
-    quota: { reels: "3", threads: "30", fbPost: "1", links: "3" },
+    quota: { reels: "3", fbPost: "3", fbCmt: "15", threads: "30", links: "4" },
     perks: ["Thông báo Telegram", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
@@ -48,7 +49,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "blue",
     badge: "Phổ biến",
-    quota: { reels: "6", threads: "4", fbPost: "4", links: "10" },
+    quota: { reels: "6", fbPost: "5", fbCmt: "35", threads: "80", links: "10" },
     perks: ["Chạy tự động", "Tăng giới hạn mỗi ngày", "Đủ dùng bán hàng đều"],
   },
   {
@@ -58,7 +59,7 @@ const TIERS: Tier[] = [
     icon: Crown,
     tone: "amber",
     badge: "Đề xuất",
-    quota: { reels: "9", threads: "6", fbPost: "7", links: "20" },
+    quota: { reels: "12", fbPost: "10", fbCmt: "70", threads: "160", links: "20" },
     perks: ["Chạy tự động", "Hỗ trợ ưu tiên", "Tối ưu cho vận hành thật"],
   },
   {
@@ -68,7 +69,7 @@ const TIERS: Tier[] = [
     icon: Rocket,
     tone: "violet",
     badge: "Max",
-    quota: { reels: "∞", threads: "∞", fbPost: "∞", links: "∞" },
+    quota: { reels: "∞", fbPost: "∞", fbCmt: "∞", threads: "∞", links: "∞" },
     perks: ["Không giới hạn", "Ưu tiên VIP", "Dành cho team scale"],
   },
 ];
@@ -150,16 +151,17 @@ export default function PricingPage() {
             <h2 className="text-2xl font-bold tracking-tight text-zinc-950">Chọn gói vận hành</h2>
             <p className="mt-1 text-sm text-zinc-500">So sánh nhanh giới hạn bot, nâng cấp khi cần scale.</p>
           </div>
-          <div className="grid grid-cols-4 gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-2 text-center">
+          <div className="hidden grid-cols-5 gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-2 text-center md:grid">
             {[
               ["Reels", "ngày"],
-              ["Threads", "comment"],
               ["FB Post", "ngày"],
+              ["FB Comment", "ngày"],
+              ["Threads Cmt", "ngày"],
               ["Links", "lưu"],
             ].map(([label, unit]) => (
-              <div key={label} className="min-w-[74px] rounded-lg bg-white px-3 py-2 shadow-sm">
-                <div className="text-[11px] font-semibold text-zinc-900">{label}</div>
-                <div className="text-[10px] text-zinc-400">{unit}</div>
+              <div key={label} className="min-w-[74px] rounded-lg bg-white px-2 py-2 shadow-sm">
+                <div className="text-[10px] font-semibold text-zinc-900">{label}</div>
+                <div className="text-[9px] text-zinc-400">{unit}</div>
               </div>
             ))}
           </div>
@@ -193,16 +195,17 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 p-3">
+                <div className="flex flex-col gap-1.5 p-3">
                   {[
                     ["Reels", tier.quota.reels],
-                    ["Threads", tier.quota.threads],
                     ["FB Post", tier.quota.fbPost],
+                    ["FB Comment", tier.quota.fbCmt],
+                    ["Threads Cmt", tier.quota.threads],
                     ["Links", tier.quota.links],
                   ].map(([label, value]) => (
-                    <div key={label} className="rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-2">
-                      <div className="text-[10px] font-medium text-zinc-400">{label}</div>
-                      <div className="mt-0.5 text-lg font-bold leading-none text-zinc-950">{value}</div>
+                    <div key={label} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50/80 px-3 py-1.5">
+                      <div className="text-[11px] font-medium text-zinc-500">{label}</div>
+                      <div className="text-[13px] font-bold text-zinc-950">{value}</div>
                     </div>
                   ))}
                 </div>
