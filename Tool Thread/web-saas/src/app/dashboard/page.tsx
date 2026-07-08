@@ -207,10 +207,7 @@ export default function DashboardPage() {
               <Zap className="w-4 h-4" />
               Thiết lập Bot
             </Link>
-            <Link href="/dashboard/analytics" className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-full text-sm font-semibold transition-all border border-gray-200 shadow-sm flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Xem Thống kê
-            </Link>
+
           </div>
         </div>
         {/* Decorative elements */}
