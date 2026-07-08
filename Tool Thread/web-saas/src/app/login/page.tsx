@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getDeviceFingerprint } from "../../utils/fingerprint";
-import HeartsBackground from "../../components/HeartsBackground";
+import ConfettiCanvas from "../../components/ConfettiCanvas";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -83,7 +83,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center items-center p-4 relative overflow-hidden">
       {/* Interactive mouse trail background */}
-      <HeartsBackground />
+      <ConfettiCanvas />
 
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
