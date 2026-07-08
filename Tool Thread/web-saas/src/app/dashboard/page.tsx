@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import {
   Activity, Crown, Zap, TrendingUp, Video, MessageSquare, Image,
-  ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2
+  ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket
 } from "lucide-react";
 import Link from "next/link";
 
