@@ -388,28 +388,32 @@ export default function Home() {
                     content: <>Tiến trình vừa chạy xong!<br/>- Đã rải thính tại: Trang chủ (For You)<br/>- Tổng số bài viết đã cmt: 10 bài</>
                   },
                 ].map((m, i) => (
-                  <div key={i} className="flex flex-col items-start animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
-                    <div className="bg-[#182533] text-zinc-200 rounded-2xl rounded-bl-sm p-3 shadow-sm relative max-w-[92%] border border-white/[0.02]">
-                      <div className={`flex items-center gap-1.5 ${m.color} font-medium text-[13px] mb-1.5`}>
-                        <CheckCircle2 fill="currentColor" className="w-[14px] h-[14px] flex-shrink-0 text-white" />
-                        <span className="truncate">{m.title}</span>
+                  <Reveal key={i} delay={400 + i * 200}>
+                    <div className="flex flex-col items-start">
+                      <div className="bg-[#182533] text-zinc-200 rounded-2xl rounded-bl-sm p-3 shadow-sm relative max-w-[92%] border border-white/[0.02]">
+                        <div className={`flex items-center gap-1.5 ${m.color} font-medium text-[13px] mb-1.5`}>
+                          <CheckCircle2 fill="currentColor" className="w-[14px] h-[14px] flex-shrink-0 text-white" />
+                          <span className="truncate">{m.title}</span>
+                        </div>
+                        <div className="text-[13px] leading-[1.6] mb-1">
+                          {m.content}
+                        </div>
+                        <div className="text-[10px] text-[#6b7b8c] text-right mt-1 font-medium">{m.time}</div>
                       </div>
-                      <div className="text-[13px] leading-[1.6] mb-1">
-                        {m.content}
-                      </div>
-                      <div className="text-[10px] text-[#6b7b8c] text-right mt-1 font-medium">{m.time}</div>
                     </div>
-                  </div>
+                  </Reveal>
                 ))}
 
                 {/* User Message (from screenshot) */}
-                <div className="flex flex-col items-end animate-fade-in" style={{ animationDelay: `600ms`, animationFillMode: 'both' }}>
-                  <div className="bg-[#2b5278] text-white rounded-2xl rounded-br-sm px-3.5 py-2 shadow-sm relative max-w-[90%] border border-white/[0.02]">
-                    <div className="text-[13.5px] leading-relaxed">
-                      /menu <span className="text-[10px] text-[#86a8c4] ml-2 font-medium">21:53 <Check className="w-3 h-3 inline text-[#5eb5f7] -ml-0.5"/></span>
+                <Reveal delay={1000}>
+                  <div className="flex flex-col items-end">
+                    <div className="bg-[#2b5278] text-white rounded-2xl rounded-br-sm px-3.5 py-2 shadow-sm relative max-w-[90%] border border-white/[0.02]">
+                      <div className="text-[13.5px] leading-relaxed">
+                        /menu <span className="text-[10px] text-[#86a8c4] ml-2 font-medium">21:53 <Check className="w-3 h-3 inline text-[#5eb5f7] -ml-0.5"/></span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Reveal>
 
               </div>
             </div>
