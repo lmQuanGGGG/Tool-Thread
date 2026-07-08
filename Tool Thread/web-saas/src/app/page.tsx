@@ -609,30 +609,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 3D Orb Section — kiểu Antigravity SDK ── */}
-      <section className="relative z-10 py-24 overflow-hidden">
-        <div className="max-w-[1100px] mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <Reveal delay={100}>
-              <ServerlessIllustration />
-            </Reveal>
-            <Reveal delay={250}>
-              <div>
-                <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-5">Hạ tầng Serverless</h2>
-                <p className="text-zinc-500 text-[15px] leading-relaxed mb-4">
-                  Toàn bộ hệ thống chạy trên GitHub Actions + Cloudflare Workers. Không server, không chi phí vận hành, uptime 99.9%.
-                </p>
-                <ul className="space-y-3 text-[14px] text-zinc-600">
-                  {["GitHub Actions — cron job tự động 24/7", "Cloudflare Workers — proxy API tốc độ cao", "Supabase — database PostgreSQL miễn phí", "Telegram Bot API — nhận thông báo tự động"].map((t) => (
-                    <li key={t} className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" />{t}</li>
-                  ))}
-                </ul>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
       {/* ── Tutorial ── */}
       <section id="tutorial" className="relative z-10 px-4 py-28 bg-white border-t border-zinc-100 overflow-hidden">
         <div className="max-w-[1200px] mx-auto">
@@ -789,6 +765,30 @@ export default function Home() {
         </div>
       </section>
 
+
+      {/* ── 3D Orb Section — kiểu Antigravity SDK ── */}
+      <section className="relative z-10 py-24 overflow-hidden">
+        <div className="max-w-[1100px] mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <Reveal delay={100}>
+              <ServerlessIllustration />
+            </Reveal>
+            <Reveal delay={250}>
+              <div>
+                <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-5">Hạ tầng Serverless</h2>
+                <p className="text-zinc-500 text-[15px] leading-relaxed mb-4">
+                  Toàn bộ hệ thống chạy trên GitHub Actions + Cloudflare Workers. Không server, không chi phí vận hành, uptime 99.9%.
+                </p>
+                <ul className="space-y-3 text-[14px] text-zinc-600">
+                  {["GitHub Actions — cron job tự động 24/7", "Cloudflare Workers — proxy API tốc độ cao", "Supabase — database PostgreSQL miễn phí", "Telegram Bot API — nhận thông báo tự động"].map((t) => (
+                    <li key={t} className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" />{t}</li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
 
       {/* ── Dark CTA ── */}
       <section className="relative z-10 px-4 pb-20 max-w-[1100px] mx-auto">
