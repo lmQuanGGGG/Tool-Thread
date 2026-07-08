@@ -382,7 +382,7 @@ export default function AccountsPage() {
                 </div>
                 <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-1`} />
                 <p className="text-[11px] text-gray-500 mb-5 leading-relaxed">
-                  💡 Hỗ trợ quét và lấy video 1080p đa nền tảng: <span className="font-medium text-blue-600">YouTube, TikTok, Facebook Reels, Instagram Reels, Twitter</span>.
+                  💡 Hỗ trợ quét và lấy video 1080p đa nền tảng: <span className="font-medium text-blue-600">YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels, Twitter</span>.
                 </p>
                 
                 <div className="flex items-center justify-between mb-4">
