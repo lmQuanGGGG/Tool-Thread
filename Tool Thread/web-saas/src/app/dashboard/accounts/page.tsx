@@ -553,7 +553,7 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
                       
-                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-0 px-4 md:px-0 [&::-webkit-scrollbar]:hidden">
+                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-5 px-4 md:px-5 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
@@ -748,7 +748,7 @@ export default function AccountsPage() {
 	                      </>
 	                    )}
 
-		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-0 px-4 md:px-0 [&::-webkit-scrollbar]:hidden">
+		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 px-4 md:px-6 [&::-webkit-scrollbar]:hidden">
 		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
                           const hasImages = post.image_urls && post.image_urls.length > 0;
                           return (
