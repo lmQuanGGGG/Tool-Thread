@@ -175,11 +175,12 @@ const ConfettiCanvas = () => {
         p.vy += (targetY - p.y) * RETURN_FORCE;
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
-          // Lực "di cư": Thay vì tác động vật lý bạo lực, ta chỉ nhẹ nhàng dời điểm neo (base) của hạt.
-          // Nhưng thay vì dồn hết vào chính giữa chuột (gây ra hiện tượng gom cục), 
-          // ta dời về vị trí tương đối tạo thành hình trái tim xung quanh chuột.
-          const targetMouseX = mx + p.heartX;
-          const targetMouseY = my + p.heartY;
+          // Lực "di cư" và tạo hình trái tim
+          // Thêm hiệu ứng nhịp đập (Heartbeat) phập phồng mạnh mẽ bằng hàm sin lũy thừa
+          const beatScale = 1 + Math.pow(Math.sin(t * 15), 6) * 0.4;
+
+          const targetMouseX = mx + p.heartX * beatScale;
+          const targetMouseY = my + p.heartY * beatScale;
           const pullDx = targetMouseX - p.baseX;
           const pullDy = targetMouseY - p.baseY;
 
