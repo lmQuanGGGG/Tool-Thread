@@ -671,22 +671,20 @@ export default function Home() {
 
             {/* Right Col: Video Player */}
             <Reveal delay={300} className="w-full">
-              <div className="bg-white p-2.5 rounded-[32px] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-hidden group w-full mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-500"></div>
-                <div className="rounded-[24px] overflow-hidden bg-zinc-950 aspect-[16/10] relative shadow-inner">
-                  <video 
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    controls 
-                    className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
-                    poster="/0709-poster.jpg"
-                    src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
-                  >
-                    Trình duyệt của bạn không hỗ trợ thẻ video.
-                  </video>
-                </div>
+              <div className="rounded-[24px] overflow-hidden bg-zinc-950 aspect-[16/10] relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] border border-zinc-200/60 group w-full mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-500 z-10"></div>
+                <video 
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls 
+                  className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity duration-300"
+                  poster="/0709-poster.jpg"
+                  src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
+                >
+                  Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
               </div>
             </Reveal>
           </div>
