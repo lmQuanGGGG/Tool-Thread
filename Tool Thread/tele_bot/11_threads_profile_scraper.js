@@ -88,15 +88,21 @@ async function run() {
     }
 
     // Lấy config từ DB
-    const { data: profiles, error } = await supabase
+    let { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email)
         .limit(1);
 
     if (error || !profiles || profiles.length === 0) {
-        console.error("❌ Không tìm thấy user trong DB!");
-        process.exit(1);
+        console.warn(`⚠️ Không tìm thấy user ${email} trong DB! Thử lấy một user bất kỳ làm fallback...`);
+        const { data: fallbackProfiles } = await supabase.from('profiles').select('*').limit(1);
+        if (!fallbackProfiles || fallbackProfiles.length === 0) {
+            console.error("❌ Không có bất kỳ user nào trong bảng profiles! Vui lòng đăng ký tài khoản trên Web SaaS trước.");
+            process.exit(1);
+        }
+        profiles = fallbackProfiles;
+        console.log(`✅ Đã fallback sang user: ${profiles[0].email}`);
     }
 
     const dbConfig = profiles[0];

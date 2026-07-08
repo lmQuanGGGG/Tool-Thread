@@ -30,7 +30,10 @@ export async function POST(request: Request) {
     else if (botType === 'fb_comment') workflowId = 'fb_comment_worker.yml';
     else if (botType === 'threads_scraper') {
       workflowId = 'threads_scraper_worker.yml';
-      inputs = { target_url: body.target_url || "https://www.threads.net/@zuck" };
+      inputs = { 
+        target_url: body.target_url || "https://www.threads.net/@zuck",
+        email: email
+      };
     }
     else if (botType.startsWith('threads_post_')) {
       workflowId = 'threads_post_worker.yml';

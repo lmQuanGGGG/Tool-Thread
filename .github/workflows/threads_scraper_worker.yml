@@ -7,6 +7,10 @@ on:
         description: "Link profile Threads cần cào"
         required: true
         default: "https://www.threads.net/@zuck"
+      email:
+        description: "Email user (tự động từ UI)"
+        required: false
+        default: ""
 
 jobs:
   scrape_threads:
@@ -34,6 +38,7 @@ jobs:
     - name: Chạy Script Cào Data với Xvfb
       working-directory: "Tool Thread/tele_bot"
       env:
+        USER_EMAIL: ${{ github.event.inputs.email }}
         PROFILE_URL: ${{ github.event.inputs.target_url }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -361,7 +361,7 @@ export default function CrawlPage() {
                         const res = await fetch("/api/trigger-bot", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ email: "admin@autofarm.com", botType: "threads_scraper", target_url: url })
+                          body: JSON.stringify({ email: userId ? await supabase.auth.getUser().then(r => r.data.user?.email) : "admin@autofarm.com", botType: "threads_scraper", target_url: url })
                         });
                         if (res.ok) addLog("✅ Đã gửi lệnh thành công! Đợi 1-2 phút hệ thống sẽ tự lưu Data.");
                         else addLog("❌ Lỗi kích hoạt Bot Cloud!");
