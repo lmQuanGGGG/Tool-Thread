@@ -123,10 +123,17 @@ const ConfettiCanvas = () => {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
-          // Lực hút — càng gần càng mạnh
-          const force = ATTRACT_FORCE * (1 - dist / ATTRACT_RADIUS) * p.depth;
+          const RING_RADIUS = 100;
+          // Lực kéo/đẩy để duy trì bán kính RING_RADIUS
+          // dist > RING_RADIUS => hút vào; dist < RING_RADIUS => đẩy ra
+          const force = (dist - RING_RADIUS) * 0.0008 * p.depth;
           p.vx += dx * force;
           p.vy += dy * force;
+          
+          // Lực xoáy (orbit) nhẹ để các hạt bơi vòng quanh tâm chuột
+          const orbitForce = 0.015 * p.depth;
+          p.vx += dy * orbitForce;
+          p.vy -= dx * orbitForce;
         } else {
           // Kéo về vị trí base + oscillation nhẹ
           const targetX = p.baseX + Math.sin(t * 2 + p.angle) * 8;
