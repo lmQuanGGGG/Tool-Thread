@@ -247,10 +247,10 @@ async function run() {
         }
     }
 
+    const rawThreadsData = await page.evaluate(() => window.rawThreadsData || []);
+    
     console.log("✅ Đã cuộn xong, đóng browser...");
     await browser.close();
-
-    const rawThreadsData = await page.evaluate(() => window.rawThreadsData || []);
 
     if (!rawThreadsData || rawThreadsData.length === 0) {
         console.error("❌ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
