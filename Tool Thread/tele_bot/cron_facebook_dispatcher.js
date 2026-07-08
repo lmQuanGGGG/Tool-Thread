@@ -57,10 +57,36 @@ async function run() {
 
         if (!hasFb && !hasThreads) continue;
 
+        const isFree = p.tier === 'free';
+        const isLite = p.tier === 'lite';
         const isPlus = p.tier === 'plus';
         const isProOrMax = p.tier === 'pro' || p.tier === 'promax';
 
-        if (!isPlus && !isProOrMax) continue;
+        if (!isFree && !isLite && !isPlus && !isProOrMax) continue;
+
+        // Free Logic
+        if (isFree) {
+            if (hasFb && [8, 19].includes(vnHour)) {
+                await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [19].includes(vnHour)) {
+                await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasThreads && [8, 19].includes(vnHour)) {
+                await dispatchWorkflow('threads_post_worker.yml', p.email);
+            }
+        }
+
+        // Lite Logic
+        if (isLite) {
+            if (hasFb && [8, 13, 19].includes(vnHour)) {
+                await dispatchWorkflow('reels_worker.yml', p.email);
+                await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasThreads && [8, 13, 19].includes(vnHour)) {
+                await dispatchWorkflow('threads_post_worker.yml', p.email);
+            }
+        }
 
         // Plus Logic
         if (isPlus) {
