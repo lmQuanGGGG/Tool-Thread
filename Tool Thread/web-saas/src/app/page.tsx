@@ -532,39 +532,69 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal delay={200}>
-            <div className="rounded-[24px] bg-[#f4f4f5] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col relative">
+            <div className="rounded-[24px] bg-[#0e1621] border border-zinc-800 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative h-[420px]">
+              {/* Pattern Background overlay */}
+              <div 
+                className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20zm4 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2z' fill='%231f2937' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E")` }}
+              ></div>
+
               {/* Fake Header */}
-              <div className="bg-white/90 backdrop-blur-md px-5 py-3.5 border-b border-zinc-200 flex items-center gap-3 z-10 sticky top-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)] border border-blue-400/30">
+              <div className="bg-[#17212b]/95 backdrop-blur-md px-5 py-3 border-b border-[#232e3c] flex items-center gap-3 z-10 sticky top-0 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)] border border-blue-400/20">
                   <Bot className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="font-bold text-[14.5px] text-zinc-900 leading-tight">AutoFarm Bot</div>
-                  <div className="text-[12px] text-blue-500 font-medium">bot</div>
+                  <div className="font-semibold text-[14.5px] text-zinc-100 leading-tight">AutoFarm Bot</div>
+                  <div className="text-[12.5px] text-blue-400 font-medium">bot</div>
                 </div>
               </div>
               
               {/* Messages */}
-              <div className="p-5 space-y-4">
+              <div className="p-4 space-y-3.5 z-10 overflow-y-auto flex-1 custom-scrollbar">
                 {[
-                  { time: "10:30", text: "Crawl thành công 15 video từ kênh YouTube", icon: <Download className="w-[14px] h-[14px] text-blue-500" />, iconBg: "bg-blue-50 border-blue-100" },
-                  { time: "11:45", text: "Đã upload 3 video lên Facebook Reels", icon: <Clapperboard className="w-[14px] h-[14px] text-indigo-500" />, iconBg: "bg-indigo-50 border-indigo-100" },
-                  { time: "14:20", text: "Đã comment 12 bài Threads (Profile: @bot1)", icon: <MessageSquare className="w-[14px] h-[14px] text-emerald-600" />, iconBg: "bg-emerald-50 border-emerald-100" },
-                  { time: "16:00", text: "Cảnh báo: Cookie Facebook sắp hết hạn", icon: <AlertTriangle className="w-[14px] h-[14px] text-amber-500" />, iconBg: "bg-amber-50 border-amber-200", highlight: true },
-                  { time: "18:00", text: "Hoàn tất chu kỳ AutoFarm hôm nay", icon: <CheckCircle2 className="w-[14px] h-[14px] text-emerald-500" />, iconBg: "bg-emerald-50 border-emerald-100" },
+                  { 
+                    time: "17:22", 
+                    title: "Báo cáo Threads Comment Bot (Nick 1)",
+                    color: "text-[#4ade80]",
+                    content: <>Tiến trình vừa chạy xong!<br/>- Đã rải thính tại: Trang chủ (For You)<br/>- Tổng số bài viết đã cmt: 5 bài</>
+                  },
+                  { 
+                    time: "20:19", 
+                    title: "Báo cáo Threads Comment Bot (Nick 1)",
+                    color: "text-[#4ade80]",
+                    content: <>Tiến trình vừa chạy xong!<br/>- Đã rải thính tại: Trang chủ (For You)<br/>- Tổng số bài viết đã cmt: 4 bài</>
+                  },
+                  { 
+                    time: "23:01", 
+                    title: "Báo cáo Threads Comment Bot (Nick 1)",
+                    color: "text-[#4ade80]",
+                    content: <>Tiến trình vừa chạy xong!<br/>- Đã rải thính tại: Trang chủ (For You)<br/>- Tổng số bài viết đã cmt: 10 bài</>
+                  },
                 ].map((m, i) => (
-                  <div key={i} className="flex items-end gap-2 animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
-                    <div className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center border mb-4 flex-shrink-0 ${m.iconBg}`}>
-                      {m.icon}
-                    </div>
-                    <div className="flex flex-col gap-1 items-start">
-                      <div className={`px-4 py-2.5 rounded-2xl rounded-bl-sm text-[13.5px] shadow-sm max-w-full ${m.highlight ? 'bg-orange-50 text-orange-800 border border-orange-200' : 'bg-white text-zinc-800 border border-zinc-200'}`}>
-                        {m.text}
+                  <div key={i} className="flex flex-col items-start animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
+                    <div className="bg-[#182533] text-zinc-200 rounded-2xl rounded-bl-sm p-3 shadow-sm relative max-w-[92%] border border-white/[0.02]">
+                      <div className={`flex items-center gap-1.5 ${m.color} font-medium text-[13px] mb-1.5`}>
+                        <CheckCircle2 className="w-[14px] h-[14px] flex-shrink-0" fill="currentColor" className="w-[14px] h-[14px] text-white" />
+                        <span className="truncate">{m.title}</span>
                       </div>
-                      <span className="text-[10px] font-medium text-zinc-400 ml-1">{m.time}</span>
+                      <div className="text-[13px] leading-[1.6] mb-1">
+                        {m.content}
+                      </div>
+                      <div className="text-[10px] text-[#6b7b8c] text-right mt-1 font-medium">{m.time}</div>
                     </div>
                   </div>
                 ))}
+
+                {/* User Message (from screenshot) */}
+                <div className="flex flex-col items-end animate-fade-in" style={{ animationDelay: `600ms`, animationFillMode: 'both' }}>
+                  <div className="bg-[#2b5278] text-white rounded-2xl rounded-br-sm px-3.5 py-2 shadow-sm relative max-w-[90%] border border-white/[0.02]">
+                    <div className="text-[13.5px] leading-relaxed">
+                      /menu <span className="text-[10px] text-[#86a8c4] ml-2 font-medium">21:53 <Check className="w-3 h-3 inline text-[#5eb5f7] -ml-0.5"/></span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </Reveal>
