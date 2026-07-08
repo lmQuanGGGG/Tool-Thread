@@ -396,7 +396,7 @@ export default function CrawlPage() {
                     <span className="font-mono text-sm text-zinc-300">Mẫu cấu trúc JSON (Tự tải lên)</span>
                   </div>
                   <button onClick={() => {
-                    navigator.clipboard.writeText(`[\n  {\n    "post_id": "123456789_0000",\n    "timestamp": 1700000000,\n    "post_url": "https://www.threads.net/@user/post/123",\n    "author": { "username": "username", "full_name": "Full Name" },\n    "content": {\n      "text": "Nội dung bài viết",\n      "media": [\n        { "type": "image", "url": "https://link_anh.jpg" }\n      ]\n    },\n    "stats": { "likes": 120, "replies": 5 }\n  }\n]`);
+                    navigator.clipboard.writeText(`[\n  {\n    "post_id": "123456789",\n    "post_url": "https://www.threads.net/@user/post/123",\n    "content": {\n      "text": "Nội dung bài viết",\n      "media": [\n        { "url": "https://link_anh.jpg" },\n        { "url": "https://link_video.mp4" }\n      ]\n    }\n  }\n]`);
                     setCopied(true); setTimeout(() => setCopied(false), 2500);
                   }} disabled={!canUseCrawl}
                     className={`flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-lg border transition-all
@@ -412,17 +412,15 @@ export default function CrawlPage() {
                     <pre className="text-[10px] font-mono text-sky-300/70 whitespace-pre-wrap leading-relaxed">
 {`[
   {
-    "post_id": "123456789_0000",
-    "timestamp": 1700000000,
+    "post_id": "123456789",
     "post_url": "https://www.threads.net/@user/post/123",
-    "author": { "username": "username", "full_name": "Full Name" },
     "content": {
       "text": "Nội dung bài viết",
       "media": [
-        { "type": "image", "url": "https://link_anh.jpg" }
+        { "url": "https://link_anh.jpg" },
+        { "url": "https://link_video.mp4" }
       ]
-    },
-    "stats": { "likes": 120, "replies": 5 }
+    }
   }
 ]`}
                     </pre>
