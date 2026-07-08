@@ -46,16 +46,28 @@ async function run() {
         if (!p.email || !p.tier) continue;
         const tierLimit = limitsMap[p.tier] || limitsMap['free'];
         
-        // Skip if not an auto_run tier (e.g. free, lite)
-        if (!tierLimit.auto_run) continue;
+        const vnHour = (new Date().getUTCHours() + 7) % 24;
 
         const stat = statsMap[p.email];
         const used = stat ? (stat.threads_commented || 0) : 0;
         let limit = tierLimit.threads_per_day;
-        
-        // Auto bot chỉ chạy tối đa 50% quota tổng của gói
-        if (limit !== -1) {
-            limit = Math.floor(limit / 2);
+
+        if (p.tier === 'free') {
+            // Free: 100% auto. Runs only on 2 slots (e.g., 8h, 20h).
+            if (vnHour !== 8 && vnHour !== 20) {
+                continue;
+            }
+        } else if (p.tier === 'lite') {
+            // Lite: 20 auto. Runs on 3 slots (e.g., 8h, 13h, 20h).
+            if (vnHour !== 8 && vnHour !== 13 && vnHour !== 20) {
+                continue;
+            }
+            limit = 20; // 20/30 auto
+        } else {
+            // Plus, Pro, ProMax: 50% auto. Runs anytime until limit.
+            if (limit !== -1) {
+                limit = Math.floor(limit / 2);
+            }
         }
 
         // Check quota

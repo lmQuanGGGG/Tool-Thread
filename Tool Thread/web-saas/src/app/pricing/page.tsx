@@ -32,7 +32,7 @@ const TIERS: Tier[] = [
     icon: Activity,
     tone: "zinc",
     quota: { reels: "2", fbPost: "1", threads: "10", threadsPost: "2", crawl: "1", links: "2" },
-    perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Dùng thử luồng bot", "Phù hợp test nhanh"],
+    perks: ["Auto Cmt Threads (10/10)", "Đăng bài Threads (Thủ công)", "Chia 2 khung giờ chạy", "Phù hợp test nhanh"],
   },
   {
     key: "lite",
@@ -41,7 +41,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "emerald",
     quota: { reels: "3", fbPost: "3", threads: "30", threadsPost: "3", crawl: "2", links: "4" },
-    perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
+    perks: ["Auto Cmt Threads (20/30)", "Đăng bài Threads (Thủ công)", "Chia 3 khung giờ chạy", "Dành cho shop nhỏ"],
   },
   {
     key: "plus",
