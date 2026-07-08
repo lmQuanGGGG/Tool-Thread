@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Grid, Network, BarChart, Rocket, CreditCard, Video,
+  LayoutDashboard, Network, LineChart, Rocket, CircleDollarSign, Bot,
   Crown, Zap, Activity, ChevronRight, ChevronLeft, PanelLeft, Search, LogOut
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
@@ -21,10 +21,10 @@ const TIER_META: Record<string, { label: string; icon: React.ElementType; color:
 const ADMIN_EMAIL = "lmquang.devops@gmail.com";
 
 const NAV_ITEMS = [
-  { name: "Dashboard",    href: "/dashboard",          icon: Grid,       adminOnly: false },
-  { name: "Bots & Config", href: "/dashboard/accounts", icon: Video,      adminOnly: false },
-  { name: "Analytics",    href: "/dashboard/analytics", icon: BarChart,   adminOnly: true  },
-  { name: "Pricing",      href: "/pricing",             icon: CreditCard, adminOnly: false },
+  { name: "Dashboard",    href: "/dashboard",          icon: LayoutDashboard, adminOnly: false },
+  { name: "Bots & Config", href: "/dashboard/accounts", icon: Bot,             adminOnly: false },
+  { name: "Analytics",    href: "/dashboard/analytics", icon: LineChart,       adminOnly: true  },
+  { name: "Pricing",      href: "/pricing",             icon: CircleDollarSign, adminOnly: false },
 ];
 
 const SIDEBAR_W = 256;
