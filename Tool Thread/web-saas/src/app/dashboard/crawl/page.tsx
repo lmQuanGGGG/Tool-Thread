@@ -352,7 +352,7 @@ export default function CrawlPage() {
                   <button 
                     onClick={async () => {
                       const url = (document.getElementById('cloudTargetUrl') as HTMLInputElement).value;
-                      if (!url || !url.includes('threads.net')) {
+                      if (!url || !url.includes('threads')) {
                         addLog("❌ Link không hợp lệ!");
                         return;
                       }

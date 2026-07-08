@@ -97,7 +97,7 @@ async function run() {
     const dbConfig = profiles[0];
     const targetUrl = process.env.PROFILE_URL;
 
-    if (!targetUrl || !targetUrl.includes('threads.net')) {
+    if (!targetUrl || !targetUrl.includes('threads')) {
         console.error("❌ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào Github Action input 'target_url')");
         process.exit(1);
     }
