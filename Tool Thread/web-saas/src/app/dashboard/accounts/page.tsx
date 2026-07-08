@@ -384,7 +384,7 @@ export default function AccountsPage() {
               </div>
 
               {/* Right Column Wrapper */}
-              <div className="flex flex-col gap-6 h-full min-h-0">
+              <div className="flex flex-col gap-6 h-full min-h-0 overflow-hidden">
                 {/* Shopee Editor (AI Parsing Results) */}
                 {parsedLinks.length > 0 && (
                   <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
@@ -549,7 +549,7 @@ export default function AccountsPage() {
                 
               </div>
 
-              <div className="flex flex-col gap-6 h-full min-h-0">
+              <div className="flex flex-col gap-6 h-full min-h-0 overflow-hidden">
 {/* Posts Editor */}
                 <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
                   <div className="flex items-center justify-between mb-5">
