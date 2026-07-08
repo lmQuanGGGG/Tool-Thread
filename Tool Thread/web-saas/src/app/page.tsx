@@ -148,16 +148,19 @@ const ConfettiCanvas = () => {
           alpha += (1 - dist / ATTRACT_RADIUS) * 0.35;
         }
 
-        // Hiệu ứng "con sứa vỗ cánh" (Squish & Stretch)
-        const flap = Math.sin(t * 15 + p.angle * 4);
-        const bobbingY = flap * 12 * p.depth;
-        const scaleX = 1 - flap * 0.2;  // Co lại chiều ngang
-        const scaleY = 1 + flap * 0.35; // Dãn ra chiều dọc
+        // Nhịp đập của sứa (Pulse) - bơi từng nhịp
+        const pulse = Math.pow(Math.sin(t * 8 + p.angle * 2), 4);
+        
+        // Sứa đẩy nước bơi lên/tiến tới
+        const bobbingY = Math.sin(t * 5 + p.angle) * 8 * p.depth;
+        
+        // Thay vì bóp méo hình, cho hạt "nở" nhẹ theo nhịp
+        const scale = 1 + pulse * 0.15;
 
         ctx.save();
-        ctx.translate(p.x, p.y + bobbingY);
+        ctx.translate(p.x, p.y + bobbingY - pulse * 5); // Đẩy nhẹ lên khi vỗ
         ctx.rotate(p.rotation);
-        ctx.scale(scaleX, scaleY);
+        ctx.scale(scale, scale);
         ctx.globalAlpha = Math.min(alpha, 0.85);
         ctx.fillStyle = p.color;
 
