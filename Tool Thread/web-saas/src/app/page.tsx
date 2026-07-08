@@ -1,132 +1,168 @@
 "use client";
 
-import { ArrowRight, Play, Check, Copy, MessageSquare, Bot, BarChart2, Download, Link2, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Play, Check, Download, Link2, CheckCircle2, Sparkles, Zap, Shield, Infinity, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-zinc-200 selection:text-black">
+    <div className="min-h-screen bg-[#030303] text-zinc-300 font-sans selection:bg-blue-500/30 selection:text-white overflow-hidden relative">
       
+      {/* Animated Background Orbs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px] animate-pulse mix-blend-screen pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-600/20 blur-[150px] animate-pulse mix-blend-screen pointer-events-none" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-[40%] left-[50%] translate-x-[-50%] w-[80%] h-[30%] rounded-full bg-emerald-600/10 blur-[100px] pointer-events-none"></div>
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none"></div>
+
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto border-b border-transparent">
-        <div className="font-bold text-xl tracking-tight">Automation Hub</div>
+      <nav className="relative z-50 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div className="font-bold text-xl tracking-tight text-white">AutoFarm<span className="text-blue-500">.</span></div>
+        </div>
         
-        <div className="hidden md:flex items-center gap-8 text-xs font-medium text-zinc-500">
-          <a href="#features" className="hover:text-zinc-900 transition-colors">Tính năng</a>
-          <a href="#tutorial" className="hover:text-zinc-900 transition-colors">Hướng dẫn</a>
-          <a href="#pricing" className="hover:text-zinc-900 transition-colors">Bảng giá</a>
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400 bg-white/5 px-8 py-3 rounded-full border border-white/10 backdrop-blur-md">
+          <a href="#tutorial" className="hover:text-white transition-colors">Hướng dẫn</a>
+          <a href="#pricing" className="hover:text-white transition-colors">Bảng giá</a>
+          <a href="#" className="hover:text-white transition-colors">Tính năng</a>
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors">
+          <Link href="/login" className="hidden sm:block text-sm font-medium text-zinc-400 hover:text-white transition-colors">
             Đăng nhập
           </Link>
-          <Link href="/login" className="bg-black text-white text-xs font-semibold px-5 py-2.5 rounded-full hover:bg-zinc-800 transition-colors">
-            Bắt đầu ngay
+          <Link href="/login" className="group relative px-6 py-2.5 rounded-full overflow-hidden bg-white/10 hover:bg-white/20 border border-white/10 transition-all duration-300">
+            <div className="absolute inset-0 w-0 bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-[400ms] ease-out group-hover:w-full"></div>
+            <span className="relative text-sm font-semibold text-white flex items-center gap-2">
+              Bắt đầu ngay <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </span>
           </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <main className="pt-24 pb-20 px-4 max-w-4xl mx-auto text-center flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[9px] font-bold text-blue-600 uppercase tracking-widest mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-          Hệ thống đang hoạt động - V3.5
-        </div>
+      <main className="relative z-10 pt-32 pb-24 px-4 max-w-5xl mx-auto text-center flex flex-col items-center">
+        <div className={`transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-blue-400 uppercase tracking-widest mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Hệ thống AutoFarm V3.5
+          </div>
 
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-black leading-[1.05] mb-6">
-          Tự động hoá Threads <br className="hidden md:block" /> & Reels chỉ với 1 Click
-        </h1>
+          <h1 className="text-5xl md:text-7xl lg:text-[80px] font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500 leading-[1.1] mb-8 pb-2">
+            Tự động hoá Threads <br className="hidden md:block" /> & Reels toàn diện
+          </h1>
 
-        <p className="text-zinc-500 text-sm md:text-base max-w-2xl leading-relaxed mb-10">
-          Giải pháp nuôi tài khoản và tự động tương tác dành cho nhà sáng tạo và Affiliate. Tự động lấy video YouTube Shorts đăng lên Reels, đăng bài Facebook kèm link Shopee, comment dạo Threads kéo traffic — tất cả quản lý qua Telegram.
-        </p>
+          <p className="text-zinc-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-12">
+            Hệ thống nuôi tài khoản AI tối thượng. Tự động sao chép Youtube Shorts sang Reels, thả comment dạo Threads kéo traffic không giới hạn. Quản lý toàn quyền qua Telegram.
+          </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <Link href="/login" className="w-full sm:w-auto bg-black text-white text-sm font-semibold px-8 py-3.5 rounded-full flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all active:scale-95">
-            <span>Truy cập Dashboard</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <a href="#tutorial" className="w-full sm:w-auto bg-white border border-zinc-200 text-zinc-900 text-sm font-semibold px-8 py-3.5 rounded-full flex items-center justify-center gap-2 hover:bg-zinc-50 transition-all active:scale-95 shadow-sm">
-            <Play className="w-4 h-4 text-zinc-400" />
-            <span>Xem hướng dẫn</span>
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+            <Link href="/login" className="group relative w-full sm:w-auto bg-white text-black text-sm font-bold px-8 py-4 rounded-full flex items-center justify-center gap-2 hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+              <span>Truy cập Dashboard</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <a href="#tutorial" className="w-full sm:w-auto bg-white/5 border border-white/10 text-white text-sm font-bold px-8 py-4 rounded-full flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-md">
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                <Play className="w-3 h-3 text-white fill-white" />
+              </div>
+              <span>Xem hướng dẫn</span>
+            </a>
+          </div>
         </div>
       </main>
 
-      {/* Core Features */}
-      <section id="features" className="px-4 py-24 max-w-6xl mx-auto border-t border-zinc-100">
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold tracking-tight text-black">Chức năng hệ thống</h2>
-          <p className="text-zinc-500 text-sm mt-2">Vận hành tự động hoàn toàn (Cloud), không cần treo máy.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4"><Copy className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg mb-2">Auto Up Reels</h3>
-            <p className="text-sm text-zinc-500">Bot tự động cào video Youtube Shorts, tải về và render đăng lên FB Reels để kéo view.</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4"><MessageSquare className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg mb-2">Auto Cmt Threads</h3>
-            <p className="text-sm text-zinc-500">Hệ thống nuôi nick mồi, tự động đi comment dạo trên Threads để kéo follow và traffic.</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4"><CheckCircle2 className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg mb-2">Auto Đăng Facebook</h3>
-            <p className="text-sm text-zinc-500">Cào sản phẩm Shopee, sinh caption AI và tự động đăng bài lên FB kèm link Affiliate.</p>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4"><Bot className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg mb-2">Bot Telegram</h3>
-            <p className="text-sm text-zinc-500">Nhận thông báo trạng thái đăng bài, tương tác với nick, đổi cấu hình trực tiếp qua Telegram.</p>
-          </div>
-        </div>
+      {/* 3D Glass Cards Showcase */}
+      <section className="relative z-10 max-w-6xl mx-auto px-4 pb-32">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-500 hover:-translate-y-2">
+               <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 mb-6 group-hover:scale-110 transition-transform">
+                  <Zap className="w-6 h-6 text-blue-400" />
+               </div>
+               <h3 className="text-xl font-bold text-white mb-3">Clone Reels Thần Tốc</h3>
+               <p className="text-sm text-zinc-400 leading-relaxed">Thuật toán tự động tìm kiếm, tải và re-up Youtube Shorts lên FB Reels/Instagram với độ trễ bằng 0. Lách bản quyền thông minh.</p>
+            </div>
+            <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-500 hover:-translate-y-2">
+               <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 mb-6 group-hover:scale-110 transition-transform">
+                  <Bot className="w-6 h-6 text-purple-400" />
+               </div>
+               <h3 className="text-xl font-bold text-white mb-3">AI Threads Comment</h3>
+               <p className="text-sm text-zinc-400 leading-relaxed">Tự động scan các bài post hot trên Threads và thả comment mồi nhử bằng AI. Tạo luồng traffic khổng lồ về link Affiliate của bạn.</p>
+            </div>
+            <div className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-500 hover:-translate-y-2">
+               <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 mb-6 group-hover:scale-110 transition-transform">
+                  <Shield className="w-6 h-6 text-emerald-400" />
+               </div>
+               <h3 className="text-xl font-bold text-white mb-3">Bảo Mật Telegram</h3>
+               <p className="text-sm text-zinc-400 leading-relaxed">Không cần treo máy. Mọi lệnh điều khiển, báo cáo doanh thu, cảnh báo lỗi đều được gửi trực tiếp về Telegram cá nhân an toàn tuyệt đối.</p>
+            </div>
+         </div>
       </section>
 
-      {/* Hướng dẫn cài đặt */}
-      <section id="tutorial" className="px-4 py-20 bg-zinc-50/50 border-y border-zinc-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-black mb-4">Cách thiết lập hệ thống</h2>
-            <p className="text-zinc-500 text-sm">Chỉ cần 3 bước đơn giản để lấy Cookie bằng EditThisCookie và bắt đầu tự động hóa.</p>
+      {/* Hướng dẫn cài đặt - Glassmorphism */}
+      <section id="tutorial" className="relative z-10 px-4 py-24 border-y border-white/5 bg-black/40 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">Cách thiết lập siêu đơn giản</h2>
+            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">Chỉ mất đúng 3 phút để cài đặt tiện ích lấy Cookie và kích hoạt cỗ máy kiếm tiền tự động của bạn.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative">
-              <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">1</div>
-              <h4 className="font-bold text-zinc-900 text-lg mb-3 mt-4">Cài đặt Extension</h4>
-              <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
-                Tải và cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên trình duyệt Chrome hoặc Cốc Cốc của bạn.
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connecting lines */}
+            <div className="hidden md:block absolute top-1/2 left-1/6 right-1/6 h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent -translate-y-1/2 z-0"></div>
+
+            {/* Step 1 */}
+            <div className="relative z-10 bg-[#0A0A0A] p-8 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:border-blue-500/50 transition-colors group">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-black border border-white/20 flex items-center justify-center shadow-xl group-hover:border-blue-500 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all">
+                 <span className="text-xl font-bold text-white">1</span>
+              </div>
+              <h4 className="font-bold text-white text-xl mb-4 mt-6 text-center">Cài đặt Extension</h4>
+              <p className="text-sm text-zinc-400 mb-8 text-center leading-relaxed h-16">
+                Thêm tiện ích <strong>EditThisCookie</strong> vào trình duyệt Chrome để trích xuất phiên đăng nhập.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors">
-                <Download className="w-4 h-4" />
-                Cài EditThisCookie
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 py-3.5 rounded-xl transition-colors">
+                <Download className="w-4 h-4" /> Tải EditThisCookie
               </a>
             </div>
 
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative">
-              <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">2</div>
-              <h4 className="font-bold text-zinc-900 text-lg mb-3 mt-4">Đăng nhập nền tảng</h4>
-              <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
-                Truy cập vào Threads.net hoặc Facebook.com và đảm bảo bạn đã đăng nhập vào tài khoản muốn cho Bot chạy tự động.
+            {/* Step 2 */}
+            <div className="relative z-10 bg-[#0A0A0A] p-8 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:border-purple-500/50 transition-colors group">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-black border border-white/20 flex items-center justify-center shadow-xl group-hover:border-purple-500 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all">
+                 <span className="text-xl font-bold text-white">2</span>
+              </div>
+              <h4 className="font-bold text-white text-xl mb-4 mt-6 text-center">Đăng nhập nền tảng</h4>
+              <p className="text-sm text-zinc-400 mb-8 text-center leading-relaxed h-16">
+                Mở web Threads hoặc Facebook và đảm bảo bạn đang đăng nhập vào đúng tài khoản cần nuôi.
               </p>
-              <a href="https://www.threads.net" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 py-3 rounded-xl transition-colors">
-                <Link2 className="w-4 h-4" />
-                Mở Threads.net
+              <a href="https://www.threads.net" target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 py-3.5 rounded-xl transition-colors">
+                <Link2 className="w-4 h-4" /> Mở Threads.net
               </a>
             </div>
 
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative">
-              <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">3</div>
-              <h4 className="font-bold text-zinc-900 text-lg mb-3 mt-4">Copy Session ID</h4>
-              <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
-                Click vào icon bánh quy trên thanh trình duyệt, tìm dòng <strong>sessionid</strong> (hoặc c_user/xs bên FB), copy đoạn mã ở ô "Giá trị" rồi dán vào trang Cài đặt Bot.
+            {/* Step 3 */}
+            <div className="relative z-10 bg-[#0A0A0A] p-8 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:border-emerald-500/50 transition-colors group">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-black border border-white/20 flex items-center justify-center shadow-xl group-hover:border-emerald-500 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all">
+                 <span className="text-xl font-bold text-white">3</span>
+              </div>
+              <h4 className="font-bold text-white text-xl mb-4 mt-6 text-center">Copy Session ID</h4>
+              <p className="text-sm text-zinc-400 mb-8 text-center leading-relaxed h-16">
+                Click icon cookie trên Chrome, copy "Giá trị" của dòng <strong>sessionid</strong> và dán vào Dashboard.
               </p>
-              <div className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 py-3 rounded-xl">
-                <CheckCircle2 className="w-4 h-4" />
-                Hoàn tất
+              <div className="flex items-center justify-center w-full gap-2 text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-3.5 rounded-xl">
+                <CheckCircle2 className="w-4 h-4" /> Hoàn tất tích hợp
               </div>
             </div>
           </div>
@@ -134,114 +170,119 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="px-4 py-32 max-w-7xl mx-auto border-t border-zinc-50">
-        <div className="text-center mb-16">
-          <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest block mb-3 font-mono">Bảng giá</span>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-black mb-4">Chọn gói vận hành</h2>
-          <p className="text-zinc-500 text-sm">Hệ thống thanh toán tự động qua PayOS. Nâng cấp ngay tức thì.</p>
+      <section id="pricing" className="relative z-10 px-4 py-32 max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">Đầu tư sinh lời tự động</h2>
+          <p className="text-zinc-400 text-lg">Hệ thống mở khóa 24/7. Thanh toán tự động qua PayOS. Nâng cấp bất cứ lúc nào.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           
           {/* FREE */}
-          <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 shadow-sm flex flex-col">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3 bg-zinc-100 w-fit px-2.5 py-1 rounded-full">Free</div>
-            <div className="text-3xl font-black text-black mb-1">0đ</div>
-            <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Dùng thử nhanh</p>
-            <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />2 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />1 FB Post / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />10 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />1 Lượt cào SP Shopee</li>
-              <li className="flex items-center gap-2 text-zinc-300 line-through">Không có thông báo Tele</li>
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-[2rem] p-6 shadow-xl flex flex-col hover:border-white/20 transition-all">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-4 bg-white/5 border border-white/10 w-fit px-3 py-1.5 rounded-full">Free</div>
+            <div className="text-4xl font-black text-white mb-2">0đ</div>
+            <p className="text-[12px] font-medium text-zinc-500 mb-8 border-b border-white/10 pb-6">Trải nghiệm cơ bản</p>
+            <ul className="space-y-4 mb-8 text-sm text-zinc-400 flex-1">
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-zinc-500" />2 Reels / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-zinc-500" />10 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-zinc-500" />2 Threads Post / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-zinc-500" />1 FB Post / ngày</li>
             </ul>
-            <Link href="/login" className="block w-full py-3 rounded-xl border border-zinc-200 text-[12px] font-bold text-zinc-600 hover:bg-zinc-50 transition-colors text-center">Bắt đầu</Link>
+            <Link href="/login" className="block w-full py-4 rounded-xl border border-white/10 text-sm font-bold text-white hover:bg-white/5 transition-colors text-center">Bắt đầu ngay</Link>
           </div>
 
           {/* LITE */}
-          <div className="bg-white border border-emerald-200 rounded-[2rem] p-6 shadow-sm flex flex-col">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mb-3 bg-emerald-50 w-fit px-2.5 py-1 rounded-full">Lite</div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <div className="text-3xl font-black text-black">59k</div>
-              <div className="text-[10px] text-zinc-400 font-medium">/tháng</div>
+          <div className="bg-[#0A0A0A] border border-emerald-500/30 rounded-[2rem] p-6 shadow-[0_0_30px_rgba(16,185,129,0.05)] flex flex-col hover:border-emerald-500/50 transition-all">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-4 bg-emerald-500/10 border border-emerald-500/20 w-fit px-3 py-1.5 rounded-full">Lite</div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <div className="text-4xl font-black text-white">59k</div>
+              <div className="text-xs text-zinc-500 font-medium">/tháng</div>
             </div>
-            <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Cho shop nhỏ</p>
-            <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />3 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />3 FB Post / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />30 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />2 Lượt cào SP Shopee</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />Bot gửi thông báo</li>
+            <p className="text-[12px] font-medium text-zinc-500 mb-8 border-b border-white/10 pb-6">Cho shop nhỏ</p>
+            <ul className="space-y-4 mb-8 text-sm text-zinc-300 flex-1">
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-emerald-400" />3 Reels / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-emerald-400" />30 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-emerald-400" />3 Threads Post / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-emerald-400" />3 FB Post / ngày</li>
+              <li className="flex items-center gap-3 font-medium text-emerald-400"><Bot className="w-4 h-4" />Tele Bot Alert</li>
             </ul>
-            <Link href="/login" className="block w-full py-3 rounded-xl bg-emerald-50 text-emerald-700 text-[12px] font-bold hover:bg-emerald-100 transition-colors text-center">Mua gói LITE</Link>
+            <Link href="/login" className="block w-full py-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold hover:bg-emerald-500/20 transition-colors text-center">Mua gói LITE</Link>
           </div>
 
           {/* PLUS */}
-          <div className="bg-white border-2 border-blue-500 rounded-[2rem] p-6 shadow-xl relative scale-105 z-10 flex flex-col">
-            <div className="absolute -top-3 right-6 bg-blue-500 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-              Phổ biến
+          <div className="bg-gradient-to-b from-blue-900/40 to-[#0A0A0A] border border-blue-500 rounded-[2rem] p-6 shadow-[0_0_40px_rgba(59,130,246,0.2)] relative scale-105 z-10 flex flex-col">
+            <div className="absolute -top-4 right-6 bg-blue-500 text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+              Phổ biến nhất
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-3 bg-blue-50 w-fit px-2.5 py-1 rounded-full">Plus</div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <div className="text-3xl font-black text-black">129k</div>
-              <div className="text-[10px] text-zinc-400 font-medium">/tháng</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-blue-300 mb-4 bg-blue-500/20 border border-blue-500/30 w-fit px-3 py-1.5 rounded-full">Plus</div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <div className="text-4xl font-black text-white">129k</div>
+              <div className="text-xs text-blue-300/60 font-medium">/tháng</div>
             </div>
-            <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Bán hàng ổn định</p>
-            <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />6 Reels / ngày</li>
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />5 FB Post / ngày</li>
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />80 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />3 Lượt cào SP Shopee</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-500" />✅ Tự động chạy hàng ngày</li>
+            <p className="text-[12px] font-medium text-blue-200/50 mb-8 border-b border-blue-500/20 pb-6">Nuôi acc chuyên nghiệp</p>
+            <ul className="space-y-4 mb-8 text-sm text-white flex-1">
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-400" />6 Reels / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-400" />80 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-400" />6 Threads Post / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-400" />5 FB Post / ngày</li>
+              <li className="flex items-center gap-3 font-bold text-blue-400 bg-blue-500/10 -mx-2 px-2 py-1 rounded-lg"><Zap className="w-4 h-4" />Auto 24/7</li>
             </ul>
-            <Link href="/login" className="block w-full py-3 rounded-xl bg-blue-600 text-white text-[12px] font-bold hover:bg-blue-700 shadow-md shadow-blue-200 transition-colors text-center">Mua gói PLUS</Link>
+            <Link href="/login" className="block w-full py-4 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all text-center">Nâng cấp PLUS</Link>
           </div>
 
           {/* PRO */}
-          <div className="bg-white border border-amber-200 rounded-[2rem] p-6 shadow-sm flex flex-col">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-3 bg-amber-50 w-fit px-2.5 py-1 rounded-full">Pro</div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <div className="text-3xl font-black text-black">199k</div>
-              <div className="text-[10px] text-zinc-400 font-medium">/tháng</div>
+          <div className="bg-[#0A0A0A] border border-amber-500/30 rounded-[2rem] p-6 shadow-[0_0_30px_rgba(245,158,11,0.05)] flex flex-col hover:border-amber-500/50 transition-all">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400 mb-4 bg-amber-500/10 border border-amber-500/20 w-fit px-3 py-1.5 rounded-full">Pro</div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <div className="text-4xl font-black text-white">199k</div>
+              <div className="text-xs text-zinc-500 font-medium">/tháng</div>
             </div>
-            <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Tối ưu vận hành</p>
-            <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />12 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />10 FB Post / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />160 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />4 Lượt cào SP Shopee</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />✅ Tự động chạy hàng ngày</li>
+            <p className="text-[12px] font-medium text-zinc-500 mb-8 border-b border-white/10 pb-6">Bán hàng công nghiệp</p>
+            <ul className="space-y-4 mb-8 text-sm text-zinc-300 flex-1">
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-amber-400" />12 Reels / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-amber-400" />160 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-amber-400" />12 Threads Post / ngày</li>
+              <li className="flex items-center gap-3"><Check className="w-4 h-4 text-amber-400" />10 FB Post / ngày</li>
+              <li className="flex items-center gap-3 font-medium text-amber-400"><Zap className="w-4 h-4" />Auto 24/7</li>
             </ul>
-            <Link href="/login" className="block w-full py-3 rounded-xl bg-amber-50 text-amber-700 text-[12px] font-bold hover:bg-amber-100 transition-colors text-center">Mua gói PRO</Link>
+            <Link href="/login" className="block w-full py-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-bold hover:bg-amber-500/20 transition-colors text-center">Mua gói PRO</Link>
           </div>
 
           {/* PROMAX */}
-          <div className="bg-zinc-900 border border-black rounded-[2rem] p-6 shadow-lg flex flex-col text-white">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 mb-3 bg-white w-fit px-2.5 py-1 rounded-full">ProMax</div>
-            <div className="flex items-baseline gap-1 mb-1">
-              <div className="text-3xl font-black">499k</div>
-              <div className="text-[10px] text-zinc-400 font-medium">/vĩnh viễn</div>
+          <div className="bg-gradient-to-br from-purple-900/20 to-[#0A0A0A] border border-purple-500/50 rounded-[2rem] p-6 shadow-xl flex flex-col hover:border-purple-500 transition-all group">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-purple-400 mb-4 bg-purple-500/10 border border-purple-500/20 w-fit px-3 py-1.5 rounded-full">ProMax</div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <div className="text-4xl font-black text-white">499k</div>
+              <div className="text-xs text-purple-400/60 font-medium">/vĩnh viễn</div>
             </div>
-            <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-800 pb-4">Team scale lớn</p>
-            <ul className="space-y-3 mb-8 text-[12px] text-zinc-300 flex-1">
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Reels</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Cmt</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Cào bài</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Chỉ chạy thủ công (chống spam)</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Ưu tiên Support</li>
+            <p className="text-[12px] font-medium text-zinc-500 mb-8 border-b border-purple-500/20 pb-6">Sở hữu trọn đời</p>
+            <ul className="space-y-4 mb-8 text-sm text-zinc-200 flex-1">
+              <li className="flex items-center gap-3"><Infinity className="w-4 h-4 text-purple-400" />Không giới hạn Reels</li>
+              <li className="flex items-center gap-3"><Infinity className="w-4 h-4 text-purple-400" />Không giới hạn Cmt</li>
+              <li className="flex items-center gap-3"><Infinity className="w-4 h-4 text-purple-400" />Không giới hạn Post</li>
+              <li className="flex items-center gap-3 text-purple-300 italic text-xs"><Bot className="w-4 h-4" />(Chỉ kích hoạt thủ công)</li>
             </ul>
-            <Link href="/login" className="block w-full py-3 rounded-xl bg-white text-black text-[12px] font-bold hover:bg-zinc-200 transition-colors text-center">Mua gói PROMAX</Link>
+            <Link href="/login" className="block w-full py-4 rounded-xl bg-purple-600/20 border border-purple-500/50 text-purple-300 text-sm font-bold group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 text-center">Mua PROMAX</Link>
           </div>
 
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-zinc-50 border-t border-zinc-100 pt-16 pb-12 px-8">
+      <footer className="relative z-10 bg-black border-t border-white/10 pt-16 pb-12 px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start gap-1">
-            <span className="font-bold text-sm text-black">Automation Hub</span>
-            <span className="text-[10px] text-zinc-400">© 2026. Designed for creators.</span>
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-500" />
+              <span className="font-bold text-sm text-white">AutoFarm.</span>
+            </div>
+            <span className="text-xs text-zinc-600">© 2026. The Future of Creator Automation.</span>
+          </div>
+          <div className="flex items-center gap-8 text-xs text-zinc-500 font-medium">
+            <a href="#" className="hover:text-white transition-colors">Điều khoản</a>
+            <a href="#" className="hover:text-white transition-colors">Bảo mật</a>
+            <a href="#" className="hover:text-white transition-colors">Telegram Support</a>
           </div>
         </div>
       </footer>
