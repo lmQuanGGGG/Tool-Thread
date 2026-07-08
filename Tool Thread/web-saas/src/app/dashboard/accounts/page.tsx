@@ -390,9 +390,9 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-white/95 border border-gray-200/80 rounded-2xl shadow-[0_18px_50px_-34px_rgba(15,23,42,0.45)] hover:shadow-[0_24px_70px_-38px_rgba(15,23,42,0.55)] hover:border-gray-300/90 transition-all duration-300";
-  const inputClass = "w-full bg-gray-50/80 border border-gray-200 rounded-xl p-3.5 text-[13px] font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/10 transition-all";
-  const editorCardClass = "bg-white border border-gray-200/90 rounded-2xl p-4 relative group/post shadow-sm hover:shadow-md hover:border-gray-300 transition-all";
+  const cardClass = "bg-white/80 backdrop-blur-3xl border border-zinc-200/60 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.06)] hover:border-zinc-200/90 transition-all duration-500";
+  const inputClass = "w-full bg-zinc-50/50 border border-zinc-200/60 rounded-2xl p-4 text-[13px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-inner";
+  const editorCardClass = "bg-white border border-zinc-100 rounded-[24px] p-4 relative group/post shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.1)] hover:border-zinc-200 transition-all";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnGreen = "btn-shimmer flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-emerald-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
@@ -408,23 +408,23 @@ export default function AccountsPage() {
     };
 
     return (
-      <div className="h-[180px] shrink-0 overflow-hidden rounded-2xl bg-[#0F0F14] shadow-[0_18px_50px_-34px_rgba(15,23,42,0.65)] border border-white/[0.08] flex flex-col">
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#161620] border-b border-white/[0.06] shrink-0">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-[11px] font-mono uppercase tracking-wider text-white">
+      <div className="h-[200px] shrink-0 overflow-hidden rounded-[24px] bg-[#0A0A0A] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] border border-white/10 flex flex-col relative z-20">
+        <div className="flex items-center justify-between px-5 py-3.5 bg-white/[0.03] border-b border-white/[0.06] shrink-0 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <Terminal className="w-4 h-4 text-blue-400" />
+            <span className="text-[11px] font-mono uppercase tracking-[0.15em] text-white/90 font-medium">
               {tab === "global" ? "Global Logs" : tab === "fb" ? "FB Logs" : "Threads Logs"}
             </span>
           </div>
           <button onClick={clearLogs} className="text-zinc-500 hover:text-white transition-colors" title="Clear Terminal">
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-[11px] bg-[#0F0F14]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[12px] bg-transparent">
           {logs.map((log, i) => (
-            <div key={i} className="flex items-start gap-2 hover:bg-white/[0.02] px-2 py-0.5 rounded transition-colors -mx-2">
+            <div key={i} className="flex items-start gap-3 hover:bg-white/[0.03] px-2.5 py-1 rounded-lg transition-colors -mx-2.5">
               <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
+              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
               <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
             </div>
           ))}
@@ -486,8 +486,9 @@ export default function AccountsPage() {
               <div className="space-y-6 h-full">
                 
 
-                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                  <div className="mb-5">
+                <div className={`${cardClass} p-8 anim-fade-up anim-d1 flex flex-col`}>
+                  {/* Cấu Hình Mạng Lưới */}
+                  <div className="mb-6">
                     <CardTitle
                       icon={LinkIcon}
                       title="Affiliate Link Pool"
@@ -496,31 +497,32 @@ export default function AccountsPage() {
                       tone="blue"
                     />
                   </div>
-                  <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-4`} />
-                  <button onClick={() => handleTrigger("parse_links")} disabled={triggeringType !== null || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
-                    {triggeringType === "parse_links" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-6`} />
+                  <button onClick={() => handleTrigger("parse_links")} disabled={triggeringType !== null || !formData.affiliate_links} className={`${btnPrimary} w-full py-3.5 rounded-[16px]`}>
+                    {triggeringType === "parse_links" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                     Đồng Bộ Tên & Sinh Comment AI
                   </button>
-                </div>
-
-                <div className={`${cardClass} p-6 h-fit anim-fade-up anim-d2`}>
-                  <div className="mb-5">
+                  
+                  <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-10"></div>
+                  
+                  {/* Thông báo Telegram */}
+                  <div className="mb-6">
                     <CardTitle
                       icon={MessageCircle}
                       title="Telegram Notify"
-                      subtitle="Nhận log chạy bot, cảnh báo lỗi cookie và báo cáo crawl ngay trên Telegram."
+                      subtitle="Nhận log chạy bot, cảnh báo lỗi cookie và báo cáo ngay trên Telegram."
                       active={!!formData.tele_chat_id}
                       tone="emerald"
                     />
                   </div>
                   <input type="text" value={formData.tele_chat_id} onChange={(e) => {
                     if (userTier === "free" || userTier === "lite") {
-                      alert("Gói Free và Lite không hỗ trợ nhận thông báo qua Telegram. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
-                      return;
+                       alert("Gói Free và Lite không hỗ trợ nhận thông báo qua Telegram. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
+                       return;
                     }
                     setFormData({ ...formData, tele_chat_id: e.target.value })
                   }} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
-                  <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3.5 py-3 text-[12px] text-emerald-700 leading-relaxed">
+                  <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-5 py-4 text-[13px] text-emerald-700 leading-relaxed shadow-sm">
                     Bot sẽ gửi thông báo realtime khi đăng bài thành công, lỗi cookie hoặc hoàn tất crawl định kỳ.
                   </div>
                 </div>
@@ -592,42 +594,43 @@ export default function AccountsPage() {
           <div className="anim-fade-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               <div className="space-y-5 h-full">
-                <div className={`${cardClass} p-6 min-h-[500px] flex flex-col justify-between anim-fade-up anim-d1`}>
+                <div className={`${cardClass} p-8 flex flex-col justify-between anim-fade-up anim-d1`}>
                   <div>
-                  <div className="mb-5">
-                    <CardTitle
-                      icon={Video}
-                      title="Kênh Video Nguồn"
-                      subtitle="Thêm kênh YouTube, TikTok hoặc Reels để bot quét video mới."
-                      active={!!formData.target_channels}
-                      tone="blue"
-                    />
-                  </div>
-                  <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-1`} />
-                  <div className="mb-6 mt-3 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/70 px-3.5 py-3 text-[12px] text-blue-700 leading-relaxed">
-                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
-                  </div>
-                  
-                  <div className="mb-5">
-                    <CardTitle
-                      icon={Cookie}
-                      title="FB Access Cookie"
-                      subtitle="Cookie dùng để đăng Reels, Story và chạy comment trên Facebook."
-                      active={!!formData.fb_cookie}
-                      tone="emerald"
-                    />
-                  </div>
-                  <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
-	                  <div className="flex flex-col gap-3">
-	                    <button onClick={() => handleTrigger("reels")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-2.5 w-full`}>
-	                      {triggeringType === "reels" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-	                      FB Reels
-	                    </button>
-                  </div>
+                    <div className="mb-6">
+                      <CardTitle
+                        icon={Video}
+                        title="Kênh Video Nguồn"
+                        subtitle="Thêm kênh YouTube, TikTok hoặc Reels để bot quét video mới."
+                        active={!!formData.target_channels}
+                        tone="blue"
+                      />
+                    </div>
+                    <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-2`} />
+                    <div className="mb-8 mt-3 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3 text-[13px] text-blue-700 leading-relaxed shadow-sm">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
+                    </div>
+                    
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-10"></div>
+                    
+                    <div className="mb-6">
+                      <CardTitle
+                        icon={Cookie}
+                        title="FB Access Cookie"
+                        subtitle="Cookie dùng để đăng Reels, Story và chạy comment trên Facebook."
+                        active={!!formData.fb_cookie}
+                        tone="emerald"
+                      />
+                    </div>
+                    <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-8 focus:border-emerald-500 focus:ring-emerald-500/10`} />
+                    <div className="flex flex-col gap-3">
+                      <button onClick={() => handleTrigger("reels")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-3.5 w-full rounded-[16px]`}>
+                        {triggeringType === "reels" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                        FB Reels
+                      </button>
+                    </div>
                   </div>
                 </div>
-                
               </div>
 
               <div className="flex h-[740px] lg:h-full lg:min-h-[740px] flex-col gap-5">
@@ -708,8 +711,8 @@ export default function AccountsPage() {
                   onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
                 />
 
-                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                  <div className="mb-5">
+                <div className={`${cardClass} p-8 anim-fade-up anim-d1`}>
+                  <div className="mb-6">
                     <CardTitle
                       icon={Cookie}
                       title="Threads Access Cookie"
@@ -718,9 +721,9 @@ export default function AccountsPage() {
                       tone="violet"
                     />
                   </div>
-                  <textarea rows={4} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-5 focus:border-violet-500 focus:ring-violet-500/10`} />
-                  <button onClick={() => handleTrigger("threads")} disabled={triggeringType !== null || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
-                    {triggeringType === "threads" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                  <textarea rows={4} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-6 focus:border-violet-500 focus:ring-violet-500/10`} />
+                  <button onClick={() => handleTrigger("threads")} disabled={triggeringType !== null || !formData.threads_cookie} className={`${btnViolet} w-full py-3.5 rounded-[16px]`}>
+                    {triggeringType === "threads" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
                     Khởi động AI Commenter
                   </button>
                 </div>

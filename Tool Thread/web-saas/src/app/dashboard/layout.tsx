@@ -132,13 +132,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-    <div className="flex min-h-screen bg-[#F7F7F8]">
+    <div className="flex min-h-screen bg-[#FAFAFA]">
       {/* Aurora */}
-      <div className="aurora-bg"><div className="aurora-blob-3" /></div>
+      <div className="aurora-bg opacity-40"><div className="aurora-blob-3" /></div>
 
       {/* ===== SIDEBAR ===== */}
       <aside
-        className="fixed top-0 left-0 h-screen z-30 flex flex-col bg-white border-r border-gray-200/80 transition-all duration-300"
+        className="fixed top-0 left-0 h-screen z-30 flex flex-col bg-white/70 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300"
         style={{ width: collapsed ? 64 : SIDEBAR_W }}
       >
         {/* Logo */}
