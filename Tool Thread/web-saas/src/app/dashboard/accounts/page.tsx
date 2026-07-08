@@ -360,14 +360,6 @@ export default function AccountsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-6">
                 
-                <ThreadsCrawler 
-                  userId={userId || ""} 
-                  tier={userTier} 
-                  credits={userCredits} 
-                  setCredits={setUserCredits}
-                  pushLog={pushLog}
-                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
-                />
 
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
                   <div className="flex items-center justify-between mb-4">
@@ -530,9 +522,19 @@ export default function AccountsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-5">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Threads Engine</h1>
-                  <p className="text-sm text-gray-500">Cấu hình Bot Threads và chỉnh sửa bài đăng.</p>
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Threads Workspace</h1>
+                  <p className="text-sm text-gray-500">Tự động lấy bài viết và cấu hình Bot Threads.</p>
                 </div>
+
+                <ThreadsCrawler 
+                  userId={userId || ""} 
+                  tier={userTier} 
+                  credits={userCredits} 
+                  setCredits={setUserCredits}
+                  pushLog={pushLog}
+                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
+                />
+
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[13px] font-semibold text-gray-900">Threads Access Cookie</h3>
