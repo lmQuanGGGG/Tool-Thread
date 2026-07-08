@@ -27,22 +27,42 @@ async function downloadImageFromUrl(url) {
 
 async function runSinglePost() {
   const email = process.env.USER_EMAIL || 'admin@autofarm.com';
-  const postId = process.env.POST_ID;
+  let postId = process.env.POST_ID;
 
   // Kiểm tra Quota
-  const hasQuota = await checkQuota(email, 'threads_posted');
+  const hasQuota = await checkQuota(email, 'threads_posts_count');
   if (!hasQuota) {
       console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng Threads hôm nay. Dừng script.`);
       await logToWeb(email, 'threads_post', `Đã hết giới hạn đăng Threads hôm nay. Dừng script.`, 'warn');
       process.exit(0);
   }
 
-  console.log(`🚀 Bắt đầu chạy bot đăng bài Threads đơn lẻ cho post_id: ${postId}`);
+  // Nếu không truyền postId (chạy tự động từ dispatcher), tìm bài chưa đăng cũ nhất
+  if (!postId || postId.trim() === '') {
+    const { data: userProfile } = await supabase.from('profiles').select('id').eq('email', email).single();
+    if (userProfile) {
+      const { data: pendingPost } = await supabase
+        .from('crawl_data')
+        .select('id')
+        .eq('user_id', userProfile.id)
+        .eq('posted', false)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      
+      if (pendingPost) {
+        postId = pendingPost.id;
+        console.log(`🤖 Auto Mode: Tự động chọn bài viết chưa đăng ID: ${postId}`);
+      }
+    }
+  }
+
+  console.log(`🚀 Bắt đầu chạy bot đăng bài Threads cho post_id: ${postId}`);
   await logToWeb(email, 'threads_post', `🚀 Bắt đầu quá trình đăng bài (ID: ${postId}) lên Threads...`, 'info');
 
   if (!postId) {
-    console.error("❌ Thiếu POST_ID");
-    await logToWeb(email, 'threads_post', `❌ Lỗi: Không nhận được ID bài viết.`, 'error');
+    console.error("❌ Thiếu POST_ID và không tìm thấy bài nào chưa đăng trong kho.");
+    await logToWeb(email, 'threads_post', `❌ Lỗi: Không tìm thấy bài viết nào chưa đăng trong kho.`, 'error');
     process.exit(1);
   }
 
@@ -382,7 +402,7 @@ async function runSinglePost() {
     } else {
       console.log("✅ Đã cập nhật trạng thái posted = true");
       await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads! [ID: ${postId}]`, 'success');
-      await updateUsageStats(email, 'threads_posted', 1);
+      await updateUsageStats(email, 'threads_posts_count', 1);
     }
 
     process.exit(0);

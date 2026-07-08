@@ -159,6 +159,7 @@ async function checkQuota(email, type = 'reels_posted') {
     const limits = await getTierLimits(profile.tier);
     const limitKey = type === 'reels_posted' ? 'reels_per_day'
                    : type === 'threads_commented' ? 'threads_per_day'
+                   : type === 'threads_posts_count' ? 'threads_post_per_day'
                    : 'fb_post_per_day';
     const limit = limits[limitKey];
     if (limit === -1) return true; // unlimited
