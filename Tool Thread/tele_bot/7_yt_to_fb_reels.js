@@ -246,10 +246,11 @@ async function fetchLatestVideos(channels) {
             let clicked = false;
             for (let i = 0; i < retries; i++) {
                 clicked = await page.evaluate((texts) => {
-                    const btns = Array.from(document.querySelectorAll('div[role="button"]'));
+                    const btns = Array.from(document.querySelectorAll('div[role="button"], span[role="button"], button'));
                     const targetBtn = btns.find(b => {
                         const text = (b.innerText || '').trim().toLowerCase();
-                        return texts.includes(text) && !b.getAttribute('aria-disabled');
+                        const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
+                        return texts.includes(text) && !disabled;
                     });
                     if (targetBtn) {
                         targetBtn.click();
