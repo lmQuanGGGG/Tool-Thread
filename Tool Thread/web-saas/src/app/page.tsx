@@ -176,8 +176,9 @@ const ConfettiCanvas = () => {
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
           // Lực "di cư" và tạo hình trái tim
+          const beatPhase = Math.sin(t * 15);
           // Thêm hiệu ứng nhịp đập (Heartbeat) phập phồng mạnh mẽ bằng hàm sin lũy thừa
-          const beatScale = 1 + Math.pow(Math.sin(t * 15), 6) * 0.4;
+          const beatScale = 1 + Math.pow(beatPhase, 6) * 0.4;
 
           const targetMouseX = mx + p.heartX * beatScale;
           const targetMouseY = my + p.heartY * beatScale;
@@ -188,6 +189,12 @@ const ConfettiCanvas = () => {
           const pullSpeed = 0.15 * p.speed;
           p.baseX += pullDx * pullSpeed;
           p.baseY += pullDy * pullSpeed;
+
+          // Hiệu ứng "thổn thức": Khi nhịp đập đạt đỉnh, bắn một vài hạt văng ra ngoài như tia lửa
+          if (beatPhase > 0.95 && Math.random() < 0.05) {
+            p.vx += p.heartX * 0.05;
+            p.vy += p.heartY * 0.05;
+          }
         }
 
         // Apply velocity
