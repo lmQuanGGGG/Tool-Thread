@@ -32,10 +32,10 @@ function useScrollScale() {
       
       // Scale từ 0.85 lên 1.0 khi cuộn
       // progress = 0 khi mép trên của element vừa ló lên (ở gần đáy màn hình)
-      // progress = 1 khi element ở giữa màn hình
-      const progress = 1 - (rect.top - windowHeight * 0.2) / (windowHeight * 0.7);
+      // Scale từ 0.7 lên 1.05 để hiệu ứng phình to rõ rệt hơn
+      const progress = 1 - (rect.top - windowHeight * 0.1) / (windowHeight * 0.8);
       const clamped = Math.min(Math.max(progress, 0), 1);
-      setScale(0.85 + clamped * 0.15);
+      setScale(0.7 + clamped * 0.35);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -307,18 +307,21 @@ const GlowOrb = () => {
    Terminal CLI Mockup
    ═══════════════════════════════════════════════ */
 const cliLines = [
-  { t: "cmd", v: "autofarm start --all" },
-  { t: "br" }, { t: "info", v: "🤖 AutoFarm v3.5 — Khởi động hệ thống..." },
-  { t: "ok", v: "✓ Kết nối Telegram Bot @autofarm_bot" },
-  { t: "ok", v: "✓ Cookie Threads hợp lệ — session: ok" },
-  { t: "ok", v: "✓ Cookie Facebook hợp lệ — c_user: ok" },
-  { t: "br" }, { t: "warn", v: "▶ Crawl Threads trending..." },
-  { t: "dim", v: "  → Tìm thấy 24 bài viết hot" },
-  { t: "dim", v: "  → Đã comment 12/12 bài thành công" },
-  { t: "br" }, { t: "warn", v: "▶ Clone Youtube Shorts → FB Reels..." },
-  { t: "dim", v: '  → Download: "Mẹo bán hàng Shopee #shorts"' },
+  { t: "cmd", v: "pm2 start ecosystem.config.js" },
+  { t: "br" }, { t: "info", v: "[PM2] Spawning PM2 daemon with pm2_home=/root/.pm2" },
+  { t: "ok", v: "[PM2] PM2 Successfully daemonized" },
+  { t: "ok", v: "✓ [Telegram] Bot @autofarm_bot connected & listening." },
+  { t: "br" }, { t: "warn", v: "▶ [Cron Dispatcher] Fetching pending tasks from Supabase..." },
+  { t: "dim", v: "  → Found 3 active profiles for comment farming" },
+  { t: "dim", v: "  → Found 1 profile for FB Reels upload" },
+  { t: "br" }, { t: "info", v: "▶ [Puppeteer] Launching headless browser..." },
+  { t: "dim", v: "  → Injected Threads cookies (session: OK)" },
+  { t: "warn", v: "  → Scraping latest trending posts..." },
+  { t: "ok", v: "  → Successfully commented on 12 posts (delay: 3s)" },
+  { t: "br" }, { t: "info", v: "▶ [Shopee Scraper] Downloading product video..." },
+  { t: "dim", v: '  → Downloaded: "Review áo thun form rộng.mp4"' },
   { t: "ok", v: "  → Upload FB Reels thành công ✓" },
-  { t: "br" }, { t: "info", v: "📊 Báo cáo: 12 cmt · 3 reels · 6 posts — gửi Telegram ✓" },
+  { t: "br" }, { t: "info", v: "📊 [System] Cycle completed. Sleeping for 15 mins..." },
 ];
 const cMap: Record<string, string> = { cmd: "text-white", info: "text-blue-400", ok: "text-green-400", warn: "text-yellow-400", dim: "text-zinc-500", br: "" };
 const cDelays = [0, 600, 1000, 1600, 2200, 2700, 3200, 3600, 4200, 4800, 5400, 5800, 6400, 7000, 7600, 8600];
@@ -417,7 +420,7 @@ export default function Home() {
       </section>
 
       {/* ── Terminal ── */}
-      <section className="relative z-10 max-w-[960px] mx-auto px-4 pt-14 pb-28">
+      <section className="relative z-10 max-w-[1024px] mx-auto px-4 pt-14 pb-28">
         <ScrollScaleWrapper>
           <div className="rounded-[28px] bg-[#0d1117] p-3 md:p-5 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)]">
             <TerminalCLI />
