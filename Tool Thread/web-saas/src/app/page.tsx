@@ -44,7 +44,7 @@ type Particle = {
   rotation: number; rotSpeed: number;
 };
 
-const ATTRACT_RADIUS = 200; // px — bán kính hút
+const ATTRACT_RADIUS = 800; // px — bán kính ảnh hưởng siêu lớn để tạo hiệu ứng vũ trụ
 const ATTRACT_FORCE = 0.04; // lực hút
 const RETURN_FORCE = 0.015; // lực kéo về vị trí gốc
 const FRICTION = 0.92;
@@ -69,7 +69,7 @@ const ConfettiCanvas = () => {
     resize();
     window.addEventListener("resize", resize);
 
-    const count = Math.min(150, Math.floor(w * h / 8000));
+    const count = Math.min(250, Math.floor(w * h / 4500)); // Tăng số lượng hạt để giống dải ngân hà
     const pts: Particle[] = [];
     for (let i = 0; i < count; i++) {
       const depth = 0.3 + Math.random() * 0.7;
@@ -123,14 +123,16 @@ const ConfettiCanvas = () => {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
-          const RING_RADIUS = 100;
+          // Bán kính phân tán rộng để tạo thành một thiên hà (vortex) chứ không phải 1 vòng tròn mỏng
+          // Sử dụng p.angle và p.depth để mỗi hạt có một quỹ đạo riêng biệt, trải dài từ gần đến rất xa
+          const RING_RADIUS = 50 + (p.angle * 60) + (p.depth * 400); 
+          
           // Lực kéo/đẩy để duy trì bán kính RING_RADIUS
-          // dist > RING_RADIUS => hút vào; dist < RING_RADIUS => đẩy ra
-          const force = (dist - RING_RADIUS) * 0.0008 * p.depth;
+          const force = (dist - RING_RADIUS) * 0.0005 * p.depth;
           p.vx += dx * force;
           p.vy += dy * force;
           
-          // Lực xoáy (orbit) nhẹ để các hạt bơi vòng quanh tâm chuột
+          // Lực xoáy (orbit) nhẹ để các hạt bơi vòng quanh tâm chuột như một cơn lốc
           const orbitForce = 0.015 * p.depth;
           p.vx += dy * orbitForce;
           p.vy -= dx * orbitForce;
