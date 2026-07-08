@@ -330,14 +330,60 @@ export default function CrawlPage() {
               ))}
             </div>
 
-            {/* Right: Script + Upload */}
+            {/* Right: Cloud Scraper + Manual Upload */}
             <div className="space-y-4">
+              
+              {/* Cloud Scraper Zone */}
+              <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Terminal className="w-5 h-5 text-purple-400" />
+                  <h3 className="font-mono text-sm text-white font-bold">Auto Cloud Scraper (Mới)</h3>
+                </div>
+                <p className="text-zinc-500 text-xs font-mono mb-4">
+                  Nhập link Profile Threads. Hệ thống sẽ tự động mượn Server Cloud để cào bài cho bạn. (Không cần mở máy)
+                </p>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="VD: https://www.threads.net/@zuck" 
+                    id="cloudTargetUrl"
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2 text-sm text-white font-mono placeholder:text-zinc-700 outline-none focus:border-purple-500/50"
+                  />
+                  <button 
+                    onClick={async () => {
+                      const url = (document.getElementById('cloudTargetUrl') as HTMLInputElement).value;
+                      if (!url || !url.includes('threads.net')) {
+                        addLog("❌ Link không hợp lệ!");
+                        return;
+                      }
+                      addLog(`🚀 Đang gửi lệnh Cloud Scraper cho: ${url}`);
+                      try {
+                        const res = await fetch("/api/trigger-bot", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ email: "admin@autofarm.com", botType: "threads_scraper", target_url: url })
+                        });
+                        if (res.ok) addLog("✅ Đã gửi lệnh thành công! Đợi 1-2 phút hệ thống sẽ tự lưu Data.");
+                        else addLog("❌ Lỗi kích hoạt Bot Cloud!");
+                      } catch (e) {
+                        addLog("❌ Lỗi kết nối API!");
+                      }
+                    }}
+                    disabled={!canUseCrawl}
+                    className={`shrink-0 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all
+                      ${canUseCrawl ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30" : "bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed"}`}
+                  >
+                    Bắt Đầu Cào
+                  </button>
+                </div>
+              </div>
+
               {/* Script box */}
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
                   <div className="flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-emerald-400" />
-                    <span className="font-mono text-sm text-zinc-300">crawl_threads.js</span>
+                    <span className="font-mono text-sm text-zinc-300">crawl_threads.js (Manual)</span>
                   </div>
                   <button onClick={copyScript} disabled={!canUseCrawl}
                     className={`flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-lg border transition-all

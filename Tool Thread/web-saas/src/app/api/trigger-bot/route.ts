@@ -18,7 +18,6 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // Map botType sang tên file workflow
     let workflowId = 'reels_worker.yml';
     let inputs: any = { email };
 
@@ -29,6 +28,10 @@ export async function POST(request: Request) {
     else if (botType === 'shopee') workflowId = 'shopee_worker.yml';
     else if (botType === 'parse_links') workflowId = 'parse_links_worker.yml';
     else if (botType === 'fb_comment') workflowId = 'fb_comment_worker.yml';
+    else if (botType === 'threads_scraper') {
+      workflowId = 'threads_scraper_worker.yml';
+      inputs = { target_url: body.target_url || "https://www.threads.net/@zuck" };
+    }
     else if (botType.startsWith('threads_post_')) {
       workflowId = 'threads_post_worker.yml';
       inputs.post_id = botType.replace('threads_post_', '');
