@@ -67,12 +67,16 @@ async function uploadToTelegram(fileUrl) {
 
 // Hàm lấy cookie
 function getCookies(dbConfig) {
-    let cookies = dbConfig?.threads_cookies_arr || [];
+    const { parseCookieString } = require('./supabase_helper');
+    let cookies = [];
+    if (dbConfig?.threads_cookie) {
+        cookies = parseCookieString(dbConfig.threads_cookie, '.threads.net');
+    }
     if ((!cookies || cookies.length === 0) && process.env.THREADS_COOKIE) {
         try {
             cookies = JSON.parse(process.env.THREADS_COOKIE);
         } catch (e) {
-            console.log("Không thể parse THREADS_COOKIE từ .env");
+            cookies = parseCookieString(process.env.THREADS_COOKIE, '.threads.net');
         }
     }
     return cookies;
