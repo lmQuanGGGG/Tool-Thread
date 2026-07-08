@@ -334,13 +334,13 @@ export default function DashboardPage() {
                 { name: "Auto Comment Threads", desc: "Rải link Affiliate tự động", icon: MessageSquare, enabled: !!profile?.threads_cookie, color: "text-blue-600" },
                 { name: "FB Auto Post Shopee", desc: "Đăng bài bán hàng lên FB", icon: Image, enabled: !!profile?.fb_cookie, color: "text-pink-600" },
               ].map((bot) => (
-                <div key={bot.name} className={`flex items-center gap-4 border rounded-2xl px-5 py-4 transition-all ${bot.enabled ? "border-zinc-100 bg-white" : "border-dashed border-zinc-200 bg-zinc-50/50"}`}>
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm border ${bot.enabled ? "bg-white border-gray-100" : "bg-gray-50/50 border-transparent"}`}>
-                    <bot.icon className={`w-4 h-4 ${bot.enabled ? bot.color : "text-gray-300"}`} />
+                <div key={bot.name} className={`flex items-center gap-4 py-3 transition-all ${bot.enabled ? "" : "opacity-60"}`}>
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border-transparent`}>
+                    <bot.icon className={`w-5 h-5 ${bot.enabled ? bot.color : "text-gray-400"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className={`text-[13px] font-semibold tracking-tight ${bot.enabled ? "text-gray-900" : "text-gray-400"}`}>{bot.name}</h4>
-                    <p className="text-[11px] font-medium text-gray-500 mt-0.5">{bot.desc}</p>
+                    <h4 className={`text-[14px] font-semibold tracking-tight ${bot.enabled ? "text-gray-900" : "text-gray-500"}`}>{bot.name}</h4>
+                    <p className="text-[12px] font-medium text-gray-500 mt-0.5">{bot.desc}</p>
                   </div>
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full ${bot.enabled ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-gray-100 text-gray-400 border border-gray-200/50"}`}>
                     {bot.enabled ? "Sẵn sàng" : "Cần Cookie"}
