@@ -547,14 +547,14 @@ export default function Home() {
               {/* Messages */}
               <div className="p-5 space-y-4">
                 {[
-                  { time: "10:30", text: "Đã comment 12 bài Threads thành công", icon: <MessageSquare className="w-[14px] h-[14px] text-blue-500" />, iconBg: "bg-blue-50 border-blue-100" },
-                  { time: "11:45", text: "Upload 3 Reels FB xong — 2.4k views", icon: <Clapperboard className="w-[14px] h-[14px] text-indigo-500" />, iconBg: "bg-indigo-50 border-indigo-100" },
-                  { time: "14:20", text: "Doanh thu hôm nay: 340,000 VNĐ", icon: <CircleDollarSign className="w-[14px] h-[14px] text-emerald-600" />, iconBg: "bg-emerald-50 border-emerald-100" },
-                  { time: "16:00", text: "Cookie FB sắp hết hạn — cần cập nhật", icon: <AlertTriangle className="w-[14px] h-[14px] text-amber-500" />, iconBg: "bg-amber-50 border-amber-200", highlight: true },
-                  { time: "18:00", text: "Hệ thống đang chạy bình thường", icon: <CheckCircle2 className="w-[14px] h-[14px] text-emerald-500" />, iconBg: "bg-emerald-50 border-emerald-100" },
+                  { time: "10:30", text: "Crawl thành công 15 video từ kênh YouTube", icon: <Download className="w-[14px] h-[14px] text-blue-500" />, iconBg: "bg-blue-50 border-blue-100" },
+                  { time: "11:45", text: "Đã upload 3 video lên Facebook Reels", icon: <Clapperboard className="w-[14px] h-[14px] text-indigo-500" />, iconBg: "bg-indigo-50 border-indigo-100" },
+                  { time: "14:20", text: "Đã comment 12 bài Threads (Profile: @bot1)", icon: <MessageSquare className="w-[14px] h-[14px] text-emerald-600" />, iconBg: "bg-emerald-50 border-emerald-100" },
+                  { time: "16:00", text: "Cảnh báo: Cookie Facebook sắp hết hạn", icon: <AlertTriangle className="w-[14px] h-[14px] text-amber-500" />, iconBg: "bg-amber-50 border-amber-200", highlight: true },
+                  { time: "18:00", text: "Hoàn tất chu kỳ AutoFarm hôm nay", icon: <CheckCircle2 className="w-[14px] h-[14px] text-emerald-500" />, iconBg: "bg-emerald-50 border-emerald-100" },
                 ].map((m, i) => (
                   <div key={i} className="flex items-end gap-2 animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
-                    <div className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center border mb-4 ${m.iconBg}`}>
+                    <div className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center border mb-4 flex-shrink-0 ${m.iconBg}`}>
                       {m.icon}
                     </div>
                     <div className="flex flex-col gap-1 items-start">
