@@ -392,9 +392,9 @@ export default function AccountsPage() {
   /* ─── Shared Styles ─── */
   const cardClass = "bg-transparent border-none shadow-none transition-all duration-500";
   const inputClass = "w-full bg-zinc-50/80 border border-zinc-200/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-sm";
-  const editorCardClass = "bg-white border border-zinc-100 rounded-[24px] p-4 relative group/post shadow-[0_8px_30px_-12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] hover:border-zinc-200 transition-all";
+  const editorCardClass = "bg-white/60 backdrop-blur-3xl border border-white/80 rounded-[32px] p-5 relative group/post shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:bg-white/80 hover:border-white transition-all duration-500 ring-1 ring-black/[0.02]";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
-  const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
+  const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white/80 backdrop-blur-md border border-white/60 text-gray-700 font-semibold text-[13px] rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-white active:translate-y-0 active:scale-[0.98] shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnGreen = "btn-shimmer flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-emerald-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnViolet = "btn-shimmer flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-violet-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
 
@@ -551,30 +551,28 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
                       
-                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-6 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
-	                          <div key={`shopee-${i}`} className={`w-[280px] shrink-0 min-h-full flex flex-col snap-center ${editorCardClass} pb-6`}>
-                            <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            
-                            <div className="pr-9">
-                              <p className="text-[13px] font-semibold text-gray-950 truncate mb-1">{p.title}</p>
-                              <p className="text-[10px] text-gray-400 font-mono truncate">{p.aff_link}</p>
+                            <div key={`shopee-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                              <div className="relative w-full aspect-[4/5] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
+                                <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-cover mix-blend-multiply" />
+                                <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
+                              <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
+                              
+                              <div className="mt-auto flex justify-between items-center pt-2">
+                                <span className="text-[12px] text-gray-400 font-mono truncate max-w-[140px]">{p.aff_link}</span>
+                                <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors group">
+                                  Lưu thay đổi <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                              </div>
                             </div>
-                            
-                            <textarea className="mt-2 w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-[3px] focus:ring-emerald-500/10" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
-                            
-	                            <div className="mt-2 h-[200px] w-full shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
-                              <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-contain shadow-sm" />
-                            </div>
-                            
-	                            <div className="mt-auto mb-1 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-3">
-                              <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
-                            </div>
-                          </div>
                         )})}
                       </div>
                     </div>
@@ -653,33 +651,28 @@ export default function AccountsPage() {
                       <ChevronRight className="w-5 h-5 pl-0.5" />
                     </button>
 
-                    <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                    <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-6 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
                       {[...parsedLinks, ...parsedLinks].map((p, i) => {
                         const sourceIndex = i % parsedLinks.length;
                         return (
-			                        <div key={`fb-story-${i}`} className={`w-[280px] shrink-0 self-start flex flex-col snap-center ${editorCardClass} pb-5`}>
-                          <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <div className="pr-9">
-                            <p className="text-[13px] font-semibold text-gray-950 truncate mb-1">{p.title}</p>
-                            <p className="text-[10px] text-gray-400 font-mono truncate">{p.aff_link}</p>
+                          <div key={`fb-story-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                            <div className="relative w-full aspect-[4/5] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
+                              <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-cover mix-blend-multiply" />
+                              <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            
+                            <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
+                            <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
+                            
+                            <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
+                              <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                              <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="text-[14px] font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 transition-colors group">
+                                {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng FB"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </button>
+                            </div>
                           </div>
-                          
-                          <textarea className="mt-2 w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-purple-500 focus:ring-[3px] focus:ring-purple-500/10" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
-                          
-		                          <div className="mt-2 h-[200px] w-full shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
-                            <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-contain shadow-sm" />
-                          </div>
-                          
-					                          <div className="mt-3 mb-1 grid grid-cols-2 gap-2 shrink-0 border-t border-gray-200/60 pt-3">
-			                            <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-2 py-1.5`}>Lưu Thay Đổi</button>
-			                            <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="flex items-center justify-center gap-1.5 rounded-xl bg-purple-500 px-2 py-1.5 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-purple-600 disabled:opacity-40">
-			                              {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
-			                              FB Post
-			                            </button>
-		                          </div>
-                        </div>
                       )})}
                     </div>
                   </div>
@@ -753,35 +746,46 @@ export default function AccountsPage() {
 	                      </>
 	                    )}
 
-		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
 		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
                           const hasImages = post.image_urls && post.image_urls.length > 0;
                           return (
-			                        <div key={`threads-${post.id}-${i}`} className={`w-[340px] shrink-0 self-start flex flex-col snap-center ${editorCardClass} pb-5`}>
-	                          <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
-	                            <Trash2 className="w-3.5 h-3.5" />
-	                          </button>
-			                          <textarea className="w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 pr-10 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-violet-500 focus:ring-[3px] focus:ring-violet-500/10" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
-	                          {post.image_urls && post.image_urls.length > 0 && (
-	                            <div className="mt-3 flex gap-3 overflow-x-auto overflow-y-hidden pb-1 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-	                              {post.image_urls.map((url: string, idx: number) => (
-	                                <div key={idx} className="relative group shrink-0">
-				                                  <img src={url} alt="Threads post media" className="h-64 w-auto rounded-xl object-contain border border-gray-200 transition-all group-hover:opacity-80 shadow-sm bg-gray-100" />
-	                                  <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
-	                                    <Trash2 className="w-3.5 h-3.5" />
-	                                  </button>
-	                                </div>
-	                              ))}
-	                            </div>
-	                          )}
-				                          <div className="mt-3 mb-1 flex justify-center gap-2 border-t border-gray-200/60 pt-3">
-	                            <button onClick={() => handleSavePost(post)} className={`${btnSecondary} min-w-[128px] text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
-	                            <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className={`${btnViolet} min-w-[128px] text-[12px] px-4 py-1.5`}>
-	                              {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Đăng Threads"}
-	                            </button>
-	                          </div>
-	                        </div>
-	                      );
+                            <div key={`threads-${post.id}-${i}`} className="w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                              {hasImages ? (
+                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
+                                  <div className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+                                    {post.image_urls.map((url: string, idx: number) => (
+                                      <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
+                                        <img src={url} alt="Threads media" className="h-full w-full object-cover" />
+                                        <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all shadow-md">
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá Post">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
+                                  <MessageCircle className="w-12 h-12 text-violet-300 mb-3" />
+                                  <p className="text-violet-400 font-medium text-sm">Text Only Post</p>
+                                  <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
+                              
+                              <textarea className="w-full bg-transparent border-none p-0 text-[15px] font-medium text-gray-900 resize-none outline-none leading-relaxed min-h-[80px] placeholder:text-gray-300 focus:ring-0 mb-4" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+                              
+                              <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
+                                <button onClick={() => handleSavePost(post)} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                                <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className="text-[14px] font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors group">
+                                  {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng Threads"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                              </div>
+                            </div>
                         })}
 	                      {threadsPosts.length === 0 && (
 	                        <div className="h-full w-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 text-center text-gray-400 px-6">
