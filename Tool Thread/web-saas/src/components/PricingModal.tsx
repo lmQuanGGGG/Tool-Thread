@@ -108,7 +108,7 @@ export default function PricingModal({ open, onClose }: PricingModalProps) {
               return (
                 <div
                   key={tier.key}
-                  className={`bg-[#f8f9fa] rounded-[32px] p-8 flex flex-col h-full relative transition-all ${isCurrent ? "ring-2 ring-zinc-900 shadow-md" : ""}`}
+                  className={`bg-[#f8f9fa] hover:bg-white rounded-[32px] p-8 flex flex-col h-full relative transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] ${isCurrent ? "ring-2 ring-zinc-900 shadow-md" : ""}`}
                 >
                   <div className="mb-5">
                     <span className={`inline-block px-3 py-1.5 rounded-md text-[11px] font-semibold ${tier.tagColor}`}>
