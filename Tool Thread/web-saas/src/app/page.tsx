@@ -331,29 +331,33 @@ const ServerlessIllustration = () => {
           
           {/* Ring 1 (Outer) */}
           <div className="ring-1 absolute w-[260px] h-[260px] md:w-[340px] md:h-[340px] rounded-full border border-blue-200/60 border-dashed flex items-center justify-center">
+            {/* GitHub Actions */}
             <div className="absolute -top-6 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-1">
-              <GitBranch className="w-5 h-5 text-zinc-900" />
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-900"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
             </div>
+            {/* Telegram Bot */}
             <div className="absolute -bottom-6 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-1">
-              <MessageSquare className="w-5 h-5 text-blue-500" />
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-[#2AABEE]"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
             </div>
           </div>
 
           {/* Ring 2 (Inner) */}
           <div className="ring-2 absolute w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-full border border-indigo-200/80 border-dotted flex items-center justify-center">
+            {/* Supabase (PostgreSQL) */}
             <div className="absolute -left-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
-              <Database className="w-4 h-4 text-emerald-600" />
+              <Database className="w-5 h-5 text-[#3ECF8E]" />
             </div>
+            {/* Cloudflare (Workers) */}
             <div className="absolute -right-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
-              <Zap className="w-4 h-4 text-amber-500" />
+              <Cloud className="w-5 h-5 text-[#F38020]" />
             </div>
           </div>
 
-          {/* Central Hub */}
+          {/* Central Hub (AutoFarm Core) */}
           <div className="center-hub relative z-10 w-24 h-24 bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-zinc-100 flex items-center justify-center">
             <div className="absolute inset-0 bg-blue-500/10 rounded-3xl animate-pulse" />
             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-inner relative z-10">
-              <Cloud className="w-7 h-7" />
+              <Bot className="w-7 h-7" />
             </div>
           </div>
         </div>
