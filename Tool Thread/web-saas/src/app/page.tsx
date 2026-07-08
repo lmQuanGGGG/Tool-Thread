@@ -77,6 +77,7 @@ type Particle = {
   size: number; color: string; shape: number;
   angle: number; speed: number; depth: number;
   rotation: number; rotSpeed: number;
+  heartX: number; heartY: number;
 };
 
 const ATTRACT_RADIUS = 800; // px — bán kính ảnh hưởng siêu lớn để tạo hiệu ứng vũ trụ
@@ -108,6 +109,14 @@ const ConfettiCanvas = () => {
     const pts: Particle[] = [];
     for (let i = 0; i < count; i++) {
       const depth = 0.3 + Math.random() * 0.7;
+      
+      // Sinh toạ độ hình trái tim rải rác
+      const t_heart = Math.random() * Math.PI * 2;
+      // Scale trái tim to ra và rải rác nhờ random
+      const rScale = (0.3 + Math.random() * 0.7) * 20; 
+      const hx = rScale * 16 * Math.pow(Math.sin(t_heart), 3);
+      const hy = -rScale * (13 * Math.cos(t_heart) - 5 * Math.cos(2 * t_heart) - 2 * Math.cos(3 * t_heart) - Math.cos(4 * t_heart));
+
       pts.push({
         x: Math.random() * w, y: Math.random() * h,
         baseX: Math.random() * w, baseY: Math.random() * h,
@@ -120,6 +129,8 @@ const ConfettiCanvas = () => {
         depth,
         rotation: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.02,
+        heartX: hx,
+        heartY: hy,
       });
     }
 
@@ -164,11 +175,17 @@ const ConfettiCanvas = () => {
         p.vy += (targetY - p.y) * RETURN_FORCE;
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
-          // Lực "di cư": Thay vì tác động vật lý bạo lực, ta chỉ nhẹ nhàng dời điểm neo (base) của hạt về phía chuột.
-          // Hạt vẫn sẽ trôi bồng bềnh theo hàm sin/cos như cũ, nhưng cả cụm sẽ đi theo chuột nhanh hơn một chút.
+          // Lực "di cư": Thay vì tác động vật lý bạo lực, ta chỉ nhẹ nhàng dời điểm neo (base) của hạt.
+          // Nhưng thay vì dồn hết vào chính giữa chuột (gây ra hiện tượng gom cục), 
+          // ta dời về vị trí tương đối tạo thành hình trái tim xung quanh chuột.
+          const targetMouseX = mx + p.heartX;
+          const targetMouseY = my + p.heartY;
+          const pullDx = targetMouseX - p.baseX;
+          const pullDy = targetMouseY - p.baseY;
+
           const pullSpeed = 0.015 * p.speed;
-          p.baseX += dx * pullSpeed;
-          p.baseY += dy * pullSpeed;
+          p.baseX += pullDx * pullSpeed;
+          p.baseY += pullDy * pullSpeed;
         }
 
         // Apply velocity
