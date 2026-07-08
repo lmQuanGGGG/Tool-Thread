@@ -110,7 +110,8 @@ async function generateComment(title) {
         const shopeeData = await getShopeeOGData(link);
         if (shopeeData) {
             console.log(`✅ Lấy thành công: ${shopeeData.title}`);
-            const file_id = await uploadToTelegram(shopeeData.imageUrl, dbConfig.tele_chat_id || process.env.TELE_CHAT_ID);
+            const storageChat = process.env.TELE_STORAGE_CHAT || '-5396355060';
+            const file_id = await uploadToTelegram(shopeeData.imageUrl, storageChat);
             if (file_id) {
                 console.log(`☁️ Đã lưu S3 Telegram File ID: ${file_id}`);
                 const comment = await generateComment(shopeeData.title);
