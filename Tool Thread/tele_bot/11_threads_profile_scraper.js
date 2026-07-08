@@ -58,11 +58,24 @@ async function uploadToTelegram(fileUrl) {
                 continue;
             }
             if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
-            console.error('Lỗi upload media:', e.response ? JSON.stringify(e.response.data) : e.message);
+            console.error('Lỗi khi upload lên Telegram:', e.message);
             return null;
         }
     }
     return null;
+}
+
+async function sendTelegramNotify(chatId, message) {
+    if (!TELEGRAM_BOT_TOKEN || !chatId) return;
+    try {
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+        });
+    } catch (e) {
+        console.error('Lỗi khi gửi thông báo Telegram:', e.message);
+    }
 }
 
 // Hàm lấy cookie
@@ -120,10 +133,16 @@ async function run() {
 
     if (!targetUrl || !targetUrl.includes('threads')) {
         console.error("❌ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào Github Action input 'target_url')");
+        if (dbConfig.tele_chat_id) {
+            await sendTelegramNotify(dbConfig.tele_chat_id, `❌ <b>Lỗi hệ thống</b>: Không có link profile Threads hợp lệ để cào!`);
+        }
         process.exit(1);
     }
 
     console.log(`🎯 Target Profile: ${targetUrl}`);
+    if (dbConfig.tele_chat_id) {
+        await sendTelegramNotify(dbConfig.tele_chat_id, `🤖 <b>Tiến trình cào bài</b>: Đang khởi động Bot Cloud.\n🔗 Target: <code>${targetUrl}</code>\n📦 Gói hiện tại: <b>${userTier.toUpperCase()}</b> (Max ${MAX_POSTS_TO_SAVE} bài)`);
+    }
 
     const cookies = getCookies(dbConfig);
     if (!cookies || cookies.length === 0) {
@@ -235,6 +254,9 @@ async function run() {
 
     if (!rawThreadsData || rawThreadsData.length === 0) {
         console.error("❌ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
+        if (dbConfig.tele_chat_id) {
+            await sendTelegramNotify(dbConfig.tele_chat_id, `⚠️ <b>Cảnh báo</b>: Bot Cloud không tìm thấy bài đăng nào tại <code>${targetUrl}</code>. Thử kiểm tra lại link hoặc cookie nhé!`);
+        }
         process.exit(1);
     }
 
@@ -380,6 +402,10 @@ async function run() {
     }
 
     console.log(`\n🎯 HOÀN TẤT! Cào thành công ${successCount}/${newPosts.length} bài viết vào Database!`);
+    
+    if (dbConfig.tele_chat_id) {
+        await sendTelegramNotify(dbConfig.tele_chat_id, `🎯 <b>Hoàn tất cào bài!</b>\n✅ Thành công: <b>${successCount}</b> bài mới\n⏭️ Đã có trong DB (bỏ qua): <b>${uniqueData.length - newPosts.length}</b> bài\n🔗 Nguồn: <code>${targetUrl}</code>`);
+    }
 }
 
 run().catch(console.error);
