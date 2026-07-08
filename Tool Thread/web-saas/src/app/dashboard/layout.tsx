@@ -139,20 +139,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ===== SIDEBAR ===== */}
       <aside
-        className="fixed top-0 left-0 h-screen z-30 flex flex-col bg-white/70 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300"
-        style={{ width: collapsed ? 64 : SIDEBAR_W }}
+        className={`fixed top-0 left-0 h-screen z-40 flex flex-col bg-white/95 backdrop-blur-3xl border-r border-zinc-100/80 transition-all duration-300 max-md:w-[260px] ${collapsed ? "max-md:-translate-x-full md:w-[64px]" : "translate-x-0 md:w-[256px]"}`}
       >
-        {/* Toggle Sidebar Button */}
         <button 
           onClick={() => setCollapsed(!collapsed)} 
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-40 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-900 transition-all hover:scale-110"
+          className="absolute -right-4 md:-right-3 top-1/2 -translate-y-1/2 z-50 w-8 h-8 md:w-6 md:h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-md text-gray-500 hover:text-gray-900 transition-all hover:scale-110"
         >
-          {collapsed ? <ChevronRight className="w-3.5 h-3.5 ml-0.5" /> : <ChevronLeft className="w-3.5 h-3.5 pr-0.5" />}
+          {collapsed ? <ChevronRight className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" /> : <ChevronLeft className="w-4 h-4 md:w-3.5 md:h-3.5 pr-0.5" />}
         </button>
 
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px] hover:opacity-80 transition-opacity">
-          <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "w-0 opacity-0 hidden" : "w-full opacity-100"}`}>
+          <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "max-md:w-full max-md:opacity-100 w-0 opacity-0 hidden max-md:flex" : "w-full opacity-100"}`}>
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
               <Rocket className="w-4 h-4" />
             </div>
@@ -162,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           {collapsed && (
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm mx-auto shrink-0">
+            <div className="hidden md:flex w-8 h-8 rounded-lg bg-blue-600 items-center justify-center text-white shadow-sm mx-auto shrink-0">
               <Rocket className="w-4 h-4" />
             </div>
           )}
@@ -171,131 +169,135 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
           {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
-            // Pricing dùng modal thay vì navigate
             if (item.href === "/pricing") {
               return (
                 <button
                   key={item.name}
                   onClick={() => setPricingOpen(true)}
                   title={collapsed ? item.name : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50 ${
-                    collapsed ? "justify-center !px-0 w-10 h-10 mx-auto" : ""
-                  }`}
+                  className={`flex items-center w-full px-3 py-2.5 rounded-xl transition-all duration-200 group text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900`}
                 >
-                  <item.icon className="w-5 h-5 shrink-0" strokeWidth={2} />
-                  {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                  <item.icon className="w-[18px] h-[18px] shrink-0" />
+                  <span className={`ml-3 font-medium text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "max-md:opacity-100 max-md:w-auto opacity-0 w-0 hidden max-md:block" : "opacity-100"}`}>
+                    {item.name}
+                  </span>
                 </button>
               );
             }
-            const isActive = pathname === item.href;
+
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                prefetch={true}
                 title={collapsed ? item.name : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  collapsed ? "justify-center !px-0 w-10 h-10 mx-auto" : ""
-                } ${
-                  isActive
-                    ? "text-blue-600 bg-blue-50/80"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                }`}
+                className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${active ? "bg-blue-50 text-blue-700 font-semibold shadow-sm border border-blue-100/50" : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900 font-medium"}`}
               >
-                <item.icon className={`shrink-0 ${isActive ? "w-5 h-5" : "w-5 h-5"}`} strokeWidth={isActive ? 2.5 : 2} />
-                {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600"}`} />
+                <span className={`ml-3 text-[13px] whitespace-nowrap transition-all duration-300 ${collapsed ? "max-md:opacity-100 max-md:w-auto opacity-0 w-0 hidden max-md:block" : "opacity-100"}`}>
+                  {item.name}
+                </span>
+                {active && !collapsed && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Bottom */}
-        <div className="p-3 pb-4 space-y-2 shrink-0">
-          {collapsed ? (
-            <button 
-              onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
-              className="w-9 h-9 mx-auto rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-all"
-              title="Đăng xuất"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          ) : (
-            <>
-              <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center ${meta.bg}`}>
-                      <TierIcon className={`w-3 h-3 ${meta.color}`} />
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-medium text-gray-400 leading-none">Gói hiện tại</p>
-                      <p className={`text-xs font-bold ${meta.color} mt-0.5`}>{meta.label}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setPricingOpen(true)} className="text-[10px] text-blue-600 font-semibold hover:underline whitespace-nowrap">Xem gói →</button>
-                </div>
-
-                {limits && used && (
-                  <div className="space-y-2 border-t border-gray-100 pt-2.5">
-                    {[
-                      { label: "Reels", used: used.reels_posted || 0, limit: limits.reels_per_day, color: "bg-blue-500" },
-                      { label: "Comment", used: used.threads_commented || 0, limit: limits.threads_per_day, color: "bg-violet-500" },
-                      { label: "FB Post", used: used.fb_story_posted || 0, limit: limits.fb_story_per_day, color: "bg-amber-500" },
-                    ].map(({ label, used: u, limit: l, color }) => {
-                      const unlimited = l === -1;
-                      const remaining = unlimited ? "∞" : Math.max(0, l - u);
-                      const pct = unlimited ? 12 : l === 0 ? 100 : Math.min(100, (u / l) * 100);
-                      const nearLimit = !unlimited && l > 0 && pct >= 80;
-                      return (
-                        <div key={label}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] text-gray-400">{label}</span>
-                            <span className={`text-[10px] font-semibold ${nearLimit ? "text-red-500" : "text-gray-500"}`}>
-                              {l === 0 ? "—" : unlimited ? "∞" : `còn ${remaining}`}
-                            </span>
-                          </div>
-                          {l !== 0 && (
-                            <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full transition-all duration-500 ${nearLimit ? "bg-red-500" : color}`} style={{ width: `${pct}%` }} />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="mt-2 text-[9px] leading-relaxed">
-                  {isPro
-                    ? <span className="text-emerald-600 font-medium">✅ Bot chạy tự động hàng ngày</span>
-                    : <span className="text-gray-400">
-                        {tier === "free" && "Nâng cấp để bot tự động!"}
-                        {tier === "lite" && "Nâng Plus để tự động mỗi ngày!"}
-                        {tier === "plus" && "Nâng Pro để tăng gấp đôi giới hạn."}
-                      </span>
-                  }
-                </div>
+        {/* Bottom Area */}
+        <div className="p-3 border-t border-zinc-100 space-y-2">
+          {/* User Profile */}
+          <div className="flex items-center gap-3 px-2 py-2 mb-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center shrink-0 border border-white shadow-sm overflow-hidden">
+              <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user?.email}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
+            </div>
+            <div className={`overflow-hidden transition-all duration-300 ${collapsed ? "max-md:w-full max-md:opacity-100 w-0 opacity-0 hidden max-md:block" : "w-full opacity-100"}`}>
+              <p className="text-[12px] font-semibold text-gray-900 truncate pr-2">{user?.email}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <TierIcon className={`w-3 h-3 ${meta.color}`} />
+                <span className={`text-[10px] font-bold ${meta.color} uppercase tracking-wider`}>{meta.label}</span>
               </div>
+            </div>
+          </div>
 
-              {tier !== "promax" && (
-                <button onClick={() => setPricingOpen(true)} className="flex items-center justify-between w-full bg-gray-900 text-white font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors group">
-                  <span>⚡ Nâng cấp gói</span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
+          {/* Usage Mini Widget */}
+          {!collapsed && (
+            <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 max-md:block">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold tracking-wider text-gray-500 uppercase">Hôm nay</span>
+              </div>
+              {limits && used && (
+                <div className="space-y-3">
+                  {[
+                    { label: "Reels", used: used.reels_posted || 0, limit: limits.reels_per_day, color: "bg-blue-500" },
+                    { label: "Comment", used: used.threads_commented || 0, limit: limits.threads_per_day, color: "bg-violet-500" },
+                    { label: "FB Post", used: used.fb_story_posted || 0, limit: limits.fb_story_per_day, color: "bg-amber-500" },
+                  ].map(({ label, used: u, limit: l, color }) => {
+                    const unlimited = l === -1;
+                    const remaining = unlimited ? "∞" : Math.max(0, l - u);
+                    const pct = unlimited ? 12 : l === 0 ? 100 : Math.min(100, (u / l) * 100);
+                    const nearLimit = !unlimited && l > 0 && pct >= 80;
+                    return (
+                      <div key={label}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-gray-400">{label}</span>
+                          <span className={`text-[10px] font-semibold ${nearLimit ? "text-red-500" : "text-gray-500"}`}>
+                            {l === 0 ? "—" : unlimited ? "∞" : `còn ${remaining}`}
+                          </span>
+                        </div>
+                        {l !== 0 && (
+                          <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-500 ${nearLimit ? "bg-red-500" : color}`} style={{ width: `${pct}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="mt-2 text-[9px] leading-relaxed">
+                {isPro
+                  ? <span className="text-emerald-600 font-medium">✅ Bot chạy tự động hàng ngày</span>
+                  : <span className="text-gray-400">
+                      {tier === "free" && "Nâng cấp để bot tự động!"}
+                      {tier === "lite" && "Nâng Plus để tự động mỗi ngày!"}
+                      {tier === "plus" && "Nâng Pro để tăng gấp đôi giới hạn."}
+                    </span>
+                }
+              </div>
+            </div>
+          )}
+
+          {(tier !== "promax" && !collapsed) && (
+            <button onClick={() => setPricingOpen(true)} className="max-md:flex flex items-center justify-between w-full bg-gray-900 text-white font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors group">
+              <span>⚡ Nâng cấp gói</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
+            </button>
+          )}
+          
+          {collapsed && (
+            <div className="hidden max-md:block">
+               {tier !== "promax" && (
+                <button onClick={() => setPricingOpen(true)} className="max-md:flex flex items-center justify-between w-full bg-gray-900 text-white font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors group mb-2">
+                  <span>⚡ Nâng cấp</span>
                 </button>
               )}
-              <button 
-                onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
-                className="flex items-center justify-between w-full bg-red-50 text-red-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-red-100 transition-colors group"
-              >
-                <span>Đăng xuất</span>
-                <LogOut className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
-              </button>
-            </>
+            </div>
           )}
+
+          <button 
+            onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
+            className={`flex items-center justify-between w-full bg-red-50 text-red-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-red-100 transition-colors group ${collapsed ? "max-md:px-4 max-md:justify-between px-0 justify-center" : ""}`}
+          >
+            <span className={`${collapsed ? "max-md:block hidden" : ""}`}>Đăng xuất</span>
+            <LogOut className={`w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all ${collapsed ? "max-md:ml-0" : ""}`} />
+          </button>
         </div>
       </aside>
 
       {/* ===== MAIN ===== */}
-      <main className="flex-1 flex flex-col min-h-screen relative z-10 transition-all duration-300" style={{ marginLeft: collapsed ? 64 : SIDEBAR_W }}>
+      <main className={`flex-1 flex flex-col min-h-screen relative z-10 transition-all duration-300 ${collapsed ? "md:pl-[64px]" : "md:pl-[256px]"}`}>
         {/* Dot grid */}
         <div className="absolute inset-0 pointer-events-none z-0 opacity-40" style={{ backgroundImage: "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <div className="flex-1 z-10 overflow-hidden">{children}</div>
