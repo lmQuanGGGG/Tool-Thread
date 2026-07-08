@@ -476,9 +476,8 @@ export default function AccountsPage() {
                 
               </div>
 
-              {/* Mảng Data Shopee cho Story */}
               {parsedLinks.length > 0 ? (
-                <div className={`${cardClass} p-6 flex flex-col h-full min-h-0 anim-fade-up anim-d3`}>
+                <div className={`${cardClass} p-6 flex flex-col h-[600px] lg:h-0 lg:min-h-full overflow-hidden anim-fade-up anim-d3`}>
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-[13px] font-semibold text-gray-900">FB Story Poster (Shopee Data)</h3>
                     <span className="px-2.5 py-1 rounded-md bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
@@ -506,7 +505,7 @@ export default function AccountsPage() {
                   </div>
                 </div>
               ) : (
-                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[700px] anim-fade-up anim-d3 text-center`}>
+                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[600px] lg:h-0 lg:min-h-full overflow-hidden anim-fade-up anim-d3 text-center`}>
                   <Image className="w-10 h-10 text-gray-300 mb-3" />
                   <p className="text-[13px] font-medium text-gray-600">Chưa có Data Shopee</p>
                   <p className="text-[11px] text-gray-400 mt-1 max-w-[250px]">Hãy sang tab Cấu Hình Chung, dán link Affiliate và nhấn Đồng bộ để lấy dữ liệu nhé!</p>
