@@ -186,9 +186,37 @@ async function fetchLatestVideos(channels) {
 
             console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
             
-            // Tải file bằng curl (-sL để tải âm thầm, tránh spam log trên Github Actions)
-            const downloadCmd = `curl -sL -o "${outputPath}" "${bestFormat.url}"`;
-            execSync(downloadCmd, { stdio: 'inherit' });
+            const axios = require('axios');
+            const response = await axios({
+                url: bestFormat.url,
+                method: 'GET',
+                responseType: 'stream',
+                timeout: 300000 // 5 minutes timeout
+            });
+
+            const totalLength = parseInt(response.headers['content-length'], 10);
+            let downloadedLength = 0;
+            let lastReportedProgress = 0;
+
+            const writer = fs.createWriteStream(outputPath);
+            response.data.on('data', (chunk) => {
+                downloadedLength += chunk.length;
+                if (totalLength) {
+                    const percent = Math.floor((downloadedLength / totalLength) * 100);
+                    if (percent >= lastReportedProgress + 10) {
+                        console.log(`⏳ Đang tải: ${percent}%...`);
+                        lastReportedProgress = percent;
+                    }
+                }
+            });
+
+            response.data.pipe(writer);
+
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+            console.log(`✅ Tải video ${bestFormat.label} hoàn tất!`);
     } catch (err) {
         console.error("❌ Lỗi tải video:", err.message);
         process.exit(1);
