@@ -1,9 +1,27 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function POST(request: Request) {
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, botType = 'reels' } = body;
+
+    // Lấy user từ Authorization header
+    const token = request.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+    if (authErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Đảm bảo chỉ có thể kích hoạt bot cho chính email của user đang login
+    if (user.email !== email) {
+      return NextResponse.json({ error: "Forbidden: Cannot trigger bot for another user" }, { status: 403 });
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });

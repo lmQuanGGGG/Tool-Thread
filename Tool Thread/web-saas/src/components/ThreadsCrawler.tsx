@@ -117,10 +117,14 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
               if (!cloudTargetUrl) return;
               pushLog("INFO", `Đang gửi lệnh Cloud Scraper cho: ${cloudTargetUrl}`, "global");
               try {
+                const { data: { session } } = await supabase.auth.getSession();
                 const { data: userData } = await supabase.auth.getUser();
                 const res = await fetch("/api/trigger-bot", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token}` 
+                  },
                   body: JSON.stringify({ email: userData.user?.email || "admin@autofarm.com", botType: "threads_scraper", target_url: cloudTargetUrl })
                 });
                 if (res.ok) pushLog("SUCCESS", "Đã gửi lệnh thành công! Hệ thống sẽ cào ngầm.", "global");

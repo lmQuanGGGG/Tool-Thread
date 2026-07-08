@@ -360,7 +360,15 @@ export default function AccountsPage() {
     setTriggering(true);
     pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`, target);
     try {
-      const res = await fetch("/api/trigger-bot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: userEmail, botType }) });
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/trigger-bot", { 
+        method: "POST", 
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}` 
+        }, 
+        body: JSON.stringify({ email: userEmail, botType }) 
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       pushLog("SUCCESS", `Bot [${botType.toUpperCase()}] đã được kích hoạt thành công!`, target);
