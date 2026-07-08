@@ -531,8 +531,13 @@ export default function Home() {
               </Link>
             </div>
           </Reveal>
-          <Reveal delay={200}>
-            <div className="rounded-[24px] bg-[#0e1621] border border-zinc-800 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative h-[420px]">
+          <Reveal delay={200} className="relative">
+            {/* Hologram / Confetti Background Decoration behind the card */}
+            <div className="absolute -inset-8 sm:-inset-12 md:-inset-16 z-0 bg-[#f1f3f6] rounded-[36px] md:rounded-[48px] pointer-events-none overflow-hidden shadow-inner hidden sm:block border border-zinc-200/50">
+                <div className="absolute inset-0 opacity-[0.5]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg opacity='0.7'%3E%3Ccircle cx='20' cy='20' r='3' fill='%234285F4'/%3E%3Ccircle cx='90' cy='100' r='2.5' fill='%23EA4335'/%3E%3Ccircle cx='105' cy='30' r='3.5' fill='%23FBBC05'/%3E%3Crect x='50' y='75' width='8' height='2.5' transform='rotate(45 54 76)' fill='%2334A853'/%3E%3Crect x='25' y='105' width='10' height='2.5' transform='rotate(-35 30 106)' fill='%234285F4'/%3E%3Crect x='100' y='80' width='7' height='2' transform='rotate(15 103 81)' fill='%23EA4335'/%3E%3Cpath d='M70,15 l5,5 l-5,5 l-5,-5 Z' fill='%23EA4335'/%3E%3Cpath d='M30,70 l4,4 l-4,4 l-4,-4 Z' fill='%23FBBC05'/%3E%3C/g%3E%3C/svg%3E")`, backgroundSize: '120px' }}></div>
+            </div>
+
+            <div className="rounded-[24px] bg-[#0e1621] border border-zinc-800 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col relative h-[420px] z-10 transition-transform duration-500 hover:scale-[1.02]">
               {/* Pattern Background overlay */}
               <div 
                 className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
