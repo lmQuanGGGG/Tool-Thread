@@ -131,6 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isPro = tier === "pro" || tier === "promax";
 
   return (
+    <>
     <div className="flex min-h-screen bg-[#F7F7F8]">
       {/* Aurora */}
       <div className="aurora-bg"><div className="aurora-blob-3" /></div>
@@ -222,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <p className={`text-xs font-bold ${meta.color} mt-0.5`}>{meta.label}</p>
                     </div>
                   </div>
-                  <Link href="/pricing" className="text-[10px] text-blue-600 font-semibold hover:underline whitespace-nowrap">Xem gói →</Link>
+                  <button onClick={() => setPricingOpen(true)} className="text-[10px] text-blue-600 font-semibold hover:underline whitespace-nowrap">Xem gói →</button>
                 </div>
 
                 {limits && used && (
@@ -267,10 +268,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
 
               {tier !== "promax" && (
-                <Link href="/pricing" className="flex items-center justify-between w-full bg-gray-900 text-white font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors group">
+                <button onClick={() => setPricingOpen(true)} className="flex items-center justify-between w-full bg-gray-900 text-white font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-gray-800 transition-colors group">
                   <span>⚡ Nâng cấp gói</span>
                   <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
-                </Link>
+                </button>
               )}
               <button 
                 onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
@@ -299,5 +300,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     {/* Pricing Modal — render ngoài layout để overlay toàn màn hình */}
     <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
+    </>
   );
 }
