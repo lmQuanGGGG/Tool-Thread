@@ -443,7 +443,8 @@ export default function AccountsPage() {
                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Facebook Engine</h1>
                   <p className="text-sm text-gray-500">Thiết lập Cookie và chạy tiến trình Facebook.</p>
                 </div>
-                <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
+                <div className={`${cardClass} p-6 min-h-[500px] flex flex-col justify-between anim-fade-up anim-d1`}>
+                  <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[13px] font-semibold text-gray-900">Kênh Video Nguồn (Youtube/TikTok)</h3>
                     <StatusDot active={!!formData.target_channels} />
@@ -471,6 +472,7 @@ export default function AccountsPage() {
                       {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
                       Auto Comment
                     </button>
+                  </div>
                   </div>
                 </div>
                 
