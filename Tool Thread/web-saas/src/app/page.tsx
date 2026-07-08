@@ -84,9 +84,7 @@ const ATTRACT_FORCE = 0.04; // lực hút
 const RETURN_FORCE = 0.05; // lực kéo về vị trí gốc (tăng mạnh để tụ hình trái tim nhanh hơn)
 const FRICTION = 0.92;
 
-const defaultColors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800", "#A855F7", "#06B6D4"];
-
-const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none", colors = defaultColors }: { className?: string, colors?: string[] }) => {
+const ConfettiCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -9999, y: -9999, active: false });
 
@@ -95,11 +93,13 @@ const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none", c
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const colors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800", "#A855F7", "#06B6D4"];
     let w = 0, h = 0;
 
     const resize = () => {
-      w = canvas.width = canvas.clientWidth;
-      h = canvas.height = canvas.clientHeight;
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
     };
     resize();
     window.addEventListener("resize", resize);
@@ -258,7 +258,7 @@ const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none", c
     };
   }, []);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" />;
 };
 
 /* ═══════════════════════════════════════════════
@@ -393,6 +393,7 @@ export default function Home() {
           <a href="#pricing" className="hover:text-zinc-900 transition-colors">Bảng giá</a>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/login" className="hidden sm:block text-[14px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Đăng nhập</Link>
           <Link href="/login" className="bg-zinc-900 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full hover:bg-black transition-colors flex items-center gap-1.5">
             Bắt đầu <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -642,7 +643,16 @@ export default function Home() {
       <section className="relative z-10 px-4 pb-20 max-w-[1100px] mx-auto">
         <Reveal>
           <div className="rounded-[32px] bg-[#0d1117] px-8 md:px-16 py-16 text-center relative overflow-hidden">
-            <ConfettiCanvas className="absolute inset-0 z-0 pointer-events-none opacity-30" colors={["#3b82f6", "#60a5fa", "#93c5fd", "#2563eb", "#1d4ed8"]} />
+            <div className="absolute inset-0 opacity-25 pointer-events-none">
+              {Array.from({ length: 40 }).map((_, i) => (
+                <div key={i} suppressHydrationWarning className="absolute rounded-full bg-blue-500 animate-pulse" style={{
+                  width: 2 + Math.random() * 3, height: 2 + Math.random() * 3,
+                  left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+                  animationDuration: `${2 + Math.random() * 3}s`,
+                  animationDelay: `${Math.random() * 3}s`,
+                }} />
+              ))}
+            </div>
             <h3 className="text-[28px] md:text-[36px] font-bold text-white mb-4 relative z-10">Bắt đầu tự động hoá ngay hôm nay</h3>
             <p className="text-zinc-400 text-[15px] mb-8 max-w-md mx-auto relative z-10">Tạo tài khoản miễn phí và trải nghiệm sức mạnh của AutoFarm.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
