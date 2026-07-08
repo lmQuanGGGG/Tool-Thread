@@ -465,18 +465,33 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal delay={200}>
-            <div className="rounded-[24px] bg-white border border-zinc-200 p-6 shadow-xl shadow-zinc-200/50">
-              <div className="space-y-3">
+            <div className="rounded-[24px] bg-[#f4f4f5] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col relative">
+              {/* Fake Header */}
+              <div className="bg-white/90 backdrop-blur-md px-5 py-3.5 border-b border-zinc-200 flex items-center gap-3 z-10 sticky top-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg shadow-sm">🤖</div>
+                <div>
+                  <div className="font-bold text-[14.5px] text-zinc-900 leading-tight">AutoFarm Bot</div>
+                  <div className="text-[12px] text-blue-500 font-medium">bot</div>
+                </div>
+              </div>
+              
+              {/* Messages */}
+              <div className="p-5 space-y-4">
                 {[
-                  { emoji: "🤖", text: "Bot: Đã comment 12 bài Threads thành công" },
-                  { emoji: "📹", text: "Bot: Upload 3 Reels FB xong — 2.4k views" },
-                  { emoji: "💰", text: "Bot: Doanh thu hôm nay: 340,000 VNĐ" },
-                  { emoji: "⚠️", text: "Bot: Cookie FB sắp hết hạn — cần cập nhật" },
-                  { emoji: "✅", text: "Bot: Tất cả hệ thống đang chạy bình thường" },
+                  { time: "10:30", text: "Đã comment 12 bài Threads thành công", emoji: "💬" },
+                  { time: "11:45", text: "Upload 3 Reels FB xong — 2.4k views", emoji: "📹" },
+                  { time: "14:20", text: "Doanh thu hôm nay: 340,000 VNĐ", emoji: "💰" },
+                  { time: "16:00", text: "Cookie FB sắp hết hạn — cần cập nhật", emoji: "⚠️", highlight: true },
+                  { time: "18:00", text: "Hệ thống đang chạy bình thường", emoji: "✅" },
                 ].map((m, i) => (
-                  <div key={i} className="flex items-start gap-3 bg-zinc-50 rounded-xl px-4 py-3 border border-zinc-100">
-                    <span className="text-lg flex-shrink-0">{m.emoji}</span>
-                    <span className="text-[13px] text-zinc-700 leading-relaxed">{m.text}</span>
+                  <div key={i} className="flex items-end gap-2 animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
+                    <div className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-[12px] border border-zinc-100 mb-4">{m.emoji}</div>
+                    <div className="flex flex-col gap-1 items-start">
+                      <div className={`px-4 py-2.5 rounded-2xl rounded-bl-sm text-[13.5px] shadow-sm max-w-full ${m.highlight ? 'bg-orange-50 text-orange-800 border border-orange-100' : 'bg-white text-zinc-800 border border-zinc-100'}`}>
+                        {m.text}
+                      </div>
+                      <span className="text-[10px] font-medium text-zinc-400 ml-1">{m.time}</span>
+                    </div>
                   </div>
                 ))}
               </div>
