@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Grid, Network, BarChart, Rocket, CreditCard, Video,
-  Crown, Zap, Activity, ChevronRight, PanelLeft, Search
+  Crown, Zap, Activity, ChevronRight, PanelLeft, Search, LogOut
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 
@@ -185,6 +185,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
                 </Link>
               )}
+              <button 
+                onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }} 
+                className="flex items-center justify-between w-full bg-red-50 text-red-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-red-100 transition-colors group"
+              >
+                <span>Đăng xuất</span>
+                <LogOut className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all" />
+              </button>
             </>
           )}
         </div>
