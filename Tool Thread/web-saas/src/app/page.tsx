@@ -626,57 +626,66 @@ export default function Home() {
       </section>
 
       {/* ── Tutorial ── */}
-      <section id="tutorial" className="relative z-10 px-4 py-28 bg-white border-t border-zinc-100">
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-4">Thiết lập trong 3 phút</h2>
-              <p className="text-zinc-500 text-[15px] max-w-md mx-auto">Cài extension, lấy cookie, dán vào Dashboard — xong!</p>
-            </div>
-          </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { n: "1", t: "Cài Extension", d: "Thêm EditThisCookie vào Chrome.", links: [{ href: "https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol", btn: "Tải EditThisCookie", Ic: Download }] },
-              { n: "2", t: "Đăng nhập", d: "Mở Threads.net / FB, login đúng nick.", links: [{ href: "https://www.threads.net", btn: "Mở Threads", Ic: Link2 }, { href: "https://www.facebook.com", btn: "Mở Facebook", Ic: Link2 }] },
-              { n: "3", t: "Copy Cookie", d: 'Copy giá trị "sessionid" dán vào Dashboard.', links: [{ href: null, btn: "Hoàn tất", Ic: CheckCircle2 }] },
-            ].map(({ n, t, d, links }, idx) => (
-              <Reveal key={n} delay={idx * 150}>
-                <div className="bg-[#f8f9fa] p-8 rounded-[24px] border border-zinc-200 relative pt-14 h-full flex flex-col">
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-lg">{n}</div>
-                  <h4 className="font-bold text-zinc-900 text-center text-lg mb-2">{t}</h4>
-                  <p className="text-[13px] text-zinc-500 mb-6 text-center leading-relaxed flex-grow">{d}</p>
-                  <div className="flex flex-col gap-2 mt-auto w-full">
-                    {links.map((lnk, lidx) => lnk.href ? (
-                      <a key={lidx} href={lnk.href} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-zinc-700 bg-white hover:bg-zinc-100 border border-zinc-200 py-3 rounded-xl transition-colors">
-                        <lnk.Ic className="w-4 h-4" /> {lnk.btn}
-                      </a>
-                    ) : (
-                      <div key={lidx} className="flex items-center justify-center w-full gap-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 py-3 rounded-xl">
-                        <lnk.Ic className="w-4 h-4" /> {lnk.btn}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      <section id="tutorial" className="relative z-10 px-4 py-28 bg-white border-t border-zinc-100 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-12 items-center">
+            {/* Left Col: Steps */}
+            <div className="flex flex-col justify-center">
+              <Reveal>
+                <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-4">Thiết lập trong 3 phút</h2>
+                <p className="text-zinc-500 text-[16px] mb-10 leading-relaxed">Cài extension, lấy cookie và dán vào Dashboard — tất cả chỉ trong vài thao tác đơn giản.</p>
               </Reveal>
-            ))}
-          </div>
 
-          {/* Video Tutorial via Telegram S3 Proxy */}
-          <Reveal delay={300}>
-            <div className="mt-16 bg-white p-2 rounded-[28px] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] mx-auto max-w-4xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-              <div className="rounded-[20px] overflow-hidden bg-black aspect-video relative">
-                <video 
-                  controls 
-                  className="w-full h-full object-cover"
-                  poster="/0709-poster.jpg" // optional poster if available, or just omit
-                  src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
-                >
-                  Trình duyệt của bạn không hỗ trợ thẻ video.
-                </video>
+              <div className="space-y-8 relative">
+                {/* Vertical connecting line */}
+                <div className="absolute left-4 top-2 bottom-2 w-px bg-zinc-200 z-0 hidden sm:block"></div>
+
+                {[
+                  { n: "1", t: "Cài Extension", d: "Thêm EditThisCookie vào trình duyệt Chrome của bạn.", links: [{ href: "https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol", btn: "Tải EditThisCookie", Ic: Download }] },
+                  { n: "2", t: "Đăng nhập", d: "Mở trang chủ Threads hoặc Facebook và login vào tài khoản cần dùng.", links: [{ href: "https://www.threads.net", btn: "Mở Threads", Ic: Link2 }, { href: "https://www.facebook.com", btn: "Mở Facebook", Ic: Link2 }] },
+                  { n: "3", t: "Copy Cookie", d: 'Mở extension, copy giá trị của biến "sessionid" và dán vào Dashboard.', links: [{ href: null, btn: "Hoàn tất", Ic: CheckCircle2 }] },
+                ].map(({ n, t, d, links }, idx) => (
+                  <Reveal key={n} delay={idx * 150}>
+                    <div className="flex gap-5 items-start relative z-10">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-[13px] shadow-[0_0_0_8px_white]">{n}</div>
+                      <div className="flex-grow pt-1">
+                        <h4 className="font-bold text-zinc-900 text-[17px] mb-1.5">{t}</h4>
+                        <p className="text-[14.5px] text-zinc-500 mb-4 leading-relaxed">{d}</p>
+                        <div className="flex flex-wrap gap-2.5">
+                          {links.map((lnk, lidx) => lnk.href ? (
+                            <a key={lidx} href={lnk.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[13px] font-semibold text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 px-4 py-2 rounded-xl transition-all hover:border-zinc-300 hover:shadow-sm">
+                              <lnk.Ic className="w-4 h-4" /> {lnk.btn}
+                            </a>
+                          ) : (
+                            <div key={lidx} className="inline-flex items-center gap-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-xl">
+                              <lnk.Ic className="w-4 h-4" /> {lnk.btn}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
               </div>
             </div>
-          </Reveal>
+
+            {/* Right Col: Video Player */}
+            <Reveal delay={300} className="w-full">
+              <div className="bg-white p-2.5 rounded-[32px] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-hidden group w-full mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-500"></div>
+                <div className="rounded-[24px] overflow-hidden bg-zinc-950 aspect-[16/10] relative shadow-inner">
+                  <video 
+                    controls 
+                    className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
+                    poster="/0709-poster.jpg"
+                    src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
+                  >
+                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                  </video>
+                </div>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
