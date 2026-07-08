@@ -84,7 +84,9 @@ const ATTRACT_FORCE = 0.04; // lực hút
 const RETURN_FORCE = 0.05; // lực kéo về vị trí gốc (tăng mạnh để tụ hình trái tim nhanh hơn)
 const FRICTION = 0.92;
 
-const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none" }: { className?: string }) => {
+const defaultColors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800", "#A855F7", "#06B6D4"];
+
+const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none", colors = defaultColors }: { className?: string, colors?: string[] }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -9999, y: -9999, active: false });
 
@@ -93,8 +95,6 @@ const ConfettiCanvas = ({ className = "fixed inset-0 z-0 pointer-events-none" }:
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const colors = ["#4285F4", "#EA4335", "#FBBC04", "#34A853", "#7B61FF", "#FF6D93", "#00BCD4", "#FF9800", "#A855F7", "#06B6D4"];
     let w = 0, h = 0;
 
     const resize = () => {
@@ -642,7 +642,7 @@ export default function Home() {
       <section className="relative z-10 px-4 pb-20 max-w-[1100px] mx-auto">
         <Reveal>
           <div className="rounded-[32px] bg-[#0d1117] px-8 md:px-16 py-16 text-center relative overflow-hidden">
-            <ConfettiCanvas className="absolute inset-0 z-0 pointer-events-none opacity-30" />
+            <ConfettiCanvas className="absolute inset-0 z-0 pointer-events-none opacity-30" colors={["#3b82f6", "#60a5fa", "#93c5fd", "#2563eb", "#1d4ed8"]} />
             <h3 className="text-[28px] md:text-[36px] font-bold text-white mb-4 relative z-10">Bắt đầu tự động hoá ngay hôm nay</h3>
             <p className="text-zinc-400 text-[15px] mb-8 max-w-md mx-auto relative z-10">Tạo tài khoản miễn phí và trải nghiệm sức mạnh của AutoFarm.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
