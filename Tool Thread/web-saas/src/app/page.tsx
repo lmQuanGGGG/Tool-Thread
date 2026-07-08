@@ -63,13 +63,16 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative">
+            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative flex flex-col">
               <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">1</div>
-              <h4 className="font-bold text-zinc-900 text-lg mb-3 mt-4">Cài đặt Extension</h4>
-              <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
+              <div className="flex justify-end mb-2">
+                <img src="https://lh3.googleusercontent.com/B701FkQ_HjQy-N_u_7hJ6v-r327oB2aH-p2V_K7Qx4Yh1_Qk_32w5J0_z7H_1Z5X6k1rZ_R1_q5_5z5w_E9-Q2M=s120" alt="EditThisCookie" className="w-12 h-12 rounded-xl shadow-sm border border-zinc-100" />
+              </div>
+              <h4 className="font-bold text-zinc-900 text-lg mb-3">Cài đặt Extension</h4>
+              <p className="text-sm text-zinc-500 mb-6 leading-relaxed flex-1">
                 Tải và cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên trình duyệt Chrome hoặc Cốc Cốc của bạn.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors">
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors mt-auto">
                 <Download className="w-4 h-4" />
                 Cài EditThisCookie
               </a>

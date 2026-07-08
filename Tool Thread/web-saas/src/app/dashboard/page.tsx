@@ -231,13 +231,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-100">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm mb-4">1</div>
+            <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-100 flex flex-col">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</div>
+                <img src="https://lh3.googleusercontent.com/B701FkQ_HjQy-N_u_7hJ6v-r327oB2aH-p2V_K7Qx4Yh1_Qk_32w5J0_z7H_1Z5X6k1rZ_R1_q5_5z5w_E9-Q2M=s120" alt="EditThisCookie" className="w-10 h-10 rounded-lg shadow-sm" />
+              </div>
               <h4 className="font-semibold text-zinc-900 text-sm mb-2">Cài Extension</h4>
-              <p className="text-xs text-zinc-600 mb-4 leading-relaxed">
+              <p className="text-xs text-zinc-600 mb-4 leading-relaxed flex-1">
                 Cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên Chrome.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-xl transition-colors">
                 <Download className="w-3.5 h-3.5" />
                 Tải EditThisCookie
               </a>
