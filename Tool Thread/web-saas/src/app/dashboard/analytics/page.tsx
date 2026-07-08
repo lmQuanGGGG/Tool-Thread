@@ -63,12 +63,17 @@ export default function AnalyticsPage() {
         setAuthorized(false); setLoading(false); return;
       }
       setAuthorized(true);
-      const [ordersRes, profilesRes] = await Promise.all([
-        supabase.from("payment_orders").select("*").order("created_at", { ascending: false }),
-        supabase.from("profiles").select("id, email, tier, created_at"),
-      ]);
-      setOrders(ordersRes.data || []);
-      setProfiles(profilesRes.data || []);
+
+      // Dùng API Route server-side (service role) để bypass RLS và lấy toàn bộ data
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/admin/analytics', {
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setOrders(json.orders || []);
+        setProfiles(json.profiles || []);
+      }
       setLoading(false);
     }
     init();
