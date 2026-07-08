@@ -7,6 +7,7 @@ import {
   ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket
 } from "lucide-react";
 import Link from "next/link";
+import ConfettiCanvas from "../../components/ConfettiCanvas";
 
 const cardClass = "bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.05)] rounded-[32px]";
 
@@ -183,8 +184,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-8 xl:p-12 xl:pt-16">
-    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
+    <div className="h-full overflow-y-auto p-4 md:p-8 xl:p-12 xl:pt-16 relative">
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <ConfettiCanvas />
+      </div>
+      <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 relative z-10">
 
       {/* Welcome Banner */}
       <div className={`${cardClass} overflow-hidden relative border-none bg-gradient-to-br from-indigo-50/90 via-white/80 to-blue-50/90 p-8 md:p-12 shadow-[0_8px_32px_-12px_rgba(59,130,246,0.15)]`}>
