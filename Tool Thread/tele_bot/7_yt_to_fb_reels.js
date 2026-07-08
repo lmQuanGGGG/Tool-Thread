@@ -38,24 +38,42 @@ async function fetchLatestVideos(channels) {
     for (let channel of channels) {
         console.log("🔍 Đang quét danh sách Videos từ:", channel);
         try {
-            // Tăng số lượng quét lên 50 để tìm được nhiều video chưa đăng
-            const cmd = `${YTDLP_CMD} --flat-playlist --dump-json --playlist-end 50 --extractor-args "youtube:player_client=android" "${channel}"`;
-            const output = execSync(cmd, { encoding: 'utf8' });
-
-            const lines = output.trim().split('\n');
-            for (let line of lines) {
-                if (!line) continue;
-                try {
-                    let info = JSON.parse(line);
-                    if (info.id) {
-                        allVideos.push({ 
-                            id: info.id, 
-                            title: info.title, 
-                            url: info.url || info.webpage_url || channel,
-                            isTikTok: channel.includes('tiktok.com') 
-                        });
+            if (channel.includes('tiktok.com')) {
+                const usernameMatch = channel.match(/@([\w.-]+)/);
+                if (usernameMatch && usernameMatch[1]) {
+                    const username = usernameMatch[1];
+                    const res = await axios.get(`https://www.tikwm.com/api/user/posts?unique_id=${username}&count=50`);
+                    if (res.data && res.data.data && res.data.data.videos) {
+                        for (let vid of res.data.data.videos) {
+                            allVideos.push({
+                                id: vid.video_id,
+                                title: vid.title,
+                                url: `https://www.tiktok.com/@${username}/video/${vid.video_id}`,
+                                playUrl: vid.play,
+                                isTikTok: true
+                            });
+                        }
                     }
-                } catch (e) { }
+                }
+            } else {
+                const cmd = `${YTDLP_CMD} --flat-playlist --dump-json --playlist-end 50 --extractor-args "youtube:player_client=android" "${channel}"`;
+                const output = execSync(cmd, { encoding: 'utf8' });
+
+                const lines = output.trim().split('\n');
+                for (let line of lines) {
+                    if (!line) continue;
+                    try {
+                        let info = JSON.parse(line);
+                        if (info.id) {
+                            allVideos.push({ 
+                                id: info.id, 
+                                title: info.title, 
+                                url: info.url || info.webpage_url || channel,
+                                isTikTok: false 
+                            });
+                        }
+                    } catch (e) { }
+                }
             }
         } catch (err) {
             console.error("❌ Lỗi quét kênh:", err.message);
@@ -119,27 +137,21 @@ async function fetchLatestVideos(channels) {
 
     // 2. Tải video chất lượng cao nhất (Best Quality)
     console.log(`\n⬇️ Đang tải video: ${videoToProcess.title}`);
+    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đã tìm thấy video mới: ${videoToProcess.title}. Đang tải...`, 'info');
     const outputPath = path.join(OUTPUT_DIR, `${videoToProcess.id}.mp4`);
 
     try {
-        if (videoToProcess.isTikTok) {
-            // Đối với TikTok, yt-dlp hỗ trợ tải trực tiếp không logo chất lượng cao
-            const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : `https://www.tiktok.com/@user/video/${videoToProcess.id}`;
-            console.log(`\n➡️ Dùng yt-dlp để tải TikTok video: ${videoUrl}`);
-            const downloadCmd = `${YTDLP_CMD} -o "${outputPath}" "${videoUrl}"`;
-            execSync(downloadCmd, { stdio: 'inherit' });
-        } else {
-            // Youtube dùng gendownload API để lấy link tải
-            const videoUrl = `https://www.youtube.com/watch?v=${videoToProcess.id}`;
-            
-            console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho Youtube: ${videoUrl}`);
-            const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
-            const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
-            const jsonResp = JSON.parse(apiResponse);
+        const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : (videoToProcess.isTikTok ? `https://www.tiktok.com/@user/video/${videoToProcess.id}` : `https://www.youtube.com/watch?v=${videoToProcess.id}`);
+        
+        console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho video: ${videoUrl}`);
+        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đang gọi API GenDownload lấy video 1080p cho đa nền tảng...`, 'info');
+        const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
+        const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
+        const jsonResp = JSON.parse(apiResponse);
 
-            if (!jsonResp.formats || jsonResp.formats.length === 0) {
-                throw new Error("API gendownload không trả về formats nào.");
-            }
+        if (!jsonResp.formats || jsonResp.formats.length === 0) {
+            throw new Error("API gendownload không trả về formats nào.");
+        }
 
             // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
             let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
@@ -155,7 +167,6 @@ async function fetchLatestVideos(channels) {
             // Tải file bằng curl (-L để theo dõi redirect, -# để hiện thanh trình diễn)
             const downloadCmd = `curl -L -# -o "${outputPath}" "${bestFormat.url}"`;
             execSync(downloadCmd, { stdio: 'inherit' });
-        }
     } catch (err) {
         console.error("❌ Lỗi tải video:", err.message);
         process.exit(1);
@@ -166,6 +177,7 @@ async function fetchLatestVideos(channels) {
         process.exit(1);
     }
     console.log("✅ Tải video thành công!");
+    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Tải video 1080p hoàn tất! Đang kết nối Facebook để đăng...`, 'info');
 
     // Bỏ qua FFMPEG theo yêu cầu của sếp, giữ nguyên video gốc để chất lượng cao nhất và up nhanh hơn.
 
@@ -180,9 +192,9 @@ async function fetchLatestVideos(channels) {
     console.log(`🍪 Đã load ${cookies.length} cookies cho Facebook.`);
 
     const browser = await puppeteer.launch({
-        headless: 'new', // Chạy ngầm hoàn toàn
+        headless: false, // Hiển thị màn hình cho Sếp xem
         args: [
-            '--no-sandbox',
+            '--no-sandbox', 
             '--disable-setuid-sandbox',
             '--disable-notifications',
             '--window-size=1280,800'
@@ -196,12 +208,17 @@ async function fetchLatestVideos(channels) {
     await page.goto('https://www.facebook.com/login', { waitUntil: 'domcontentloaded' });
     await page.setCookie(...cookies);
 
+    console.log("🌐 Đang truy cập Trang Chủ Facebook (để nhận diện Cookie)...");
+    await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
+    await delay(3000);
+
     console.log("🌐 Đi đến trang tạo Reels...");
     await page.goto('https://www.facebook.com/reels/create', { waitUntil: 'networkidle2' });
     await delay(5000);
 
     try {
         console.log("⬆️ Đang tải video lên...");
+        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đang upload video lên Facebook Reels...`, 'info');
         
         let fileInput = await page.$('input[type="file"]');
         if (!fileInput) {
@@ -307,6 +324,7 @@ async function fetchLatestVideos(channels) {
         // BƯỚC 4: Gắn thẻ Affiliate (Màn hình cuối)
         if (affLink && affLink !== 'https://shope.ee/YOUR_LINK_HERE') {
             console.log("🛒 Bắt đầu gắn thẻ Affiliate Shopee...");
+            await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', 'Đang thực hiện gắn thẻ link Affiliate Shopee vào Reels...', 'info');
 
             const clickAddProduct = await page.evaluate(() => {
                 const elements = Array.from(document.querySelectorAll('*')).filter(el => {
@@ -361,6 +379,7 @@ async function fetchLatestVideos(channels) {
 
         // BƯỚC 5: Bấm Đăng / Publish
         console.log("🚀 Bấm Đăng Reels (Đợi FB duyệt bản quyền)...");
+        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', 'Bấm Đăng Reels! Đang chờ thuật toán FB duyệt bản quyền (90s)...', 'info');
         const published = await clickButtonWithText(page, ['đăng', 'publish', 'chia sẻ', 'share'], 30); // Chờ lên đến 90s (30x3s)
         if (!published) {
             console.log("⚠️ Không bấm được nút Đăng (có thể do video quá nặng hoặc lỗi). Dừng tiến trình!");

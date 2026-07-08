@@ -19,11 +19,11 @@ jobs:
           node-version: '20'
 
       - name: Cài đặt thư viện
-        working-directory: ./tele_bot
+        working-directory: './Tool Thread/tele_bot'
         run: npm install
 
       - name: Chạy script Upload ảnh từ Crawl Data lên Telegram
-        working-directory: ./tele_bot
+        working-directory: './Tool Thread/tele_bot'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
