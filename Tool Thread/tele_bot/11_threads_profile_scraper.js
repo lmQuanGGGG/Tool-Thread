@@ -265,16 +265,23 @@ async function run() {
 
         // 1. Upload Media to Telegram
         if (post.media && post.media.length > 0) {
+            console.log(`   📸 Phát hiện ${post.media.length} media. Đang tiến hành Upload lên Telegram...`);
             for (let j = 0; j < post.media.length; j++) {
                 if (post.media[j].url) {
+                    console.log(`   ⏳ Đang tải media [${j+1}/${post.media.length}]...`);
                     image_urls.push(post.media[j].url);
                     const file_id = await uploadToTelegram(post.media[j].url);
                     if (file_id) {
                         image_file_ids.push(file_id);
+                        console.log(`   ✅ Tải thành công media [${j+1}] -> File_ID: ${file_id}`);
+                    } else {
+                        console.log(`   ❌ Lỗi tải media [${j+1}]!`);
                     }
                     await delay(1000); // Rate limit protection
                 }
             }
+        } else {
+            console.log(`   📝 Bài viết chỉ có Text, không có media.`);
         }
         
         // 2. Insert to Supabase DB (crawl_data)
