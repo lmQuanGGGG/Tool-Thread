@@ -51,6 +51,14 @@ export default function AccountsPage() {
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const threadsCarouselRef = useRef<HTMLDivElement>(null);
+  const shopeeCarouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollShopee = (direction: "left" | "right") => {
+    if (shopeeCarouselRef.current) {
+      const scrollAmount = direction === "left" ? -350 : 350;
+      shopeeCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   const scrollThreads = (direction: "left" | "right") => {
     if (threadsCarouselRef.current) {
@@ -383,81 +391,105 @@ export default function AccountsPage() {
                 </div>
               </div>
 
-              {/* Posts Editor */}
-              <div className={`${cardClass} p-6 flex flex-col h-full min-h-0 anim-fade-up anim-d3`}>
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
-                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
-                </div>
-                <div className="relative flex-1 min-h-0">
-                  {threadsPosts.length > 0 && (
-                    <>
-                      <button onClick={() => scrollThreads('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-                        <ChevronLeft className="w-5 h-5 pr-0.5" />
-                      </button>
-                      <button onClick={() => scrollThreads('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-                        <ChevronRight className="w-5 h-5 pl-0.5" />
-                      </button>
-                    </>
-                  )}
-                  <div ref={threadsCarouselRef} className="flex overflow-x-auto gap-5 h-full snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden">
-                    {threadsPosts.map((post) => (
-                      <div key={post.id} className="w-[320px] shrink-0 h-full flex flex-col bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all snap-center">
-                        <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
-                          <Trash2 className="w-3.5 h-3.5" />
+              {/* Right Column Wrapper */}
+              <div className="flex flex-col gap-6 h-full min-h-0">
+                {/* Posts Editor */}
+                <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
+                    <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
+                  </div>
+                  <div className="relative flex-1 min-h-0">
+                    {threadsPosts.length > 0 && (
+                      <>
+                        <button onClick={() => scrollThreads('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                          <ChevronLeft className="w-5 h-5 pr-0.5" />
                         </button>
-                        <textarea className="w-full flex-1 bg-transparent text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[120px] placeholder:text-gray-400" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
-                        {post.image_urls && post.image_urls.length > 0 && (
-                          <div className="mt-3 flex gap-2 overflow-x-auto pb-2 shrink-0">
-                            {post.image_urls.map((url: string, idx: number) => (
-                              <div key={idx} className="relative group shrink-0">
-                                <img src={url} className="h-20 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
-                                <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="mt-4 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-4">
-                          <button onClick={() => handleSavePost(post)} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
-                          <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} text-[12px] px-4 py-1.5`}>Đăng Threads</button>
-                        </div>
-                      </div>
-                    ))}
-                    {threadsPosts.length === 0 && (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                        <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
-                        <p className="text-sm">Không có dữ liệu Crawl nào.</p>
-                      </div>
+                        <button onClick={() => scrollThreads('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                          <ChevronRight className="w-5 h-5 pl-0.5" />
+                        </button>
+                      </>
                     )}
+                    <div ref={threadsCarouselRef} className="flex overflow-x-auto gap-5 h-full snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden">
+                      {threadsPosts.map((post) => (
+                        <div key={post.id} className="w-[320px] shrink-0 h-full flex flex-col bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all snap-center">
+                          <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <textarea className="w-full flex-1 bg-transparent text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[120px] placeholder:text-gray-400" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+                          {post.image_urls && post.image_urls.length > 0 && (
+                            <div className="mt-3 flex gap-2 overflow-x-auto pb-2 shrink-0">
+                              {post.image_urls.map((url: string, idx: number) => (
+                                <div key={idx} className="relative group shrink-0">
+                                  <img src={url} className="h-20 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
+                                  <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="mt-4 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-4">
+                            <button onClick={() => handleSavePost(post)} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
+                            <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} text-[12px] px-4 py-1.5`}>Đăng Threads</button>
+                          </div>
+                        </div>
+                      ))}
+                      {threadsPosts.length === 0 && (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                          <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
+                          <p className="text-sm">Không có dữ liệu Crawl nào.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              
-            </div>
-
-            {parsedLinks.length > 0 && (
-              <div className={`${cardClass} p-6 anim-fade-up anim-d3`}>
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[13px] font-semibold text-gray-900">AI Parsing Results</h3>
-                  <span className="px-2 py-1 rounded-md bg-gray-100 text-[11px] font-mono text-gray-500 border border-gray-200/80">{parsedLinks.length} items</span>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 dim-siblings">
-                  {parsedLinks.map((p, i) => (
-                    <div key={i} className="flex gap-3.5 bg-gray-50 border border-gray-200/80 p-3.5 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all">
-                      <img src={p.image_url} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-200 border border-gray-200/80 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-gray-900 truncate mb-0.5">{p.title}</p>
-                        <p className="text-[10px] text-gray-400 font-mono truncate mb-1">{p.aff_link}</p>
-                        <p className="text-[11px] text-gray-500 italic leading-snug">"{p.suggested_comment}"</p>
+                {/* Shopee Editor (AI Parsing Results) */}
+                {parsedLinks.length > 0 && (
+                  <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-[13px] font-semibold text-gray-900">Shopee Data (AI Parsing)</h3>
+                      <span className="px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-100 text-[11px] font-mono text-emerald-600 font-semibold">{parsedLinks.length} items</span>
+                    </div>
+                    
+                    <div className="relative flex-1 min-h-0">
+                      <button onClick={() => scrollShopee('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                        <ChevronLeft className="w-5 h-5 pr-0.5" />
+                      </button>
+                      <button onClick={() => scrollShopee('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                        <ChevronRight className="w-5 h-5 pl-0.5" />
+                      </button>
+                      
+                      <div ref={shopeeCarouselRef} className="flex overflow-x-auto gap-5 h-full snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden">
+                        {parsedLinks.map((p, i) => (
+                          <div key={i} className="w-[320px] shrink-0 h-full flex flex-col bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all snap-center">
+                            <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
+                            <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
+                            
+                            <textarea className="w-full flex-1 bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[100px] placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
+                            
+                            <div className="mt-3 flex items-center gap-3 shrink-0">
+                              <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
+                            </div>
+                            
+                            <div className="mt-4 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-4">
+                              <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+
 
           </div>
         )}
