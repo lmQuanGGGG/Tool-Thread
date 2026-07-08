@@ -435,7 +435,7 @@ async function fetchLatestVideos(channels) {
         // BƯỚC 5: Bấm Đăng / Publish
         console.log("🚀 Bấm Đăng Reels (Đợi FB duyệt bản quyền)...");
         await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', 'Bấm Đăng Reels! Đang chờ thuật toán FB duyệt bản quyền (90s)...', 'info');
-        const published = await clickButtonWithText(page, ['đăng', 'publish', 'chia sẻ', 'share'], 30); // Chờ lên đến 90s (30x3s)
+        const published = await clickButtonWithText(page, ['đăng', 'publish'], 30); // Chờ lên đến 90s (30x3s)
         if (!published) {
             console.log("⚠️ Không bấm được nút Đăng (có thể do video quá nặng hoặc lỗi). Dừng tiến trình!");
             throw new Error("Không thể click nút Đăng");
