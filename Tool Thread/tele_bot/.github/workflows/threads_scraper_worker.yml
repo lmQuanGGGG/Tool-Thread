@@ -1,0 +1,45 @@
+name: Threads Profile Scraper Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Email của user (ví dụ: admin@autofarm.com)"
+        required: true
+        default: "admin@autofarm.com"
+
+jobs:
+  scrape_threads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout mã nguồn
+      uses: actions/checkout@v3
+
+    - name: Cài đặt Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Cài đặt Chrome & Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable xvfb libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libxss1 libnss3 libatk1.0-0 libgtk-3-0
+        
+    - name: Cài đặt thư viện Node
+      working-directory: "Tool Thread/tele_bot"
+      run: npm install
+
+    - name: Chạy Script Cào Data với Xvfb
+      working-directory: "Tool Thread/tele_bot"
+      env:
+        USER_EMAIL: ${{ github.event.inputs.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        MAX_SCROLLS: "15"
+      run: |
+        echo "🔥 Đang chạy Bot Cào Profile Threads cho user: ${{ github.event.inputs.email }}"
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js
