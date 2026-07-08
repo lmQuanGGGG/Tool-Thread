@@ -152,6 +152,9 @@ begin
   if not exists (select 1 from pg_policies where tablename = 'crawl_data' and policyname = 'Users update own crawl data') then
     execute 'create policy "Users update own crawl data" on crawl_data for update using (auth.uid() = user_id)';
   end if;
+  if not exists (select 1 from pg_policies where tablename = 'crawl_data' and policyname = 'Users delete own crawl data') then
+    execute 'create policy "Users delete own crawl data" on crawl_data for delete using (auth.uid() = user_id)';
+  end if;
 
   -- credit_transactions policies
   if not exists (select 1 from pg_policies where tablename = 'credit_transactions' and policyname = 'Users view own transactions') then

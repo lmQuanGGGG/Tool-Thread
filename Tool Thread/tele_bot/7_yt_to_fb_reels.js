@@ -91,7 +91,14 @@ async function fetchLatestVideos(channels) {
                 const targetBtn = btns.find(b => {
                     const text = (b.innerText || '').trim().toLowerCase();
                     const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
-                    return texts.some(t => text.includes(t)) && !disabled;
+                    if (disabled) return false;
+                    
+                    // So khớp chính xác hoặc chỉ flexible với chữ 'tiếp tục' / 'continue'
+                    return texts.some(t => {
+                        if (text === t) return true;
+                        if ((t === 'tiếp tục' || t === 'continue') && text.startsWith(t)) return true;
+                        return false;
+                    });
                 });
                 if (targetBtn) {
                     targetBtn.click();

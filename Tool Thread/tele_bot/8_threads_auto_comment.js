@@ -76,7 +76,7 @@ async function downloadImageFromTelegram(file_id) {
             products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
         }
     }
-    
+
     let validProducts = products.filter(p => p.tele_file_id && (p.suggested_comment || p.title));
 
     if (validProducts.length === 0) {
@@ -235,10 +235,9 @@ async function downloadImageFromTelegram(file_id) {
 
                     // Kiểu 2: Nút dạng mũi tên (SVG)
                     if (!postBtn) {
-                        const svgs = Array.from(dialog.querySelectorAll('svg[aria-label="Post"], svg[aria-label="Đăng"], svg[aria-label="Reply"], svg[aria-label="Trả lời"], svg[aria-label="Câu trả lời"]'));
+                        const svgs = Array.from(dialog.querySelectorAll('svg[aria-label="Post"], svg[aria-label="Đăng"], svg[aria-label="Reply"], svg[aria-label="Trả lời"]'));
                         if (svgs.length > 0) {
-                            let svg = svgs[svgs.length - 1]; // Ưu tiên nút xuất hiện sau cùng (trong modal)
-                            postBtn = svg.closest('div[role="button"]') || svg;
+                            postBtn = svgs[svgs.length - 1]; // Ưu tiên nút xuất hiện sau cùng (trong modal)
                         }
                     }
 
