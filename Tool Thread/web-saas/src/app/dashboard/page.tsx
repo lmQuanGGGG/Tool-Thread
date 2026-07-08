@@ -141,6 +141,28 @@ export default function DashboardPage() {
     verifyPayment().then(() => {
       loadData();
     });
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      channel = supabase.channel('realtime_usage_dashboard')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'usage_stats', 
+          filter: `user_id=eq.${user.id}` 
+        }, (payload) => {
+          const today = todayLocalDate();
+          if (payload.new && (payload.new as any).date === today) {
+            setTodayStats(normalizeStats(payload.new));
+          }
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const tier = profile?.tier || "free";
@@ -216,8 +238,8 @@ export default function DashboardPage() {
               />
               <UsageBar
                 label="📝 FB Post đã đăng"
-                used={todayStats?.fb_posts_count || 0}
-                limit={limits?.fb_post_per_day ?? 0}
+                used={todayStats?.fb_story_posted || 0}
+                limit={limits?.fb_story_per_day ?? limits?.fb_post_per_day ?? 0}
                 color="bg-pink-500"
               />
               <UsageBar
