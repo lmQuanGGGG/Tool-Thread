@@ -30,10 +30,9 @@ function useScrollScale() {
       const rect = ref.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       
-      // Scale từ 0.85 lên 1.0 khi cuộn
-      // progress = 0 khi mép trên của element vừa ló lên (ở gần đáy màn hình)
-      // Scale từ 0.7 lên 1.05 để hiệu ứng phình to rõ rệt hơn
-      const progress = 1 - (rect.top - windowHeight * 0.1) / (windowHeight * 0.8);
+      // Tính toán progress để đạt 1.0 (bung to hết cỡ) SỚM HƠN (ngay khi terminal tới giữa màn hình)
+      // progress = 0 khi ở đáy màn hình, progress = 1 khi rect.top <= windowHeight * 0.35
+      const progress = 1 - (rect.top - windowHeight * 0.35) / (windowHeight * 0.6);
       const clamped = Math.min(Math.max(progress, 0), 1);
       setScale(0.7 + clamped * 0.35);
     };
