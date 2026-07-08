@@ -239,47 +239,65 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         // Bấm nút Đăng
         console.log("🚀 Bấm Đăng (Post)...");
         await logToWeb(email, 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
-        await page.evaluate(() => {
-            const btns = Array.from(document.querySelectorAll('div[role="button"], div[aria-label="Đăng"], div[aria-label="Post"]'));
-            const postBtn = btns.find(b => {
-                const text = (b.innerText || '').trim();
-                const ariaLabel = b.getAttribute('aria-label') || '';
-                return text === 'Đăng' || text === 'Post' || ariaLabel === 'Đăng' || ariaLabel === 'Post';
-            });
-            if(postBtn) {
-                // Thử click bằng Javascript trước
-                postBtn.click();
-            }
-        });
-        
-        // Dự phòng click bằng toạ độ (giống auto_post_puppeteer)
-        await delay(1000);
-        try {
-            const postBtnInfo = await page.evaluate(() => {
-                const btns = Array.from(document.querySelectorAll('div[role="button"], div[aria-label="Đăng"], div[aria-label="Post"]'));
+        // Hàm click button
+        const clickPostBtn = async (btnTexts) => {
+            let clicked = false;
+            // 1. Thử click JS
+            clicked = await page.evaluate((texts) => {
+                const btns = Array.from(document.querySelectorAll('div[role="button"]'));
                 const postBtn = btns.find(b => {
                     const text = (b.innerText || '').trim();
                     const ariaLabel = b.getAttribute('aria-label') || '';
-                    return text === 'Đăng' || text === 'Post' || ariaLabel === 'Đăng' || ariaLabel === 'Post';
+                    return texts.includes(text) || texts.includes(ariaLabel);
                 });
-                if (postBtn) {
-                    const style = window.getComputedStyle(postBtn);
-                    if (postBtn.hasAttribute('disabled') || postBtn.getAttribute('aria-disabled') === 'true' || style.opacity !== '1') {
-                        return 'DISABLED';
-                    }
-                    const rect = postBtn.getBoundingClientRect();
-                    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                if(postBtn) {
+                    postBtn.click();
+                    return true;
                 }
-                return 'NOT_FOUND';
-            });
+                return false;
+            }, btnTexts);
             
-            if (postBtnInfo !== 'NOT_FOUND' && postBtnInfo !== 'DISABLED') {
-                console.log('[INFO] Đã tìm thấy toạ độ nút Đăng, thử click bằng chuột thật...');
-                await page.mouse.click(postBtnInfo.x, postBtnInfo.y);
+            if (clicked) return true;
+
+            // 2. Thử click bằng toạ độ
+            await delay(1000);
+            try {
+                const postBtnInfo = await page.evaluate((texts) => {
+                    const btns = Array.from(document.querySelectorAll('div[role="button"]'));
+                    const postBtn = btns.find(b => {
+                        const text = (b.innerText || '').trim();
+                        const ariaLabel = b.getAttribute('aria-label') || '';
+                        return texts.includes(text) || texts.includes(ariaLabel);
+                    });
+                    if (postBtn) {
+                        const style = window.getComputedStyle(postBtn);
+                        if (postBtn.hasAttribute('disabled') || postBtn.getAttribute('aria-disabled') === 'true' || style.opacity !== '1') {
+                            return 'DISABLED';
+                        }
+                        const rect = postBtn.getBoundingClientRect();
+                        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+                    }
+                    return 'NOT_FOUND';
+                }, btnTexts);
+                
+                if (postBtnInfo !== 'NOT_FOUND' && postBtnInfo !== 'DISABLED') {
+                    console.log(`[INFO] Đã tìm thấy toạ độ nút ${btnTexts[0]}, thử click bằng chuột thật...`);
+                    await page.mouse.click(postBtnInfo.x, postBtnInfo.y);
+                    return true;
+                }
+            } catch (err) {
+                console.log("Lỗi khi click toạ độ:", err.message);
             }
-        } catch (err) {
-            console.log("Lỗi khi click toạ độ:", err.message);
+            return false;
+        };
+
+        const clickedNext = await clickPostBtn(['Tiếp', 'Next', 'Tiếp tục', 'Continue']);
+        if (clickedNext) {
+            console.log("👉 Đã bấm nút Tiếp. Chờ popup Đăng hiện ra...");
+            await delay(2000);
         }
+        
+        await clickPostBtn(['Đăng', 'Post']);
         
         console.log("⏳ Chờ 15s để bài viết lên tường...");
         await delay(15000);
