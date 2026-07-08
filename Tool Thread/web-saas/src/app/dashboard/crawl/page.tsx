@@ -171,6 +171,7 @@ export default function CrawlPage() {
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let interval: any;
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return;
       setUserId(data.user.id);
@@ -180,7 +181,16 @@ export default function CrawlPage() {
       setCredits(10000);
 
       loadSavedPosts(data.user.id);
+      
+      // Tự động refresh data mỗi 5 giây
+      interval = setInterval(() => {
+        loadSavedPosts(data.user.id);
+      }, 5000);
     });
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   async function loadSavedPosts(uid: string) {
