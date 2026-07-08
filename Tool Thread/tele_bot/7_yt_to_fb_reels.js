@@ -196,7 +196,8 @@ async function fetchLatestVideos(channels) {
 
             const totalLength = parseInt(response.headers['content-length'], 10);
             let downloadedLength = 0;
-            let lastReportedProgress = 0;
+            let lastReportedProgress = 0; // For percentage
+            let lastReportedMB = 0; // For MB if no totalLength
 
             const writer = fs.createWriteStream(outputPath);
             response.data.on('data', (chunk) => {
@@ -206,6 +207,12 @@ async function fetchLatestVideos(channels) {
                     if (percent >= lastReportedProgress + 10) {
                         console.log(`⏳ Đang tải: ${percent}%...`);
                         lastReportedProgress = percent;
+                    }
+                } else {
+                    const downloadedMB = Math.floor(downloadedLength / (1024 * 1024));
+                    if (downloadedMB >= lastReportedMB + 5) { // Report every 5MB
+                        console.log(`⏳ Đang tải... (đã tải được ${downloadedMB} MB)`);
+                        lastReportedMB = downloadedMB;
                     }
                 }
             });
