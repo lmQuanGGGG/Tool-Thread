@@ -20,6 +20,32 @@ function useScrollReveal(threshold = 0.15) {
   return { ref, visible };
 }
 
+function useScrollScale() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.85);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Scale từ 0.85 lên 1.0 khi cuộn
+      // progress = 0 khi mép trên của element vừa ló lên (ở gần đáy màn hình)
+      // progress = 1 khi element ở giữa màn hình
+      const progress = 1 - (rect.top - windowHeight * 0.2) / (windowHeight * 0.7);
+      const clamped = Math.min(Math.max(progress, 0), 1);
+      setScale(0.85 + clamped * 0.15);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial scale
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return { ref, scale };
+}
+
 const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) => {
   const { ref, visible } = useScrollReveal(0.08);
   return (
@@ -28,6 +54,15 @@ const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; 
       className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? "opacity-100 translate-y-0 blur-0" : "opacity-0 translate-y-10 blur-[2px]"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
+      {children}
+    </div>
+  );
+};
+
+const ScrollScaleWrapper = ({ children }: { children: ReactNode }) => {
+  const { ref, scale } = useScrollScale();
+  return (
+    <div ref={ref} style={{ transform: `scale(${scale})`, transformOrigin: "top center" }} className="will-change-transform transition-transform duration-75 ease-out">
       {children}
     </div>
   );
@@ -357,11 +392,11 @@ export default function Home() {
 
       {/* ── Terminal ── */}
       <section className="relative z-10 max-w-[960px] mx-auto px-4 pt-14 pb-28">
-        <Reveal>
+        <ScrollScaleWrapper>
           <div className="rounded-[28px] bg-[#0d1117] p-3 md:p-5 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)]">
             <TerminalCLI />
           </div>
-        </Reveal>
+        </ScrollScaleWrapper>
       </section>
 
       {/* ── Icon Strip + Intro text ── */}
