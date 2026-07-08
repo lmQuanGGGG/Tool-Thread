@@ -83,7 +83,7 @@ async function fetchLatestVideos(channels) {
 }
 
 (async () => {
-    const clickButtonWithText = async (page, texts, retries = 15) => {
+    const clickButtonWithText = async (page, texts, retries = 30) => {
         let clicked = false;
         for (let i = 0; i < retries; i++) {
             clicked = await page.evaluate((texts) => {
@@ -91,7 +91,7 @@ async function fetchLatestVideos(channels) {
                 const targetBtn = btns.find(b => {
                     const text = (b.innerText || '').trim().toLowerCase();
                     const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
-                    return texts.includes(text) && !disabled;
+                    return texts.some(t => text.includes(t)) && !disabled;
                 });
                 if (targetBtn) {
                     targetBtn.click();
@@ -281,7 +281,10 @@ async function fetchLatestVideos(channels) {
         // BƯỚC 1: Bấm Tiếp Lần 1 (Tạo thước phim -> Chỉnh sửa thước phim)
         console.log("➡️ Bấm nút Tiếp (Lần 1)...");
         const next1 = await clickButtonWithText(page, ['tiếp', 'next']);
-        if (!next1) console.log("⚠️ Không bấm được nút Tiếp 1.");
+        if (!next1) {
+            console.log("⚠️ Không bấm được nút Tiếp 1. Dừng tiến trình!");
+            throw new Error("Không thể click nút Tiếp Lần 1");
+        }
         await delay(5000);
 
         // Gắn Link Affiliate (nếu có)
