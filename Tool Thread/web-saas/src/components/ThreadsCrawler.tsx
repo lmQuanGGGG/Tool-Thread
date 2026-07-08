@@ -18,7 +18,7 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
   const [isDragging, setIsDragging] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  const canUseCrawl = ["plus", "pro", "promax"].includes(tier);
+  const canUseCrawl = true; // Cho phép tất cả các gói kể cả free vì đã giới hạn số lần crawl
 
   const inputClass = "w-full bg-white border border-gray-200/80 rounded-xl px-4 py-2.5 text-[13px] text-gray-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-gray-400";
   const cardClass = "bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.03)]";
