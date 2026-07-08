@@ -325,7 +325,8 @@ const cliLines = [
   { t: "br" }, { t: "info", v: "📊 [System] Cycle completed. Sleeping for 15 mins..." },
 ];
 const cMap: Record<string, string> = { cmd: "text-white", info: "text-blue-400", ok: "text-green-400", warn: "text-yellow-400", dim: "text-zinc-500", br: "" };
-const cDelays = [0, 600, 1000, 1600, 2200, 2700, 3200, 3600, 4200, 4800, 5400, 5800, 6400, 7000, 7600, 8600];
+// Tăng tốc độ gõ log lên gấp đôi (delay ngắn hơn) và đủ 20 phần tử
+const cDelays = [0, 200, 400, 600, 800, 1000, 1300, 1500, 1700, 1900, 2200, 2400, 2800, 3200, 3400, 3800, 4200, 4600, 4800, 5200];
 
 const TerminalCLI = () => {
   const [n, setN] = useState(0);
@@ -334,7 +335,7 @@ const TerminalCLI = () => {
     const ts: ReturnType<typeof setTimeout>[] = [];
     const go = () => {
       cDelays.forEach((d, i) => ts.push(setTimeout(() => { setN(i + 1); r.current && (r.current.scrollTop = r.current.scrollHeight); }, d)));
-      ts.push(setTimeout(() => { setN(0); go(); }, 11000));
+      ts.push(setTimeout(() => { setN(0); go(); }, 7500));
     };
     go();
     return () => ts.forEach(clearTimeout);
