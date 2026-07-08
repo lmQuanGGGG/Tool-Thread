@@ -74,6 +74,7 @@ function normalizeLimits(limits: any) {
     reels_per_day: toCount(limits?.reels_per_day),
     threads_per_day: toCount(limits?.threads_per_day),
     fb_story_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
+    threads_post_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
     price_vnd: toCount(limits?.price_vnd),
   };
 }
