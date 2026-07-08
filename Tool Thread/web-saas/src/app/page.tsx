@@ -62,7 +62,7 @@ const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; 
 const ScrollScaleWrapper = ({ children }: { children: ReactNode }) => {
   const { ref, scale } = useScrollScale();
   return (
-    <div ref={ref} style={{ transform: `scale(${scale})`, transformOrigin: "top center" }} className="will-change-transform transition-transform duration-75 ease-out">
+    <div ref={ref} style={{ transform: `scale(${scale})`, transformOrigin: "top center" }} className="will-change-transform">
       {children}
     </div>
   );
@@ -573,7 +573,6 @@ export default function Home() {
               name: "Lite", price: "59.000đ / tháng", 
               desc: "Gói cơ bản phù hợp cho cá nhân kinh doanh online nhỏ lẻ.",
               btn1: "Đăng ký Lite", btn1Class: "bg-[#161618] text-white hover:bg-black",
-              btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
               featuresTitle: "Gói bao gồm:",
               features: [
                 "3 Reels, 3 FB, 3 Threads", "30 Cmt Threads", "2 Crawl Data", "Chia 3 khung giờ chạy"
@@ -584,7 +583,6 @@ export default function Home() {
               name: "Plus", price: "129.000đ / tháng", 
               desc: "Dành cho các shop cần duy trì nội dung tương tác đều đặn hàng ngày.",
               btn1: "Đăng ký Plus", btn1Class: "bg-[#161618] text-white hover:bg-black",
-              btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
               featuresTitle: "Gói bao gồm:",
               features: [
                 "6 Reels, 5 FB, 6 Threads", "80 Cmt Threads", "3 Crawl Data", "Auto max 50% comment"
@@ -620,11 +618,6 @@ export default function Home() {
                   <Link href="/login" className={`block w-full py-3.5 rounded-full text-[14px] font-medium text-center transition-colors ${plan.btn1Class}`}>
                     {plan.btn1}
                   </Link>
-                  {plan.btn2 && (
-                    <Link href="/login" className={`block w-full py-3.5 rounded-full text-[14px] font-medium text-center transition-colors ${plan.btn2Class}`}>
-                      {plan.btn2}
-                    </Link>
-                  )}
                 </div>
 
                 <div className="h-px bg-zinc-200/70 w-full mb-6"></div>
