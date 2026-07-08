@@ -83,6 +83,28 @@ async function fetchLatestVideos(channels) {
 }
 
 (async () => {
+    const clickButtonWithText = async (page, texts, retries = 15) => {
+        let clicked = false;
+        for (let i = 0; i < retries; i++) {
+            clicked = await page.evaluate((texts) => {
+                const btns = Array.from(document.querySelectorAll('div[role="button"], span[role="button"], button'));
+                const targetBtn = btns.find(b => {
+                    const text = (b.innerText || '').trim().toLowerCase();
+                    const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
+                    return texts.includes(text) && !disabled;
+                });
+                if (targetBtn) {
+                    targetBtn.click();
+                    return true;
+                }
+                return false;
+            }, texts);
+            if (clicked) break;
+            await delay(3000);
+        }
+        return clicked;
+    };
+
     // 1. Kéo config từ DB trước
     let dbConfig = null;
     try {
@@ -212,6 +234,18 @@ async function fetchLatestVideos(channels) {
     await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
     await delay(3000);
 
+    console.log("🔄 Kiểm tra màn hình xác nhận đăng nhập (Continue as)...");
+    try {
+        const isLoginScreen = await page.evaluate(() => {
+            return document.body.innerText.includes('Tiếp tục') || document.body.innerText.includes('Continue');
+        });
+        if (isLoginScreen) {
+            console.log("🔄 Phát hiện màn hình xác nhận đăng nhập, đang bấm Tiếp tục...");
+            await clickButtonWithText(page, ['tiếp tục', 'continue'], 2);
+            await delay(5000);
+        }
+    } catch (e) {}
+
     console.log("🌐 Đi đến trang tạo Reels...");
     await page.goto('https://www.facebook.com/reels/create', { waitUntil: 'networkidle2' });
     await delay(5000);
@@ -242,27 +276,7 @@ async function fetchLatestVideos(channels) {
         console.log("⏳ Chờ FB upload và xử lý video (15s)...");
         await delay(15000);
 
-        const clickButtonWithText = async (page, texts, retries = 15) => {
-            let clicked = false;
-            for (let i = 0; i < retries; i++) {
-                clicked = await page.evaluate((texts) => {
-                    const btns = Array.from(document.querySelectorAll('div[role="button"], span[role="button"], button'));
-                    const targetBtn = btns.find(b => {
-                        const text = (b.innerText || '').trim().toLowerCase();
-                        const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
-                        return texts.includes(text) && !disabled;
-                    });
-                    if (targetBtn) {
-                        targetBtn.click();
-                        return true;
-                    }
-                    return false;
-                }, texts);
-                if (clicked) break;
-                await delay(3000);
-            }
-            return clicked;
-        };
+
 
         // BƯỚC 1: Bấm Tiếp Lần 1 (Tạo thước phim -> Chỉnh sửa thước phim)
         console.log("➡️ Bấm nút Tiếp (Lần 1)...");
