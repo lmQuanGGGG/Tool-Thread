@@ -28,10 +28,10 @@ insert into public.tier_limits
   (tier, auto_run, reels_per_day, threads_per_day, fb_post_per_day, max_links, telegram_notify, price_vnd) 
 values
   ('free',    false,  1,   10,  0,   1,  false,  0),
-  ('lite',    false,  2,   30,  1,   3,  true,   59000),
-  ('plus',    true,   4,   80,  2,   10, true,   179000),
-  ('pro',     true,   6,   150, 5,   20, true,   399000),
-  ('promax',  true,  -1,   -1, -1,  -1,  true,   699000)
+  ('lite',    false,  3,   30,  1,   3,  true,   59000),
+  ('plus',    true,   6,   4,   4,   10, true,   129000),
+  ('pro',     true,   9,   6,   7,   20, true,   199000),
+  ('promax',  true,  -1,   -1, -1,  -1,  true,   499000)
 on conflict (tier) do update set
   auto_run = excluded.auto_run,
   reels_per_day = excluded.reels_per_day,
