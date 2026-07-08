@@ -8,6 +8,7 @@ import {
   Crown, Zap, Activity, ChevronRight, PanelLeft, Search, LogOut
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
+import PricingModal from "../../components/PricingModal";
 
 const TIER_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   free:   { label: "Free",   icon: Activity, color: "text-gray-500", bg: "bg-gray-100" },
@@ -60,6 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [limits, setLimits] = useState<any>(null);
   const [used, setUsed] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -164,6 +166,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
           {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
+            // Pricing dùng modal thay vì navigate
+            if (item.href === "/pricing") {
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => setPricingOpen(true)}
+                  title={collapsed ? item.name : undefined}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50 ${
+                    collapsed ? "justify-center !px-0 w-9 h-9 mx-auto" : ""
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                </button>
+              );
+            }
             const isActive = pathname === item.href;
             return (
               <Link
@@ -278,5 +296,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex-1 z-10 overflow-hidden">{children}</div>
       </main>
     </div>
+
+    {/* Pricing Modal — render ngoài layout để overlay toàn màn hình */}
+    <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
   );
 }
