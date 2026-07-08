@@ -153,7 +153,7 @@ async function checkQuota(email, type = 'reels_posted') {
 
   try {
     const { data: profile } = await supabase
-      .from('profiles').select('id, tier').eq('email', email).single();
+      .from('profiles').select('id, tier').eq('email', email).maybeSingle();
     if (!profile) return false;
 
     const limits = await getTierLimits(profile.tier);
@@ -170,7 +170,7 @@ async function checkQuota(email, type = 'reels_posted') {
       .select(type)
       .eq('user_id', profile.id)
       .eq('date', today)
-      .single();
+      .maybeSingle();
 
     const used = stat?.[type] || 0;
     const ok = used < limit;
