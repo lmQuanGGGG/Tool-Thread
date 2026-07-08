@@ -532,17 +532,20 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal delay={200} className="relative">
-            {/* Hologram / Confetti Background Decoration behind the card */}
-            <div className="absolute -inset-8 sm:-inset-12 md:-inset-16 z-0 bg-[#f1f3f6] rounded-[36px] md:rounded-[48px] pointer-events-none overflow-hidden shadow-inner hidden sm:block border border-zinc-200/50">
-                <div className="absolute inset-0 opacity-[0.5]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg opacity='0.7'%3E%3Ccircle cx='20' cy='20' r='3' fill='%234285F4'/%3E%3Ccircle cx='90' cy='100' r='2.5' fill='%23EA4335'/%3E%3Ccircle cx='105' cy='30' r='3.5' fill='%23FBBC05'/%3E%3Crect x='50' y='75' width='8' height='2.5' transform='rotate(45 54 76)' fill='%2334A853'/%3E%3Crect x='25' y='105' width='10' height='2.5' transform='rotate(-35 30 106)' fill='%234285F4'/%3E%3Crect x='100' y='80' width='7' height='2' transform='rotate(15 103 81)' fill='%23EA4335'/%3E%3Cpath d='M70,15 l5,5 l-5,5 l-5,-5 Z' fill='%23EA4335'/%3E%3Cpath d='M30,70 l4,4 l-4,4 l-4,-4 Z' fill='%23FBBC05'/%3E%3C/g%3E%3C/svg%3E")`, backgroundSize: '120px' }}></div>
-            </div>
-
             <div className="rounded-[24px] bg-[#0e1621] border border-zinc-800 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col relative h-[420px] z-10 transition-transform duration-500 hover:scale-[1.02]">
-              {/* Pattern Background overlay */}
-              <div 
-                className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20zm4 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2z' fill='%231f2937' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E")` }}
-              ></div>
+              {/* Telegram Hologram / Aurora Mesh Background */}
+              <div className="absolute inset-0 z-0 overflow-hidden bg-[#0e1621]">
+                {/* Colorful Blurry Orbs */}
+                <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#8774e1] opacity-20 blur-[80px] animate-pulse" style={{ animationDuration: '4s' }}></div>
+                <div className="absolute -bottom-[20%] -right-[10%] w-[80%] h-[80%] rounded-full bg-[#2aabee] opacity-20 blur-[90px] animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }}></div>
+                <div className="absolute top-[30%] left-[40%] w-[60%] h-[60%] rounded-full bg-[#e84d84] opacity-10 blur-[100px] animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }}></div>
+                
+                {/* Telegram Doodle Pattern Overlay */}
+                <div 
+                  className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20zm4 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2zm0 4h20v2H20v-2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")` }}
+                ></div>
+              </div>
 
               {/* Fake Header */}
               <div className="bg-[#17212b]/95 backdrop-blur-md px-5 py-3 border-b border-[#232e3c] flex items-center gap-3 z-10 sticky top-0 shadow-sm">
