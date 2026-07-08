@@ -555,7 +555,7 @@ export default function AccountsPage() {
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
-	                          <div key={`shopee-${i}`} className="w-[280px] shrink-0 min-h-full flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-6 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+	                          <div key={`shopee-${i}`} className={`w-[280px] shrink-0 min-h-full flex flex-col snap-center ${editorCardClass} pb-6`}>
                             <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -657,7 +657,7 @@ export default function AccountsPage() {
                       {[...parsedLinks, ...parsedLinks].map((p, i) => {
                         const sourceIndex = i % parsedLinks.length;
                         return (
-			                        <div key={`fb-story-${i}`} className="w-[280px] shrink-0 self-start flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-5 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+			                        <div key={`fb-story-${i}`} className={`w-[280px] shrink-0 self-start flex flex-col snap-center ${editorCardClass} pb-5`}>
                           <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -754,8 +754,10 @@ export default function AccountsPage() {
 	                    )}
 
 		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
-		                      {[...threadsPosts, ...threadsPosts].map((post, i) => (
-				                        <div key={`threads-${post.id}-${i}`} className="w-[340px] shrink-0 self-start flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-5 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
+                          const hasImages = post.image_urls && post.image_urls.length > 0;
+                          return (
+			                        <div key={`threads-${post.id}-${i}`} className={`w-[340px] shrink-0 self-start flex flex-col snap-center ${editorCardClass} pb-5`}>
 	                          <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
 	                            <Trash2 className="w-3.5 h-3.5" />
 	                          </button>
