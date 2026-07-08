@@ -126,18 +126,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen bg-white">
       <div className="aurora-bg opacity-30"><div className="aurora-blob-3" /></div>
 
-      {/* ═══════════════════════════════════════════════════════
-          MOBILE DRAWER — full-screen white overlay
-          ═══════════════════════════════════════════════════════ */}
-      <div className={`md:hidden fixed inset-0 z-[100] ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
-        {/* Backdrop */}
+      {/* MOBILE DRAWER — Backdrop (chỉ render khi mở, không block content khi đóng) */}
+      {mobileOpen && (
         <div
+          className="md:hidden fixed inset-0 bg-black/40 z-[99]"
           onClick={() => setMobileOpen(false)}
-          className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
         />
+      )}
 
-        {/* Slide-in panel */}
-        <div className={`absolute inset-y-0 left-0 w-[300px] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      {/* MOBILE DRAWER — Panel (luôn render nhưng slide qua transform) */}
+      <div className={`md:hidden fixed inset-y-0 left-0 w-[300px] bg-white flex flex-col shadow-2xl z-[100] transition-transform duration-300 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-6 pb-5 border-b border-gray-100">
@@ -256,7 +254,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
             </div>
           </div>
-        </div>
       </div>
 
       {/* ═══════════════════════════
