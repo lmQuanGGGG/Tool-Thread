@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import {
   Activity, Crown, Zap, TrendingUp, Video, MessageSquare, Image,
-  ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket
+  ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket, Send
 } from "lucide-react";
 import Link from "next/link";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
@@ -25,7 +25,7 @@ const TIER_CONFIG: Record<string, {
   promax:  { label: "PROMAX",  color: "text-white",     bg: "bg-gradient-to-r from-violet-600 to-pink-500", icon: Crown },
 };
 
-function UsageBar({ label, used, limit, color }: { label: string; used: number; limit: number; color: string }) {
+function UsageBar({ label, icon: Icon, used, limit, color }: { label: string; icon: React.ElementType; used: number; limit: number; color: string }) {
   const isUnlimited = limit === -1;
   const pct = isUnlimited ? 20 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
   const isNearLimit = !isUnlimited && pct >= 80;
@@ -33,7 +33,10 @@ function UsageBar({ label, used, limit, color }: { label: string; used: number; 
   return (
     <div>
       <div className="flex items-center justify-between text-sm mb-2">
-        <span className="font-medium text-zinc-700">{label}</span>
+        <span className="flex items-center gap-2 font-medium text-zinc-700">
+          <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
+          {label}
+        </span>
         <span className={`font-bold ${isNearLimit ? "text-red-500" : "text-zinc-900"}`}>
           {isUnlimited ? `${used} / ∞` : `${used} / ${limit}`}
         </span>
@@ -305,25 +308,29 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-5">
               <UsageBar
-                label="📹 FB Reels đã đăng"
+                label="FB Reels đã đăng"
+                icon={Video}
                 used={todayStats?.reels_posted || 0}
                 limit={limits?.reels_per_day ?? 1}
                 color="bg-violet-500"
               />
               <UsageBar
-                label="💬 Threads đã Comment"
+                label="Threads đã Comment"
+                icon={MessageSquare}
                 used={todayStats?.threads_commented || 0}
                 limit={limits?.threads_per_day ?? 10}
                 color="bg-blue-500"
               />
               <UsageBar
-                label="📝 FB Post đã đăng"
+                label="FB Post đã đăng"
+                icon={Image}
                 used={todayStats?.fb_story_posted || 0}
                 limit={limits?.fb_story_per_day ?? limits?.fb_post_per_day ?? 0}
                 color="bg-pink-500"
               />
               <UsageBar
-                label="🧵 Threads Post đã đăng"
+                label="Threads Post đã đăng"
+                icon={Send}
                 used={todayStats?.threads_posts_count || 0}
                 limit={limits?.threads_post_per_day ?? 0}
                 color="bg-emerald-500"
