@@ -248,7 +248,7 @@ export default function Home() {
       <style jsx global>{`
         @keyframes floatWave {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
+          50% { transform: translateY(-30px); }
         }
         @keyframes orbSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes orbDot {
@@ -313,7 +313,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap mb-14">
             {iconItems.map(({ icon: Ic, label }, i) => (
               <div key={label} className="flex flex-col items-center gap-2 group" style={{ animationDelay: `${i * 100}ms` }}>
-                <div style={{ animation: `floatWave 3s ease-in-out infinite`, animationDelay: `${i * 0.15}s` }}>
+                <div style={{ animation: `floatWave 3s ease-in-out infinite`, animationDelay: `${i * 0.25}s` }}>
                   <div className="w-14 h-14 rounded-full bg-white border border-zinc-200 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300">
                     <Ic className="w-5 h-5 text-zinc-700" />
                   </div>
