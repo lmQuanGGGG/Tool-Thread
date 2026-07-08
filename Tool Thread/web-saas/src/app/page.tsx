@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database, Clapperboard, CircleDollarSign, AlertTriangle, Send } from "lucide-react";
+import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database, Clapperboard, CircleDollarSign, AlertTriangle, Send, Code } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 import gsap from "gsap";
@@ -232,7 +232,7 @@ const TerminalCLI = () => {
 /* ═══════════════════════════════════════════════ */
 const iconItems = [
   { icon: Terminal, label: "CLI" }, { icon: Bot, label: "Bot" }, { icon: MessageSquare, label: "Comment" },
-  { icon: Send, label: "Post" }, { icon: Zap, label: "Reels" }, { icon: BarChart2, label: "Analytics" }, { icon: Shield, label: "Security" },
+  { icon: Send, label: "Post" }, { icon: Code, label: "Crawl" }, { icon: Zap, label: "Reels" }, { icon: BarChart2, label: "Analytics" }, { icon: Shield, label: "Security" },
 ];
 
 /* ═══════════════════════════════════════════════
@@ -326,7 +326,7 @@ export default function Home() {
         <Reveal delay={150}>
           <p className="text-[28px] md:text-[36px] font-bold tracking-tight text-zinc-900 leading-snug max-w-3xl text-left">
             AutoFarm là hệ thống tự động hoá social media,{" "}
-            <span className="text-zinc-400">cho phép bất kỳ ai cũng có thể nuôi nick và kiếm tiền trên Threads & Reels thông qua Shopee Affiliate một cách chuyên nghiệp.</span>
+            <span className="text-zinc-400">cho phép bất kỳ ai cũng có thể nuôi nick và kiếm tiền trên Threads & Reels thông qua Shopee Affiliate.</span>
           </p>
         </Reveal>
       </section>
