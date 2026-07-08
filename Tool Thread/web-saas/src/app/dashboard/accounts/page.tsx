@@ -376,7 +376,7 @@ export default function AccountsPage() {
               </div>
 
               {/* Posts Editor */}
-              <div className={`${cardClass} p-6 flex flex-col h-full anim-fade-up anim-d3`}>
+              <div className={`${cardClass} p-6 flex flex-col h-full min-h-0 anim-fade-up anim-d3`}>
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
                   <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
@@ -486,7 +486,7 @@ export default function AccountsPage() {
 
               {/* Mảng Data Shopee cho Story */}
               {parsedLinks.length > 0 ? (
-                <div className={`${cardClass} p-6 flex flex-col h-full anim-fade-up anim-d3`}>
+                <div className={`${cardClass} p-6 flex flex-col h-full min-h-0 anim-fade-up anim-d3`}>
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-[13px] font-semibold text-gray-900">FB Story Poster (Shopee Data)</h3>
                     <span className="px-2.5 py-1 rounded-md bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
