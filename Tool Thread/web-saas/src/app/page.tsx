@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown } from "lucide-react";
+import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, Github, Database } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 
@@ -262,43 +262,42 @@ const ConfettiCanvas = () => {
 };
 
 /* ═══════════════════════════════════════════════
-   3D Orb — quả cầu phát sáng kiểu Antigravity SDK
+   Serverless Illustration
    ═══════════════════════════════════════════════ */
-const GlowOrb = () => {
+const ServerlessIllustration = () => {
   const { ref, visible } = useScrollReveal(0.2);
   return (
-    <div ref={ref} className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
-      {/* Outer glow */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-blue-600/30 via-purple-600/20 to-transparent blur-[60px] animate-pulse" />
-      {/* Ring */}
-      <div className="absolute inset-4 rounded-full border border-blue-500/20" style={{ animation: "orbSpin 20s linear infinite" }} />
-      <div className="absolute inset-8 rounded-full border border-purple-500/15" style={{ animation: "orbSpin 15s linear infinite reverse" }} />
-      {/* Sphere body */}
-      <div className="absolute inset-6 rounded-full bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] shadow-[inset_0_-20px_60px_rgba(59,130,246,0.15),inset_0_20px_40px_rgba(139,92,246,0.1)]">
-        {/* Highlight */}
-        <div className="absolute top-[15%] left-[20%] w-[35%] h-[25%] rounded-full bg-gradient-to-br from-white/8 to-transparent blur-sm" />
-        {/* Grid lines on sphere */}
-        <div className="absolute inset-0 rounded-full overflow-hidden opacity-20">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={`h${i}`} className="absolute w-full border-t border-blue-400/30" style={{ top: `${20 + i * 15}%` }} />
-          ))}
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={`v${i}`} className="absolute h-full border-l border-blue-400/30" style={{ left: `${20 + i * 15}%` }} />
-          ))}
+    <div ref={ref} className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto flex items-center justify-center transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
+      {/* Background glowing gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-indigo-50/50 rounded-full blur-3xl opacity-50" />
+      
+      {/* Connection lines (SVG) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 400 400">
+        <circle cx="200" cy="200" r="130" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" className="text-blue-500" />
+      </svg>
+
+      {/* Central hub */}
+      <div className="relative z-10 w-24 h-24 bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-zinc-100 flex items-center justify-center" style={{ animation: 'float 6s ease-in-out infinite' }}>
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-inner">
+          <Cloud className="w-6 h-6" />
         </div>
       </div>
-      {/* Floating particles around orb */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const a = (i / 12) * Math.PI * 2;
-        const r = 48 + Math.random() * 5;
-        return (
-          <div key={i} suppressHydrationWarning className="absolute w-1.5 h-1.5 rounded-full bg-blue-400" style={{
-            left: `${50 + Math.cos(a) * r}%`, top: `${50 + Math.sin(a) * r}%`,
-            animation: `orbDot ${3 + Math.random() * 2}s ease-in-out infinite alternate`,
-            animationDelay: `${i * 0.3}s`, opacity: 0.6,
-          }} />
-        );
-      })}
+
+      {/* Orbiting nodes */}
+      <div className="absolute inset-0" style={{ animation: 'orbSpin 30s linear infinite' }}>
+        {/* Node 1: GitHub */}
+        <div className="absolute top-[17.5%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
+          <Github className="w-6 h-6 text-zinc-900" />
+        </div>
+        {/* Node 2: Database */}
+        <div className="absolute bottom-[27.5%] left-[21.5%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
+          <Database className="w-6 h-6 text-emerald-600" />
+        </div>
+        {/* Node 3: Telegram/Bot */}
+        <div className="absolute bottom-[27.5%] right-[21.5%] translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
+          <MessageSquare className="w-6 h-6 text-blue-500" />
+        </div>
+      </div>
     </div>
   );
 };
@@ -379,6 +378,10 @@ export default function Home() {
         @keyframes orbDot {
           0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
           100% { transform: translate(3px, -5px) scale(1.5); opacity: 0.8; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
       `}</style>
 
@@ -505,7 +508,7 @@ export default function Home() {
         <div className="max-w-[1100px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <Reveal delay={100}>
-              <GlowOrb />
+              <ServerlessIllustration />
             </Reveal>
             <Reveal delay={250}>
               <div>
