@@ -320,7 +320,7 @@ export default function Home() {
         <Reveal delay={150}>
           <p className="text-[28px] md:text-[36px] font-bold tracking-tight text-zinc-900 leading-snug max-w-3xl">
             AutoFarm là hệ thống tự động hoá social media,{" "}
-            <span className="text-zinc-400">cho phép bất kỳ ai cũng có thể nuôi nick và kiếm tiền trên Threads & Reels một cách chuyên nghiệp.</span>
+            <span className="text-zinc-400">cho phép bất kỳ ai cũng có thể nuôi nick và kiếm tiền trên Threads & Reels thông qua Shopee Affiliate một cách chuyên nghiệp.</span>
           </p>
         </Reveal>
       </section>
