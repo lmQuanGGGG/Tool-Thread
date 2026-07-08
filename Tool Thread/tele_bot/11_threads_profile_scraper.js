@@ -272,7 +272,15 @@ async function run() {
     console.log(`🎉 Bóc được ${uniqueData.length} bài đăng duy nhất từ trang!`);
 
     // CHỐNG TRÙNG VÀ GIỚI HẠN SỐ LƯỢNG (Chỉ xử lý bài chưa từng cào)
-    const MAX_POSTS_TO_SAVE = 25;
+    const TIER_LIMITS = { free: 5, lite: 12, plus: 25, pro: 59, promax: 129 };
+    const userTier = dbConfig.tier || 'free';
+    const MAX_POSTS_TO_SAVE = TIER_LIMITS[userTier] || 5;
+    
+    console.log(`📌 Gói ${userTier.toUpperCase()} - Giới hạn tối đa ${MAX_POSTS_TO_SAVE} bài`);
+    
+    // Áp dụng giới hạn TRƯỚC KHI lọc trùng, để đảm bảo luôn chỉ check số lượng bài mới nhất giới hạn trong khoảng này
+    uniqueData = uniqueData.slice(0, MAX_POSTS_TO_SAVE);
+    
     const postIds = uniqueData.map(p => p.post_id.toString());
     
     const { data: existingPosts, error: existErr } = await supabase

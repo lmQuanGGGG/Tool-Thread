@@ -175,9 +175,12 @@ export default function CrawlPage() {
       if (!data.user) return;
       setUserId(data.user.id);
       
-      // Tạm thời Hardcode tài khoản thành ProMax cho sếp test
-      setTier("promax"); 
-      setCredits(10000);
+      supabase.from("profiles").select("tier, credits").eq("id", data.user.id).single().then(({ data: profile }) => {
+        if (profile) {
+          setTier(profile.tier || "free");
+          setCredits(profile.credits || 0);
+        }
+      });
 
       loadSavedPosts(data.user.id);
       
@@ -219,8 +222,17 @@ export default function CrawlPage() {
 
     try {
       const text = await file.text();
-      const posts: CrawlPost[] = JSON.parse(text);
-      addLog(`✅ Đọc được ${posts.length} bài viết từ file`);
+      let posts: CrawlPost[] = JSON.parse(text);
+      
+      const TIER_LIMITS: Record<string, number> = { free: 5, lite: 12, plus: 25, pro: 59, promax: 129 };
+      const maxPosts = TIER_LIMITS[tier] || 5;
+      
+      if (posts.length > maxPosts) {
+        addLog(`⚠️ Gói ${tier.toUpperCase()} chỉ cho phép cào tối đa ${maxPosts} bài. Hệ thống đã tự động cắt bớt ${posts.length - maxPosts} bài thừa.`);
+        posts = posts.slice(0, maxPosts);
+      } else {
+        addLog(`✅ Xử lý ${posts.length} bài viết từ file`);
+      }
 
       let saved = 0;
       let creditUsed = 0;
