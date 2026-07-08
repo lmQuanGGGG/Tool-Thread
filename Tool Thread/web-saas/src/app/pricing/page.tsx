@@ -143,31 +143,6 @@ export default function PricingPage() {
   return (
     <div className="h-full overflow-hidden p-4 md:p-6 xl:p-8">
       <div className="mx-auto flex h-full max-w-7xl flex-col gap-4">
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/80 bg-white/90 px-5 py-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.45)] md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="mb-1 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-blue-600" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Pricing</span>
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-zinc-950">Chọn gói vận hành</h2>
-            <p className="mt-1 text-sm text-zinc-500">So sánh nhanh giới hạn bot, nâng cấp khi cần scale.</p>
-          </div>
-          <div className="hidden grid-cols-6 gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-2 text-center md:grid">
-            {[
-              ["Reels", "ngày"],
-              ["FB Post", "ngày"],
-              ["Threads Post", "ngày"],
-              ["Threads Cmt", "ngày"],
-              ["Crawl Data", "lần/ngày"],
-              ["Links", "lưu"],
-            ].map(([label, unit]) => (
-              <div key={label} className="min-w-[74px] rounded-lg bg-white px-2 py-2 shadow-sm">
-                <div className="text-[10px] font-semibold text-zinc-900">{label}</div>
-                <div className="text-[9px] text-zinc-400">{unit}</div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div className={`grid min-h-0 flex-1 grid-cols-1 gap-3 ${TIERS.filter((t) => t.key !== "promax" || currentTier === "promax").length === 5 ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
           {TIERS.filter((t) => t.key !== "promax" || currentTier === "promax").map((tier) => {
@@ -270,10 +245,7 @@ export default function PricingPage() {
           })}
         </div>
 
-        <div className="flex shrink-0 items-center justify-between rounded-2xl border border-zinc-200/80 bg-white/80 px-5 py-3 text-xs text-zinc-500">
-          <span>Thanh toán qua PayOS. Hỗ trợ ATM, VISA, MoMo và ZaloPay.</span>
-          <span className="font-medium text-zinc-700">Có thể đổi gói bất kỳ lúc nào.</span>
-        </div>
+
       </div>
     </div>
   );
