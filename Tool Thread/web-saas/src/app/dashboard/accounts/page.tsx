@@ -85,8 +85,8 @@ function CardTitle({
 /* ─── Main ──────────────────────────────────────────── */
 export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
-  const [, setSaving] = useState(false);
-  const [triggering, setTriggering] = useState(false);
+  const [triggeringType, setTriggeringType] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<string>("free");
@@ -357,7 +357,7 @@ export default function AccountsPage() {
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
     if (isThreads && !formData.threads_cookie) { pushLog("WARN", "Thiếu Threads Cookie!", target); return; }
     else if (!isThreads && !isGlobal && !formData.fb_cookie) { pushLog("WARN", "Thiếu FB Cookie!", target); return; }
-    setTriggering(true);
+    setTriggeringType(botType);
     pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`, target);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -367,14 +367,14 @@ export default function AccountsPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session?.access_token}` 
         }, 
-        body: JSON.stringify({ email: userEmail, botType }) 
+        body: JSON.stringify({ email: userEmail, botType: botType.split('_card')[0] }) 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      pushLog("SUCCESS", `Bot [${botType.toUpperCase()}] đã được kích hoạt thành công!`, target);
+      pushLog("SUCCESS", `Bot [${botType.toUpperCase().replace('_CARD', '')}] đã được kích hoạt thành công!`, target);
       pushLog("INFO", "Theo dõi tiến trình qua Telegram Bot của bạn.", target);
     } catch (e: any) { pushLog("ERROR", e.message || "Kích hoạt thất bại.", target); }
-    finally { setTriggering(false); }
+    finally { setTriggeringType(null); }
   };
 
   /* ─── Loading ─── */
@@ -502,8 +502,8 @@ export default function AccountsPage() {
                     />
                   </div>
                   <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-4`} />
-                  <button onClick={() => handleTrigger("parse_links")} disabled={triggering || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  <button onClick={() => handleTrigger("parse_links")} disabled={triggeringType !== null || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
+                    {triggeringType === "parse_links" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                     Đồng Bộ Tên & Sinh Comment AI
                   </button>
                 </div>
@@ -625,8 +625,8 @@ export default function AccountsPage() {
                   </div>
                   <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
 	                  <div className="flex flex-col gap-3">
-	                    <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5 w-full`}>
-	                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+	                    <button onClick={() => handleTrigger("reels")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-2.5 w-full`}>
+	                      {triggeringType === "reels" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
 	                      FB Reels
 	                    </button>
                   </div>
@@ -676,8 +676,8 @@ export default function AccountsPage() {
                           
 					                          <div className="mt-3 mb-1 grid grid-cols-2 gap-2 shrink-0 border-t border-gray-200/60 pt-3">
 			                            <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-2 py-1.5`}>Lưu Thay Đổi</button>
-			                            <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className="flex items-center justify-center gap-1.5 rounded-xl bg-purple-500 px-2 py-1.5 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-purple-600 disabled:opacity-40">
-			                              {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+			                            <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="flex items-center justify-center gap-1.5 rounded-xl bg-purple-500 px-2 py-1.5 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-purple-600 disabled:opacity-40">
+			                              {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
 			                              FB Post
 			                            </button>
 		                          </div>
@@ -724,8 +724,8 @@ export default function AccountsPage() {
                     />
                   </div>
                   <textarea rows={4} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-5 focus:border-violet-500 focus:ring-violet-500/10`} />
-                  <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
-                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                  <button onClick={() => handleTrigger("threads")} disabled={triggeringType !== null || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
+                    {triggeringType === "threads" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     Khởi động AI Commenter
                   </button>
                 </div>
@@ -776,7 +776,9 @@ export default function AccountsPage() {
 	                          )}
 				                          <div className="mt-3 mb-1 flex justify-center gap-2 border-t border-gray-200/60 pt-3">
 	                            <button onClick={() => handleSavePost(post)} className={`${btnSecondary} min-w-[128px] text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
-	                            <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} min-w-[128px] text-[12px] px-4 py-1.5`}>Đăng Threads</button>
+	                            <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className={`${btnViolet} min-w-[128px] text-[12px] px-4 py-1.5`}>
+	                              {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Đăng Threads"}
+	                            </button>
 	                          </div>
 	                        </div>
 	                      ))}
