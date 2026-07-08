@@ -408,7 +408,7 @@ export default function AccountsPage() {
     };
 
     return (
-      <div className="mx-4 md:mx-0 h-[200px] shrink-0 overflow-hidden rounded-[24px] bg-[#0A0A0A] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] border border-white/10 flex flex-col relative z-20">
+      <div className="h-[200px] shrink-0 overflow-hidden rounded-[24px] bg-[#0A0A0A] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] border border-white/10 flex flex-col relative z-20">
         <div className="flex items-center justify-between px-5 py-3.5 bg-white/[0.03] border-b border-white/[0.06] shrink-0 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <Terminal className="w-4 h-4 text-blue-400" />
