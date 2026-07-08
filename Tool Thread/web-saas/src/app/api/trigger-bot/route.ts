@@ -27,6 +27,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
     }
 
+    // CHỐNG SPAM: Kiểm tra xem bot này đã được trigger trong vòng 3 phút qua chưa (dựa vào bot_logs)
+    const baPhutTruoc = new Date(Date.now() - 3 * 60000).toISOString();
+    const { data: recentLogs } = await supabaseAdmin
+      .from('bot_logs')
+      .select('created_at')
+      .eq('email', email)
+      .eq('bot_type', botType)
+      .gte('created_at', baPhutTruoc)
+      .limit(1);
+
+    if (recentLogs && recentLogs.length > 0) {
+      return NextResponse.json({ 
+        error: "Tiến trình này đang chạy hoặc vừa được kích hoạt! Vui lòng đợi 3 phút trước khi bấm lại." 
+      }, { status: 429 });
+    }
+
     const githubToken = process.env.GITHUB_TOKEN;
     const githubRepo = process.env.GITHUB_REPO; // Định dạng: owner/repo (Ví dụ: tuantran/autofarm)
 
@@ -74,12 +90,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Github API Error:", errorText);
-      return NextResponse.json({ error: 'Không thể kích hoạt Bot trên Github' }, { status: 500 });
+      const errText = await response.text();
+      return NextResponse.json({ error: `GitHub API error: ${response.status} - ${errText}` }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'Đã gửi lệnh chạy Bot thành công!' });
+    // Ghi log để khóa nút bấm (chống spam)
+    await supabaseAdmin.from('bot_logs').insert([{
+      email,
+      bot_type: botType,
+      message: `Đang khởi động ${botType.toUpperCase()}...`,
+      level: 'info'
+    }]);
+
+    return NextResponse.json({ success: true, message: `Triggered ${workflowId} successfully` });
 
   } catch (error: any) {
     console.error("Lỗi API trigger:", error);
