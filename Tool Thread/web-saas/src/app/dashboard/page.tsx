@@ -366,17 +366,17 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold text-gray-900 tracking-tight">Gói hiện tại</h3>
             </div>
 
-            <div className={`mt-2 rounded-[24px] p-6 border shadow-sm ${tier === "promax" ? "bg-gradient-to-br from-violet-600 to-pink-500 border-transparent text-white" : tier === "pro" ? "bg-white border-amber-100" : tier === "plus" ? "bg-white border-blue-100" : tier === "lite" ? "bg-white border-emerald-100" : "bg-white border-gray-100"}`}>
-              <div className={`text-4xl font-black tracking-tight mb-1 ${tier === "promax" ? "text-white" : "text-gray-900"}`}>
+            <div className="mt-4">
+              <div className={`text-4xl font-black tracking-tight mb-1 ${tier === "promax" ? "bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-pink-600" : "text-gray-900"}`}>
                 {tierConf.label}
               </div>
-              <div className={`text-xs font-semibold uppercase tracking-wider mb-6 ${tier === "promax" ? "text-white/80" : "text-gray-400"}`}>
+              <div className="text-xs font-semibold uppercase tracking-wider mb-6 text-gray-400">
                 {limits?.price_vnd === 0 ? "Gói Miễn phí" : `${(limits?.price_vnd || 0).toLocaleString("vi-VN")}đ / Tháng`}
               </div>
-              <div className={`text-[13px] font-medium space-y-3 ${tier === "promax" ? "text-white/90" : "text-gray-600"}`}>
-                <div className="flex items-center gap-2"><div className={`w-1.5 h-1.5 rounded-full ${tier === "promax" ? "bg-white" : "bg-indigo-500"}`} /> Reels: {limits?.reels_per_day === -1 ? "Không giới hạn" : `${limits?.reels_per_day} video/ngày`}</div>
-                <div className="flex items-center gap-2"><div className={`w-1.5 h-1.5 rounded-full ${tier === "promax" ? "bg-white" : "bg-indigo-500"}`} /> Comment: {limits?.threads_per_day === -1 ? "Không giới hạn" : `${limits?.threads_per_day} bài/ngày`}</div>
-                <div className="flex items-center gap-2"><div className={`w-1.5 h-1.5 rounded-full ${tier === "promax" ? "bg-white" : "bg-indigo-500"}`} /> Chạy tự động: {limits?.auto_run ? "Hỗ trợ" : "Chưa hỗ trợ"}</div>
+              <div className="text-[13px] font-medium space-y-3 text-gray-600">
+                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Reels: {limits?.reels_per_day === -1 ? "Không giới hạn" : `${limits?.reels_per_day} video/ngày`}</div>
+                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Comment: {limits?.threads_per_day === -1 ? "Không giới hạn" : `${limits?.threads_per_day} bài/ngày`}</div>
+                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Chạy tự động: {limits?.auto_run ? "Hỗ trợ" : "Chưa hỗ trợ"}</div>
               </div>
             </div>
 
