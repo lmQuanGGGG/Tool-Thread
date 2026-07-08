@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@payos/node": "^2.0.5",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.109.0",
     "@types/three": "^0.185.0",
     "lucide-react": "^1.23.0",
