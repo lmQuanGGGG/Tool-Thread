@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       cancelUrl: `${domain}/pricing?payment=cancel`
     };
 
-    const paymentLinkRes = await payos.createPaymentLink(body);
+    const paymentLinkRes = await payos.paymentRequests.create(body);
 
     return NextResponse.json({ checkoutUrl: paymentLinkRes.checkoutUrl });
 
