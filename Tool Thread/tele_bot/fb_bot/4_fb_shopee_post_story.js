@@ -145,8 +145,14 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     console.log("📸 Đã tải ảnh xong:", imagePaths);
 
     // Ghép Caption 2 sản phẩm
-    let caption1 = product1.suggested_comment || `${product1.title}\n🛒 Đặt hàng tại đây: ${product1.aff_link}`;
-    let caption2 = product2.suggested_comment || `${product2.title}\n🛒 Đặt hàng tại đây: ${product2.aff_link}`;
+    let caption1 = product1.suggested_comment && product1.suggested_comment.includes(product1.aff_link) 
+        ? product1.suggested_comment 
+        : (product1.suggested_comment ? `${product1.suggested_comment}\n🛒 Link: ${product1.aff_link}` : `${product1.title}\n🛒 Đặt hàng tại đây: ${product1.aff_link}`);
+        
+    let caption2 = product2.suggested_comment && product2.suggested_comment.includes(product2.aff_link) 
+        ? product2.suggested_comment 
+        : (product2.suggested_comment ? `${product2.suggested_comment}\n🛒 Link: ${product2.aff_link}` : `${product2.title}\n🛒 Đặt hàng tại đây: ${product2.aff_link}`);
+        
     let finalCaption = `✨ Gom lẹ 2 deal này cho bà nào cần nha:\n\n1️⃣ ${caption1}\n\n2️⃣ ${caption2}`;
 
     // Khởi tạo trình duyệt
@@ -242,18 +248,8 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             // Đợi lâu hơn một chút để FB focus con trỏ vào ô nhập liệu
             await delay(1500); 
             
-            // Sử dụng clipboard/insertText để paste nội dung thay vì type từng chữ, tránh lỗi emoji trên Ubuntu (Github Actions)
+            // Sử dụng insertText để paste nội dung thay vì type từng chữ, tránh lỗi emoji
             await page.evaluate((text) => {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.setData('text/plain', text);
-                const event = new ClipboardEvent('paste', {
-                    clipboardData: dataTransfer,
-                    bubbles: true,
-                    cancelable: true
-                });
-                document.activeElement.dispatchEvent(event);
-                
-                // Fallback nếu paste event không ăn (tuỳ phiên bản Draft.js của FB)
                 document.execCommand('insertText', false, text);
             }, caption);
             
