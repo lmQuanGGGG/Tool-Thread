@@ -86,14 +86,33 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         process.exit(1);
     }
 
-    // Chọn 2 sản phẩm ngẫu nhiên khác nhau (nếu đủ số lượng)
-    let product1 = scrapedData[getRandomInt(0, scrapedData.length - 1)];
-    let product2 = scrapedData[getRandomInt(0, scrapedData.length - 1)];
-    if (scrapedData.length > 1) {
-        while (product2.aff_link === product1.aff_link) {
-            product2 = scrapedData[getRandomInt(0, scrapedData.length - 1)];
+    // Lọc ra các sản phẩm chưa đăng
+    let unpostedData = scrapedData.filter(item => !item.fb_posted);
+    
+    // Nếu hết bài hoặc chỉ còn 1 bài (không đủ 2 bài để đăng), reset lại toàn bộ
+    if (unpostedData.length < 2) {
+        console.log("♻️ Đã đăng hết 1 vòng (hoặc không đủ 2 bài). Đang reset lại danh sách đăng từ đầu...");
+        scrapedData.forEach(item => item.fb_posted = false);
+        unpostedData = scrapedData;
+    }
+
+    // Chọn 2 sản phẩm ngẫu nhiên khác nhau từ danh sách chưa đăng
+    let p1Index = getRandomInt(0, unpostedData.length - 1);
+    let p2Index = getRandomInt(0, unpostedData.length - 1);
+    if (unpostedData.length > 1) {
+        while (p2Index === p1Index) {
+            p2Index = getRandomInt(0, unpostedData.length - 1);
         }
     }
+    
+    let product1 = unpostedData[p1Index];
+    let product2 = unpostedData[p2Index];
+    
+    // Đánh dấu 2 sản phẩm này là đã đăng trong mảng gốc
+    let originalIdx1 = scrapedData.findIndex(item => item.aff_link === product1.aff_link);
+    let originalIdx2 = scrapedData.findIndex(item => item.aff_link === product2.aff_link);
+    if (originalIdx1 !== -1) scrapedData[originalIdx1].fb_posted = true;
+    if (originalIdx2 !== -1) scrapedData[originalIdx2].fb_posted = true;
     
     console.log("🎯 Sản phẩm mục tiêu 1:", product1.title);
     console.log("🎯 Sản phẩm mục tiêu 2:", product2.title);
@@ -350,6 +369,19 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         console.log("✅ Đã Share lên Story thành công!");
         await logToWeb(email, 'fb-story', '✅ Đã Share lên Story thành công!', 'success');
         await updateUsageStats(email, 'fb_posts_count', 1);
+        
+        // Cập nhật lại mảng dữ liệu (đã đánh dấu fb_posted) lên DB và file local
+        const { supabase } = require('../supabase_helper');
+        if (dbConfig && dbConfig.id && supabase) {
+            await supabase.from('profiles').update({ parsed_affiliate_links: scrapedData }).eq('id', dbConfig.id);
+            console.log("💾 Đã lưu trạng thái Đã Đăng (fb_posted) của 2 sản phẩm vào Database.");
+        }
+        
+        const dataFile = path.resolve(__dirname, 'shopee_data.json');
+        if (fs.existsSync(dataFile)) {
+            fs.writeFileSync(dataFile, JSON.stringify(scrapedData, null, 2));
+        }
+
         await delay(5000);
 
     } catch (e) {
