@@ -131,11 +131,10 @@ const CRAWL_SCRIPT = `(function () {
 })();`;
 
 const STEPS = [
-  { icon: "1", title: "Mở Threads trên Chrome", desc: "Vào trang profile cần crawl. Đăng nhập bằng tài khoản bình thường." },
-  { icon: "2", title: "Mở DevTools Console", desc: "Nhấn F12 (Windows) hoặc Cmd+Option+J (Mac) → chọn tab Console. (Lưu ý: Nếu trình duyệt cảnh báo, hãy gõ 'allow pasting' rồi Enter để cho phép dán code)." },
-  { icon: "3", title: "Paste script & chạy", desc: "Copy script bên dưới → paste vào Console → Enter. Rồi gõ: autoScrape() và Enter." },
-  { icon: "4", title: "Đợi cuộn tự động", desc: "Bot sẽ tự cuộn và tìm bài. Khi đủ 25 bài, file JSON sẽ tự tải về máy." },
-  { icon: "5", title: "Upload file JSON lên đây", desc: "Kéo thả file JSON vừa tải về vào vùng bên dưới để hệ thống xử lý." },
+  { icon: "1", title: "Cách 1: Auto Cloud Scraper (Khuyên dùng)", desc: "Chỉ cần dán link Profile Threads vào ô bên phải và bấm Bắt Đầu Cào. Hệ thống sẽ tự động lấy bài ngầm cho bạn." },
+  { icon: "2", title: "Chờ tự động cập nhật", desc: "Hệ thống sẽ mất khoảng 1-2 phút để cào và xử lý. Dữ liệu mới sẽ tự động hiển thị trên màn hình mà không cần f5." },
+  { icon: "3", title: "Cách 2: Upload file JSON thủ công", desc: "Nếu bạn muốn tự up file, hãy copy đoạn Code JSON bên phải và tạo một file có đuôi .json." },
+  { icon: "4", title: "Kéo thả file vào hệ thống", desc: "Kéo thả file .json vừa tạo vào vùng Upload phía dưới để đưa dữ liệu vào kho." },
 ];
 
 interface CrawlPost {
