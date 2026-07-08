@@ -122,26 +122,18 @@ const ConfettiCanvas = () => {
         const dy = my - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
+        // Kéo về vị trí base + oscillation bồng bềnh (luôn luôn chạy để giữ sự nhẹ nhàng)
+        const targetX = p.baseX + Math.sin(t * 2 + p.angle) * 15;
+        const targetY = p.baseY + Math.cos(t * 1.5 + p.angle) * 15;
+        p.vx += (targetX - p.x) * RETURN_FORCE;
+        p.vy += (targetY - p.y) * RETURN_FORCE;
+
         if (mouseActive && dist < ATTRACT_RADIUS) {
-          // Bán kính phân tán rộng để tạo thành một thiên hà (vortex) chứ không phải 1 vòng tròn mỏng
-          // Sử dụng p.angle và p.depth để mỗi hạt có một quỹ đạo riêng biệt, trải dài từ gần đến rất xa
-          const RING_RADIUS = 50 + (p.angle * 60) + (p.depth * 400); 
-          
-          // Lực kéo/đẩy để duy trì bán kính RING_RADIUS (nhẹ nhàng hơn)
-          const force = (dist - RING_RADIUS) * 0.0002 * p.depth;
-          p.vx += dx * force;
-          p.vy += dy * force;
-          
-          // Lực xoáy (orbit) trôi bồng bềnh siêu chậm
-          const orbitForce = 0.003 * p.depth;
-          p.vx += dy * orbitForce;
-          p.vy -= dx * orbitForce;
-        } else {
-          // Kéo về vị trí base + oscillation nhẹ
-          const targetX = p.baseX + Math.sin(t * 2 + p.angle) * 8;
-          const targetY = p.baseY + Math.cos(t * 1.5 + p.angle) * 6;
-          p.vx += (targetX - p.x) * RETURN_FORCE;
-          p.vy += (targetY - p.y) * RETURN_FORCE;
+          // Lực "di cư": Thay vì tác động vật lý bạo lực, ta chỉ nhẹ nhàng dời điểm neo (base) của hạt về phía chuột.
+          // Hạt vẫn sẽ trôi bồng bềnh theo hàm sin/cos như cũ, nhưng cả cụm sẽ từ từ đi theo chuột.
+          const pullSpeed = 0.002 * p.speed;
+          p.baseX += dx * pullSpeed;
+          p.baseY += dy * pullSpeed;
         }
 
         // Apply velocity
