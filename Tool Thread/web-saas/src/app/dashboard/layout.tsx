@@ -59,8 +59,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [used, setUsed] = useState<any>(null);
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let currentUser: any = null;
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
+      currentUser = user;
       const today = todayLocalDate();
       Promise.all([
         supabase.from("usage_stats")
@@ -78,7 +82,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           .eq("tier", t).maybeSingle()
           .then(({ data }) => setLimits(normalizeLimits(data)));
       });
+
+      // Lắng nghe realtime
+      channel = supabase.channel('realtime_usage')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'usage_stats', 
+          filter: `user_id=eq.${user.id}` 
+        }, (payload) => {
+          const today = todayLocalDate();
+          if (payload.new && (payload.new as any).date === today) {
+            setUsed(normalizeUsage(payload.new));
+          }
+        })
+        .subscribe();
     });
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const meta = TIER_META[tier] || TIER_META.free;
