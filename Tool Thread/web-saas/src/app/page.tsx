@@ -266,18 +266,49 @@ const ConfettiCanvas = () => {
    ═══════════════════════════════════════════════ */
 const ServerlessIllustration = () => {
   const { ref, visible } = useScrollReveal(0.2);
+  const [transform, setTransform] = useState("perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)");
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = -((y - centerY) / centerY) * 15;
+    const rotateY = ((x - centerX) / centerX) * 15;
+    
+    setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`);
+  };
+
+  const handleMouseLeave = () => {
+    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)");
+  };
+
   return (
-    <div ref={ref} className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto flex items-center justify-center transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
+    <div 
+      ref={ref} 
+      className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto flex items-center justify-center transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+      style={{ perspective: "1000px" }}
+    >
       {/* Background glowing gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-100/60 to-indigo-100/60 rounded-full blur-3xl opacity-60" />
       
-      {/* 3D Render Image */}
-      <img 
-        src="/serverless-3d.png" 
-        alt="Serverless 3D Illustration" 
-        className="relative z-10 w-full h-full object-contain drop-shadow-2xl" 
-        style={{ animation: 'float 6s ease-in-out infinite' }} 
-      />
+      {/* 3D Tilt Wrapper */}
+      <div 
+        className="relative z-10 w-full h-full cursor-pointer mix-blend-multiply"
+        style={{ transform, transition: "transform 0.15s ease-out" }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        {/* 3D Render Image with float animation */}
+        <img 
+          src="/serverless-3d.png" 
+          alt="Serverless 3D Illustration" 
+          className="w-full h-full object-contain drop-shadow-2xl" 
+          style={{ animation: 'float 6s ease-in-out infinite' }} 
+        />
+      </div>
     </div>
   );
 };
