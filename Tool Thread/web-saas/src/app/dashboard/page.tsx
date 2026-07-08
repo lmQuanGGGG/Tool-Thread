@@ -75,11 +75,13 @@ function normalizeLimits(limits: any) {
   };
 }
 
+let globalCache: any = null;
+
 export default function DashboardPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [limits, setLimits] = useState<any>(null);
-  const [todayStats, setTodayStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(globalCache?.profile || null);
+  const [limits, setLimits] = useState<any>(globalCache?.limits || null);
+  const [todayStats, setTodayStats] = useState<any>(globalCache?.todayStats || null);
+  const [loading, setLoading] = useState(!globalCache);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -109,8 +111,17 @@ export default function DashboardPage() {
         // Lấy giới hạn từ tier_limits
         const limitsRes = await supabase.from("tier_limits").select("*").eq("tier", tier).maybeSingle();
         if (limitsRes.error) throw limitsRes.error;
-        setLimits(normalizeLimits(limitsRes.data));
-        setTodayStats(normalizeStats(statsRes.data));
+        const limitsData = normalizeLimits(limitsRes.data);
+        const statsData = normalizeStats(statsRes.data);
+        
+        globalCache = {
+          profile: profileRes.data,
+          limits: limitsData,
+          todayStats: statsData
+        };
+
+        setLimits(limitsData);
+        setTodayStats(statsData);
       } catch (e) {
         console.error(e);
         setError(e instanceof Error ? e.message : "Không tải được dữ liệu dashboard");
