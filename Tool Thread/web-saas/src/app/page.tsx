@@ -176,7 +176,8 @@ const ConfettiCanvas = () => {
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
           // Lực "di cư" và tạo hình trái tim
-          const beatPhase = Math.sin(t * 15);
+          // Giảm tốc độ nhịp đập xuống một chút (t * 12 thay vì 15)
+          const beatPhase = Math.sin(t * 12);
           // Thêm hiệu ứng nhịp đập (Heartbeat) phập phồng mạnh mẽ bằng hàm sin lũy thừa
           const beatScale = 1 + Math.pow(beatPhase, 6) * 0.4;
 
