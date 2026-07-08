@@ -148,12 +148,16 @@ const ConfettiCanvas = () => {
           alpha += (1 - dist / ATTRACT_RADIUS) * 0.35;
         }
 
-        // Hiệu ứng nhấp nhô (bobbing) liên tục
-        const bobbingY = Math.sin(t * 10 + p.angle * 4) * 12 * p.depth;
+        // Hiệu ứng "con sứa vỗ cánh" (Squish & Stretch)
+        const flap = Math.sin(t * 15 + p.angle * 4);
+        const bobbingY = flap * 12 * p.depth;
+        const scaleX = 1 - flap * 0.2;  // Co lại chiều ngang
+        const scaleY = 1 + flap * 0.35; // Dãn ra chiều dọc
 
         ctx.save();
         ctx.translate(p.x, p.y + bobbingY);
         ctx.rotate(p.rotation);
+        ctx.scale(scaleX, scaleY);
         ctx.globalAlpha = Math.min(alpha, 0.85);
         ctx.fillStyle = p.color;
 
