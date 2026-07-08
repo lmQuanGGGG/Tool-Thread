@@ -376,6 +376,26 @@ export default function AccountsPage() {
               </div>
             </div>
 
+            {parsedLinks.length > 0 && (
+              <div className={`${cardClass} p-6 anim-fade-up anim-d3`}>
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-[13px] font-semibold text-gray-900">AI Parsing Results</h3>
+                  <span className="px-2 py-1 rounded-md bg-gray-100 text-[11px] font-mono text-gray-500 border border-gray-200/80">{parsedLinks.length} items</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 dim-siblings">
+                  {parsedLinks.map((p, i) => (
+                    <div key={i} className="flex gap-3.5 bg-gray-50 border border-gray-200/80 p-3.5 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all">
+                      <img src={p.image_url} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-200 border border-gray-200/80 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-gray-900 truncate mb-0.5">{p.title}</p>
+                        <p className="text-[10px] text-gray-400 font-mono truncate mb-1">{p.aff_link}</p>
+                        <p className="text-[11px] text-gray-500 italic leading-snug">"{p.suggested_comment}"</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         )}
