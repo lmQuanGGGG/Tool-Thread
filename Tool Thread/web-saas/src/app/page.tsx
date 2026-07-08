@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal } from "lucide-react";
+import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 
@@ -481,41 +481,113 @@ export default function Home() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" className="relative z-10 px-4 py-28 max-w-[1100px] mx-auto">
+      <section id="pricing" className="relative z-10 px-4 py-28 max-w-[1200px] mx-auto">
         <Reveal>
           <div className="text-center mb-16">
-            <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-4">Gói dịch vụ</h2>
-            <p className="text-zinc-500 text-[15px]">Thanh toán tự động qua PayOS. Nâng cấp tức thì.</p>
+            <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-4">Chọn gói vận hành</h2>
+            <p className="text-zinc-500 text-[15px]">Nâng cấp bất cứ lúc nào · Thanh toán qua PayOS</p>
           </div>
         </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
-            { name: "Free", price: "0đ", per: "", desc: "Trải nghiệm", color: "zinc", items: ["2 Reels / ngày", "10 Cmt Threads", "2 Threads Post", "1 FB Post"], btn: "Bắt đầu", highlight: false },
-            { name: "Lite", price: "59k", per: "/tháng", desc: "Shop nhỏ", color: "emerald", items: ["3 Reels / ngày", "30 Cmt Threads", "3 Threads Post", "3 FB Post"], btn: "Mua LITE", highlight: false },
-            { name: "Plus", price: "129k", per: "/tháng", desc: "Chuyên nghiệp", color: "zinc-900", items: ["6 Reels / ngày", "80 Cmt Threads", "6 Threads Post", "5 FB Post", "Auto 24/7"], btn: "Nâng cấp PLUS", highlight: true },
-            { name: "Pro", price: "199k", per: "/tháng", desc: "Công nghiệp", color: "amber", items: ["12 Reels / ngày", "160 Cmt Threads", "12 Threads Post", "10 FB Post"], btn: "Mua PRO", highlight: false },
-            { name: "ProMax", price: "499k", per: "/vĩnh viễn", desc: "Trọn đời", color: "zinc", items: ["Unlimited Reels", "Unlimited Cmt", "Unlimited Post"], btn: "Mua PROMAX", highlight: false },
+            { 
+              name: "Free", price: "Miễn phí", priceSub: "", icon: Activity, theme: "zinc", badge: "", bg: "bg-white",
+              stats: [
+                { label: "Reels", value: "2" }, { label: "FB Post", value: "1" }, { label: "Threads Post", value: "2" },
+                { label: "Threads Cmt", value: "10" }, { label: "Crawl Data", value: "1" }, { label: "Links", value: "2" }
+              ],
+              features: [
+                "Auto Cmt Threads (10/10)", "Auto hết 2 Reels, 1 FB, 2 Threads", "Chia 2 khung giờ chạy", "Phù hợp test nhanh"
+              ],
+              btn: "Dùng miễn phí", btnClass: "bg-[#1c1c1e] text-white hover:bg-black"
+            },
+            { 
+              name: "Lite", price: "59.000đ", priceSub: "/tháng", icon: Zap, theme: "emerald", badge: "", bg: "bg-[#f2fbf6]",
+              stats: [
+                { label: "Reels", value: "3" }, { label: "FB Post", value: "3" }, { label: "Threads Post", value: "3" },
+                { label: "Threads Cmt", value: "30" }, { label: "Crawl Data", value: "2" }, { label: "Links", value: "4" }
+              ],
+              features: [
+                "Auto Cmt Threads (20/30)", "Auto hết 3 Reels, 3 FB, 3 Threads", "Chia 3 khung giờ chạy", "Dành cho shop nhỏ"
+              ],
+              btn: "Gói hiện tại", btnClass: "bg-[#1c1c1e] text-white hover:bg-black"
+            },
+            { 
+              name: "Plus", price: "129.000đ", priceSub: "/tháng", icon: Zap, theme: "blue", badge: "PHỔ BIẾN", bg: "bg-[#f5f8ff]",
+              stats: [
+                { label: "Reels", value: "6" }, { label: "FB Post", value: "5" }, { label: "Threads Post", value: "6" },
+                { label: "Threads Cmt", value: "80" }, { label: "Crawl Data", value: "3" }, { label: "Links", value: "10" }
+              ],
+              features: [
+                "Auto đăng 6 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 6 Reels, 5 FB Posts (rải đều)", "Đủ dùng bán hàng đều"
+              ],
+              btn: "Nâng cấp", btnClass: "bg-blue-600 text-white hover:bg-blue-700"
+            },
+            { 
+              name: "Pro", price: "199.000đ", priceSub: "/tháng", icon: Crown, theme: "orange", badge: "ĐỀ XUẤT", bg: "bg-[#fffbf0]",
+              stats: [
+                { label: "Reels", value: "12" }, { label: "FB Post", value: "10" }, { label: "Threads Post", value: "12" },
+                { label: "Threads Cmt", value: "160" }, { label: "Crawl Data", value: "4" }, { label: "Links", value: "20" }
+              ],
+              features: [
+                "Auto đăng 12 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 12 Reels, 10 FB Posts (rải đều)", "Tối ưu cho vận hành thật"
+              ],
+              btn: "Nâng cấp", btnClass: "bg-[#f59e0b] text-white hover:bg-[#d97706]"
+            }
           ].map((plan, idx) => (
             <Reveal key={plan.name} delay={idx * 80}>
-              <div className={`bg-white border ${plan.highlight ? "border-2 border-zinc-900 scale-[1.04] shadow-2xl shadow-zinc-300/40" : "border-zinc-200 hover:shadow-lg"} rounded-[20px] p-6 relative flex flex-col h-full transition-all`}>
-                {plan.highlight && <div className="absolute -top-3 right-5 bg-zinc-900 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Phổ biến</div>}
-                <div className={`text-[11px] font-bold mb-3 tracking-wider uppercase ${plan.highlight ? "text-zinc-900" : plan.color === "emerald" ? "text-emerald-600" : plan.color === "amber" ? "text-amber-600" : "text-zinc-400"}`}>{plan.name}</div>
-                <div className="flex items-baseline gap-1 mb-1"><span className="text-3xl font-bold text-zinc-900">{plan.price}</span>{plan.per && <span className="text-[11px] text-zinc-400">{plan.per}</span>}</div>
-                <p className="text-[12px] text-zinc-400 mb-5 border-b border-zinc-100 pb-4">{plan.desc}</p>
-                <ul className="space-y-3 mb-6 text-[13px] text-zinc-600 flex-1">
-                  {plan.items.map((item) => (
-                    <li key={item} className={`flex items-center gap-2 ${plan.highlight ? "font-medium text-zinc-800" : ""}`}>
-                      {item === "Auto 24/7" ? <Zap className="w-4 h-4 text-zinc-900" /> : item.startsWith("Unlimited") ? <Infinity className="w-4 h-4 text-zinc-400" /> : <Check className={`w-4 h-4 ${plan.highlight ? "text-zinc-900" : plan.color === "emerald" ? "text-emerald-500" : plan.color === "amber" ? "text-amber-500" : "text-zinc-300"}`} />}
-                      {item}
+              <div className={`${plan.bg} border ${plan.badge ? `border-${plan.theme}-200 shadow-xl shadow-${plan.theme}-500/10` : "border-zinc-200"} rounded-[24px] p-6 relative flex flex-col h-full transition-all`}>
+                
+                {/* Header */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-zinc-100 ${plan.theme === 'zinc' ? 'text-zinc-600' : plan.theme === 'emerald' ? 'text-emerald-500' : plan.theme === 'blue' ? 'text-blue-500' : 'text-amber-500'}`}>
+                    <plan.icon className="w-5 h-5" />
+                  </div>
+                  {plan.badge && (
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${plan.theme === 'blue' ? 'text-blue-600' : 'text-amber-600'}`}>
+                      {plan.badge}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-[16px] font-bold text-zinc-900 mb-1">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[28px] font-black text-zinc-900 tracking-tight">{plan.price}</span>
+                    {plan.priceSub && <span className="text-[13px] text-zinc-500 font-medium">{plan.priceSub}</span>}
+                  </div>
+                </div>
+
+                {/* Stats Table */}
+                <div className="space-y-[6px] mb-8">
+                  {plan.stats.map(s => (
+                    <div key={s.label} className="flex justify-between items-center py-[10px] px-4 rounded-xl bg-white/60 border border-black/5 text-[13px]">
+                      <span className="text-zinc-500">{s.label}</span>
+                      <span className="text-zinc-900 font-bold">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.features.map(f => (
+                    <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-600 font-medium">
+                      <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.theme === 'zinc' ? 'text-emerald-500' : plan.theme === 'emerald' ? 'text-emerald-500' : plan.theme === 'blue' ? 'text-emerald-500' : 'text-emerald-500'}`} />
+                      <span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Link href="/login" className={`block w-full py-3 rounded-full text-[13px] font-semibold transition-colors text-center ${plan.highlight ? "bg-zinc-900 text-white hover:bg-black" : plan.color === "emerald" ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : plan.color === "amber" ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "bg-[#eef0f3] text-zinc-700 hover:bg-[#e4e6ea]"}`}>{plan.btn}</Link>
+
+                {/* Button */}
+                <Link href="/login" className={`block w-full py-3.5 rounded-xl text-[14px] font-bold transition-all text-center ${plan.btnClass}`}>
+                  {plan.btn}
+                </Link>
               </div>
             </Reveal>
           ))}
         </div>
       </section>
+
 
       {/* ── Dark CTA ── */}
       <section className="relative z-10 px-4 pb-20 max-w-[1100px] mx-auto">
