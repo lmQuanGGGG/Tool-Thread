@@ -110,6 +110,12 @@ async function run() {
     }
 
     const dbConfig = profiles[0];
+    const TIER_LIMITS = { free: 5, lite: 12, plus: 25, pro: 59, promax: 129 };
+    const userTier = dbConfig.tier || 'free';
+    const MAX_POSTS_TO_SAVE = TIER_LIMITS[userTier] || 5;
+    // Mỗi nhịp scroll thường lấy được tầm 5-10 bài. Tính toán dư ra vài nhịp để chắc chắn đủ bài.
+    const MAX_SCROLLS = process.env.MAX_SCROLLS ? parseInt(process.env.MAX_SCROLLS) : Math.ceil(MAX_POSTS_TO_SAVE / 5) + 5;
+
     const targetUrl = process.env.PROFILE_URL;
 
     if (!targetUrl || !targetUrl.includes('threads')) {
@@ -196,12 +202,30 @@ async function run() {
     await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     await delay(5000);
 
-    const maxScrolls = parseInt(process.env.MAX_SCROLLS) || 15;
-    console.log(`🤖 Bắt đầu auto-scroll ${maxScrolls} nhịp...`);
-    for (let i = 0; i < maxScrolls; i++) {
+    console.log(`🤖 Bắt đầu auto-scroll tối đa ${MAX_SCROLLS} nhịp...`);
+    for (let i = 0; i < MAX_SCROLLS; i++) {
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await delay(2500); // Chờ GraphQL load
-        console.log(`Đã cuộn ${i + 1}/${maxScrolls} nhịp...`);
+        
+        const uniqueCount = await page.evaluate(() => {
+            let tempIds = [];
+            function countUnique(n) {
+                if (Array.isArray(n)) { n.forEach(countUnique); return; }
+                if (n && typeof n === 'object') {
+                    if (n.post && n.post.user) tempIds.push(n.post.id || n.post.pk);
+                    Object.values(n).forEach(countUnique);
+                }
+            }
+            countUnique(window.rawThreadsData || []);
+            return new Set(tempIds).size;
+        });
+
+        console.log(`Đã cuộn ${i + 1}/${MAX_SCROLLS} nhịp... Tìm thấy ${uniqueCount} bài / ${MAX_POSTS_TO_SAVE} bài (gói ${userTier.toUpperCase()})`);
+        
+        if (uniqueCount >= MAX_POSTS_TO_SAVE) {
+            console.log(`🎯 Đã đủ ${uniqueCount} bài! Dừng cuộn sớm để tiết kiệm tài nguyên.`);
+            break;
+        }
     }
 
     console.log("✅ Đã cuộn xong, đóng browser...");
