@@ -498,97 +498,86 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
             { 
-              name: "Free", price: "Miễn phí", priceSub: "", icon: Activity, theme: "zinc", badge: "", bg: "bg-white",
-              stats: [
-                { label: "Reels", value: "2" }, { label: "FB Post", value: "1" }, { label: "Threads Post", value: "2" },
-                { label: "Threads Cmt", value: "10" }, { label: "Crawl Data", value: "1" }, { label: "Links", value: "2" }
-              ],
+              tag: "Dùng thử", tagColor: "text-blue-500 bg-blue-50/50",
+              name: "Free", price: "0đ / tháng", 
+              desc: "Trải nghiệm sức mạnh của AutoFarm mà không cần thanh toán.",
+              btn1: "Dùng miễn phí", btn1Class: "bg-[#161618] text-white hover:bg-black",
+              featuresTitle: "Gói bao gồm:",
               features: [
-                "Auto Cmt Threads (10/10)", "Auto hết 2 Reels, 1 FB, 2 Threads", "Chia 2 khung giờ chạy", "Phù hợp test nhanh"
-              ],
-              btn: "Dùng miễn phí", btnClass: "bg-[#1c1c1e] text-white hover:bg-black"
+                "2 Reels, 1 FB Post, 2 Threads", "10 Cmt Threads", "1 Crawl Data", "Chia 2 khung giờ chạy"
+              ]
             },
             { 
-              name: "Lite", price: "59.000đ", priceSub: "/tháng", icon: Zap, theme: "emerald", badge: "", bg: "bg-[#f2fbf6]",
-              stats: [
-                { label: "Reels", value: "3" }, { label: "FB Post", value: "3" }, { label: "Threads Post", value: "3" },
-                { label: "Threads Cmt", value: "30" }, { label: "Crawl Data", value: "2" }, { label: "Links", value: "4" }
-              ],
+              tag: "Shop nhỏ", tagColor: "text-blue-500 bg-blue-50/50",
+              name: "Lite", price: "59.000đ / tháng", 
+              desc: "Gói cơ bản phù hợp cho cá nhân kinh doanh online nhỏ lẻ.",
+              btn1: "Đăng ký Lite", btn1Class: "bg-[#161618] text-white hover:bg-black",
+              btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
+              featuresTitle: "Bao gồm Free, cộng thêm:",
               features: [
-                "Auto Cmt Threads (20/30)", "Auto hết 3 Reels, 3 FB, 3 Threads", "Chia 3 khung giờ chạy", "Dành cho shop nhỏ"
-              ],
-              btn: "Gói hiện tại", btnClass: "bg-[#1c1c1e] text-white hover:bg-black"
+                "3 Reels, 3 FB, 3 Threads", "30 Cmt Threads", "2 Crawl Data", "Chia 3 khung giờ chạy"
+              ]
             },
             { 
-              name: "Plus", price: "129.000đ", priceSub: "/tháng", icon: Zap, theme: "blue", badge: "PHỔ BIẾN", bg: "bg-[#f5f8ff]",
-              stats: [
-                { label: "Reels", value: "6" }, { label: "FB Post", value: "5" }, { label: "Threads Post", value: "6" },
-                { label: "Threads Cmt", value: "80" }, { label: "Crawl Data", value: "3" }, { label: "Links", value: "10" }
-              ],
+              tag: "Phổ biến", tagColor: "text-blue-500 bg-blue-50/50",
+              name: "Plus", price: "129.000đ / tháng", 
+              desc: "Dành cho các shop cần duy trì nội dung tương tác đều đặn hàng ngày.",
+              btn1: "Đăng ký Plus", btn1Class: "bg-[#161618] text-white hover:bg-black",
+              btn2: "Xem chi tiết", btn2Class: "bg-[#e8eaed] text-zinc-900 hover:bg-[#dfe1e5]",
+              featuresTitle: "Bao gồm Lite, cộng thêm:",
               features: [
-                "Auto đăng 6 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 6 Reels, 5 FB Posts (rải đều)", "Đủ dùng bán hàng đều"
-              ],
-              btn: "Nâng cấp", btnClass: "bg-blue-600 text-white hover:bg-blue-700"
+                "6 Reels, 5 FB, 6 Threads", "80 Cmt Threads", "3 Crawl Data", "Auto max 50% comment"
+              ]
             },
             { 
-              name: "Pro", price: "199.000đ", priceSub: "/tháng", icon: Crown, theme: "orange", badge: "ĐỀ XUẤT", bg: "bg-[#fffbf0]",
-              stats: [
-                { label: "Reels", value: "12" }, { label: "FB Post", value: "10" }, { label: "Threads Post", value: "12" },
-                { label: "Threads Cmt", value: "160" }, { label: "Crawl Data", value: "4" }, { label: "Links", value: "20" }
-              ],
+              tag: "Khuyên dùng", tagColor: "text-blue-500 bg-blue-50/50",
+              name: "Pro", price: "199.000đ / tháng", 
+              desc: "Tối ưu hóa khả năng tiếp cận với giới hạn cao nhất của nền tảng.",
+              btn1: "Đăng ký Pro", btn1Class: "bg-[#161618] text-white hover:bg-black",
+              featuresTitle: "Bao gồm Plus, cộng thêm:",
               features: [
-                "Auto đăng 12 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 12 Reels, 10 FB Posts (rải đều)", "Tối ưu cho vận hành thật"
-              ],
-              btn: "Nâng cấp", btnClass: "bg-[#f59e0b] text-white hover:bg-[#d97706]"
+                "12 Reels, 10 FB, 12 Threads", "160 Cmt Threads", "4 Crawl Data", "Tối ưu hóa chạy 24/7"
+              ]
             }
           ].map((plan, idx) => (
             <Reveal key={plan.name} delay={idx * 80}>
-              <div className={`${plan.bg} border ${plan.badge ? `border-${plan.theme}-200 shadow-xl shadow-${plan.theme}-500/10` : "border-zinc-200"} rounded-[24px] p-6 relative flex flex-col h-full transition-all`}>
+              <div className="bg-[#f8f9fa] rounded-[32px] p-8 flex flex-col h-full">
+                <div className="mb-5">
+                  <span className={`inline-block px-3 py-1.5 rounded-md text-[11px] font-semibold ${plan.tagColor}`}>
+                    {plan.tag}
+                  </span>
+                </div>
                 
-                {/* Header */}
-                <div className="flex justify-between items-start mb-6">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-zinc-100 ${plan.theme === 'zinc' ? 'text-zinc-600' : plan.theme === 'emerald' ? 'text-emerald-500' : plan.theme === 'blue' ? 'text-blue-500' : 'text-amber-500'}`}>
-                    <plan.icon className="w-5 h-5" />
-                  </div>
-                  {plan.badge && (
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${plan.theme === 'blue' ? 'text-blue-600' : 'text-amber-600'}`}>
-                      {plan.badge}
-                    </span>
+                <h3 className="text-[22px] font-medium text-zinc-900 mb-2">{plan.name}</h3>
+                <div className="text-[14px] text-zinc-600 mb-8">{plan.price}</div>
+                
+                <p className="text-[14px] text-zinc-700 leading-relaxed mb-8 min-h-[65px]">
+                  {plan.desc}
+                </p>
+
+                <div className="flex flex-col gap-3 mb-8">
+                  <Link href="/login" className={`block w-full py-3.5 rounded-full text-[14px] font-medium text-center transition-colors ${plan.btn1Class}`}>
+                    {plan.btn1}
+                  </Link>
+                  {plan.btn2 && (
+                    <Link href="/login" className={`block w-full py-3.5 rounded-full text-[14px] font-medium text-center transition-colors ${plan.btn2Class}`}>
+                      {plan.btn2}
+                    </Link>
                   )}
                 </div>
 
-                <div className="mb-6">
-                  <h3 className="text-[16px] font-bold text-zinc-900 mb-1">{plan.name}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[28px] font-black text-zinc-900 tracking-tight">{plan.price}</span>
-                    {plan.priceSub && <span className="text-[13px] text-zinc-500 font-medium">{plan.priceSub}</span>}
-                  </div>
-                </div>
+                <div className="h-px bg-zinc-200/70 w-full mb-6"></div>
 
-                {/* Stats Table */}
-                <div className="space-y-[6px] mb-8">
-                  {plan.stats.map(s => (
-                    <div key={s.label} className="flex justify-between items-center py-[10px] px-4 rounded-xl bg-white/60 border border-black/5 text-[13px]">
-                      <span className="text-zinc-500">{s.label}</span>
-                      <span className="text-zinc-900 font-bold">{s.value}</span>
-                    </div>
-                  ))}
-                </div>
+                <div className="text-[13px] font-medium text-zinc-900 mb-5">{plan.featuresTitle}</div>
 
-                {/* Features */}
-                <ul className="space-y-3 mb-8 flex-1">
+                <ul className="space-y-4 flex-1">
                   {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-600 font-medium">
-                      <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.theme === 'zinc' ? 'text-emerald-500' : plan.theme === 'emerald' ? 'text-emerald-500' : plan.theme === 'blue' ? 'text-emerald-500' : 'text-emerald-500'}`} />
-                      <span>{f}</span>
+                    <li key={f} className="flex items-start gap-3 text-[13px] text-zinc-600">
+                      <Check className="w-[18px] h-[18px] text-zinc-800 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="leading-snug pt-[1px]">{f}</span>
                     </li>
                   ))}
                 </ul>
-
-                {/* Button */}
-                <Link href="/login" className={`block w-full py-3.5 rounded-xl text-[14px] font-bold transition-all text-center ${plan.btnClass}`}>
-                  {plan.btn}
-                </Link>
               </div>
             </Reveal>
           ))}
