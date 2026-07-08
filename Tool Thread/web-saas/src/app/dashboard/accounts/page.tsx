@@ -390,7 +390,7 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-transparent border-none shadow-none transition-all duration-500";
+  const cardClass = "bg-transparent border border-zinc-200/50 shadow-sm rounded-[32px] transition-all duration-500";
   const inputClass = "w-full bg-zinc-50/80 border border-zinc-200/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-sm";
   const editorCardClass = "bg-white/60 backdrop-blur-3xl border border-white/80 rounded-[32px] p-5 relative group/post shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:bg-white/80 hover:border-white transition-all duration-500 ring-1 ring-black/[0.02]";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
@@ -752,8 +752,24 @@ export default function AccountsPage() {
                           return (
                             <div key={`threads-${post.id}-${i}`} className="w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
                               {hasImages ? (
-                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
-                                  <div className="flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
+                                  {post.image_urls.length > 1 && (
+                                    <>
+                                      <button onClick={(e) => {
+                                        const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
+                                        if (c) c.scrollBy({ left: -c.clientWidth, behavior: 'smooth' });
+                                      }} className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
+                                        <ChevronLeft className="w-4 h-4 pr-0.5" />
+                                      </button>
+                                      <button onClick={(e) => {
+                                        const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
+                                        if (c) c.scrollBy({ left: c.clientWidth, behavior: 'smooth' });
+                                      }} className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
+                                        <ChevronRight className="w-4 h-4 pl-0.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                  <div className="scroll-container flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
                                     {post.image_urls.map((url: string, idx: number) => (
                                       <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
                                         <img src={url} alt="Threads media" className="h-full w-full object-cover" />
