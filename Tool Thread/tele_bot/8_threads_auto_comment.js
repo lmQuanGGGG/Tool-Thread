@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { fetchBotConfig, updateUsageStats, logToWeb } = require('./supabase_helper');
+const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota } = require('./supabase_helper');
 puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
@@ -47,24 +47,33 @@ async function downloadImageFromTelegram(file_id) {
 
     // HÚT CONFIG TỪ SUPABASE TRƯỚC ĐỂ BIẾT TIER
     let dbConfig = null;
+    const email = process.env.USER_EMAIL || 'admin@autofarm.com';
     try {
-        dbConfig = await fetchBotConfig();
+        dbConfig = await fetchBotConfig(email);
     } catch (e) { }
 
+    // Kiểm tra Quota trước khi chạy
+    const hasQuota = await checkQuota(email, 'threads_commented');
+    if (!hasQuota) {
+        console.log(`❌ Tài khoản ${email} đã hết giới hạn comment Threads hôm nay. Dừng script.`);
+        await logToWeb(email, 'threads', `Đã hết giới hạn comment Threads hôm nay. Dừng script.`, 'warn');
+        process.exit(0);
+    }
+
     const isPromax = dbConfig?.tier === 'promax';
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `Khởi động tool Threads Comment... Tier: ${dbConfig?.tier}`, 'info');
+    await logToWeb(email, 'threads', `Khởi động tool Threads Comment... Tier: ${dbConfig?.tier}`, 'info');
 
     if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
         let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy từ Telegram' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick, phi thẳng vào comment!`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
+        await logToWeb(email, 'threads', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
         if (fs.existsSync(manualFlagPath)) fs.unlinkSync(manualFlagPath); // Xoá cờ đi để lần sau chạy tự động còn biết mà ngâm nick
     } else {
         // Chạy tự động theo giờ (Cronjob): Ngâm delay random 10-30 phút
         const randomMinutes = Math.floor(Math.random() * 20) + 10;
         const msg = `⏱ HỆ THỐNG BOT TỰ ĐỘNG: Đang ngâm nick (delay ngẫu nhiên) ${randomMinutes} phút để tránh bị block...`;
         console.log(msg);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', msg, 'info');
+        await logToWeb(email, 'threads', msg, 'info');
         await delay(randomMinutes * 60 * 1000);
     }
 
@@ -81,7 +90,7 @@ async function downloadImageFromTelegram(file_id) {
 
     if (validProducts.length === 0) {
         console.error("❌ Không có sản phẩm nào hợp lệ (Chưa nhập Link Affiliate hoặc Chưa Đồng bộ).");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm nút Đồng Bộ trên Web!', 'error');
+        await logToWeb(email, 'threads', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm nút Đồng Bộ trên Web!', 'error');
         process.exit(1);
     }
 
@@ -115,7 +124,7 @@ async function downloadImageFromTelegram(file_id) {
         await page.setCookie(...cookies.filter(c => c.domain.includes('threads')));
 
         console.log("🌐 Truy cập Threads For You...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', 'Đăng nhập thành công! Truy cập Threads For You...', 'info');
+        await logToWeb(email, 'threads', 'Đăng nhập thành công! Truy cập Threads For You...', 'info');
         await page.goto('https://www.threads.net/', { waitUntil: 'networkidle2', timeout: 45000 });
         await delay(5000);
 
@@ -123,7 +132,7 @@ async function downloadImageFromTelegram(file_id) {
         let consecutiveErrors = 0;
         let postsToComment = getRandomInt(4, 5);
         console.log(`🎯 Mục tiêu: Đi cmt dạo ${postsToComment} bài viết...`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `Mục tiêu: Đi cmt dạo ${postsToComment} bài viết...`, 'info');
+        await logToWeb(email, 'threads', `Mục tiêu: Đi cmt dạo ${postsToComment} bài viết...`, 'info');
 
         // Scroll vài lần để load bài
         for (let j = 0; j < 3; j++) {
@@ -208,7 +217,7 @@ async function downloadImageFromTelegram(file_id) {
                 }
 
                 console.log(`💬 Gõ nội dung comment...`);
-                await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `Đang gõ comment thứ ${commentedCount + 1}...`, 'info');
+                await logToWeb(email, 'threads', `Đang gõ comment thứ ${commentedCount + 1}...`, 'info');
                 // Gõ text
                 const lines = cmtText.split('\n');
                 for (let line of lines) {
@@ -256,8 +265,8 @@ async function downloadImageFromTelegram(file_id) {
 
                 await delay(5000);
                 console.log("✅ Đã bắn Comment + Ảnh thành công!");
-                await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `✅ Đã bắn Comment + Ảnh thành công bài thứ ${commentedCount + 1}!`, 'success');
-                await updateUsageStats('admin@autofarm.com', 'threads_commented', 1);
+                await logToWeb(email, 'threads', `✅ Đã bắn Comment + Ảnh thành công bài thứ ${commentedCount + 1}!`, 'success');
+                await updateUsageStats(email, 'threads_commented', 1);
                 commentedCount++;
                 consecutiveErrors = 0;
 
@@ -312,7 +321,7 @@ async function downloadImageFromTelegram(file_id) {
         }
 
         console.log(`🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'threads', `🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`, 'success');
+        await logToWeb(email, 'threads', `🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`, 'success');
         try {
             const TELEGRAM_CHAT_ID = dbConfig?.tele_chat_id || process.env.TELE_CHAT_ID || -5396355060;
             const msg = `✅ **Báo cáo Threads Comment Bot (Nick ${NICK_INDEX})**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **Trang chủ (For You)**\n- Tổng số bài viết đã cmt: **${commentedCount} bài**`;

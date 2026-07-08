@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { supabase, logToWeb } = require('./supabase_helper');
+const { supabase, logToWeb, checkQuota, updateUsageStats } = require('./supabase_helper');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
@@ -28,6 +28,14 @@ async function downloadImageFromUrl(url) {
 async function runSinglePost() {
   const email = process.env.USER_EMAIL || 'admin@autofarm.com';
   const postId = process.env.POST_ID;
+
+  // Kiểm tra Quota
+  const hasQuota = await checkQuota(email, 'threads_posted');
+  if (!hasQuota) {
+      console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng Threads hôm nay. Dừng script.`);
+      await logToWeb(email, 'threads_post', `Đã hết giới hạn đăng Threads hôm nay. Dừng script.`, 'warn');
+      process.exit(0);
+  }
 
   console.log(`🚀 Bắt đầu chạy bot đăng bài Threads đơn lẻ cho post_id: ${postId}`);
   await logToWeb(email, 'threads_post', `🚀 Bắt đầu quá trình đăng bài (ID: ${postId}) lên Threads...`, 'info');
@@ -374,6 +382,7 @@ async function runSinglePost() {
     } else {
       console.log("✅ Đã cập nhật trạng thái posted = true");
       await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads! [ID: ${postId}]`, 'success');
+      await updateUsageStats(email, 'threads_posted', 1);
     }
 
     process.exit(0);

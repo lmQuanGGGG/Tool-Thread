@@ -7,7 +7,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // TÍCH HỢP ĐƯỜNG ỐNG SUPABASE
-const { fetchBotConfig, updateUsageStats, logToWeb } = require('./supabase_helper');
+const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota } = require('./supabase_helper');
 
 puppeteer.use(StealthPlugin());
 
@@ -112,11 +112,20 @@ async function fetchLatestVideos(channels) {
         return clicked;
     };
 
-    // 1. Kéo config từ DB trước
     let dbConfig = null;
+    const email = process.env.USER_EMAIL || 'admin@autofarm.com';
+
     try {
-        dbConfig = await fetchBotConfig();
+        dbConfig = await fetchBotConfig(email);
     } catch (e) {}
+
+    // Kiểm tra Quota trước khi chạy
+    const hasQuota = await checkQuota(email, 'reels_posted');
+    if (!hasQuota) {
+        console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng Reels hôm nay. Dừng script.`);
+        await logToWeb(email, 'yt-reels', `Đã hết giới hạn đăng Reels hôm nay. Dừng script.`, 'warn');
+        process.exit(0);
+    }
     
     // Đọc danh sách kênh từ DB, nếu không có thì fallback mặc định
     let channels = [];
@@ -131,7 +140,7 @@ async function fetchLatestVideos(channels) {
     }
     
     const isPromax = dbConfig?.tier === 'promax';
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Khởi động tool FB Reels... Channels: ${channels.length}`, 'info');
+    await logToWeb(email, 'yt-reels', `Khởi động tool FB Reels... Channels: ${channels.length}`, 'info');
 
     const pm2ProcessName = 'fb-reels-farmer';
     const manualFlagPath = path.resolve(__dirname, `${pm2ProcessName}.manual`);
@@ -140,7 +149,7 @@ async function fetchLatestVideos(channels) {
     if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
         let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
+        await logToWeb(email, 'yt-reels', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
         if (fs.existsSync(manualFlagPath)) fs.unlinkSync(manualFlagPath);
     } else {
         const randomMinutes = Math.floor(Math.random() * 25) + 1;
@@ -166,14 +175,14 @@ async function fetchLatestVideos(channels) {
 
     // 2. Tải video chất lượng cao nhất (Best Quality)
     console.log(`\n⬇️ Đang tải video: ${videoToProcess.title}`);
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đã tìm thấy video mới: ${videoToProcess.title}. Đang tải...`, 'info');
+    await logToWeb(email, 'yt-reels', `Đã tìm thấy video mới: ${videoToProcess.title}. Đang tải...`, 'info');
     const outputPath = path.join(OUTPUT_DIR, `${videoToProcess.id}.mp4`);
 
     try {
         const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : (videoToProcess.isTikTok ? `https://www.tiktok.com/@user/video/${videoToProcess.id}` : `https://www.youtube.com/watch?v=${videoToProcess.id}`);
         
         console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho video: ${videoUrl}`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đang gọi API GenDownload lấy video 1080p cho đa nền tảng...`, 'info');
+        await logToWeb(email, 'yt-reels', `Đang gọi API GenDownload lấy video 1080p cho đa nền tảng...`, 'info');
         const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
         const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
         const jsonResp = JSON.parse(apiResponse);
@@ -241,7 +250,7 @@ async function fetchLatestVideos(channels) {
         process.exit(1);
     }
     console.log("✅ Tải video thành công!");
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Tải video 1080p hoàn tất! Đang kết nối Facebook để đăng...`, 'info');
+    await logToWeb(email, 'yt-reels', `Tải video 1080p hoàn tất! Đang kết nối Facebook để đăng...`, 'info');
 
     // Bỏ qua FFMPEG theo yêu cầu của sếp, giữ nguyên video gốc để chất lượng cao nhất và up nhanh hơn.
 
@@ -303,7 +312,7 @@ async function fetchLatestVideos(channels) {
 
     try {
         console.log("⬆️ Đang tải video lên...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đang upload video lên Facebook Reels...`, 'info');
+        await logToWeb(email, 'yt-reels', `Đang upload video lên Facebook Reels...`, 'info');
         
         let fileInput = await page.$('input[type="file"]');
         if (!fileInput) {
@@ -393,7 +402,7 @@ async function fetchLatestVideos(channels) {
         // BƯỚC 4: Gắn thẻ Affiliate (Màn hình cuối)
         if (affLink && affLink !== 'https://shope.ee/YOUR_LINK_HERE') {
             console.log("🛒 Bắt đầu gắn thẻ Affiliate Shopee...");
-            await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', 'Đang thực hiện gắn thẻ link Affiliate Shopee vào Reels...', 'info');
+            await logToWeb(email, 'yt-reels', 'Đang thực hiện gắn thẻ link Affiliate Shopee vào Reels...', 'info');
 
             const clickAddProduct = await page.evaluate(() => {
                 const elements = Array.from(document.querySelectorAll('*')).filter(el => {
@@ -448,7 +457,7 @@ async function fetchLatestVideos(channels) {
 
         // BƯỚC 5: Bấm Đăng / Publish
         console.log("🚀 Bấm Đăng Reels (Đợi FB duyệt bản quyền)...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', 'Bấm Đăng Reels! Đang chờ thuật toán FB duyệt bản quyền (90s)...', 'info');
+        await logToWeb(email, 'yt-reels', 'Bấm Đăng Reels! Đang chờ thuật toán FB duyệt bản quyền (90s)...', 'info');
         const published = await clickButtonWithText(page, ['đăng', 'publish'], 30); // Chờ lên đến 90s (30x3s)
         if (!published) {
             console.log("⚠️ Không bấm được nút Đăng (có thể do video quá nặng hoặc lỗi). Dừng tiến trình!");
@@ -459,8 +468,8 @@ async function fetchLatestVideos(channels) {
         await delay(90000);
 
         console.log("✅ Đăng FB Reels thành công!");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Đăng FB Reels thành công: ${videoToProcess.title}`, 'success');
-        await updateUsageStats(process.env.USER_EMAIL || 'admin@autofarm.com', 'reels_posted', 1);
+        await logToWeb(email, 'yt-reels', `Đăng FB Reels thành công: ${videoToProcess.title}`, 'success');
+        await updateUsageStats(email, 'reels_posted', 1);
 
         // Lưu lịch sử
         postedIds.push(videoToProcess.id);
@@ -468,7 +477,7 @@ async function fetchLatestVideos(channels) {
 
     } catch (err) {
         console.error("❌ Lỗi khi đăng Reels:", err.message);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
+        await logToWeb(email, 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track
     } finally {

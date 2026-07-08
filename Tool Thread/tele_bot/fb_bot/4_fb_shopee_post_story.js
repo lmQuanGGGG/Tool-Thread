@@ -1,6 +1,5 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { fetchBotConfig } = require('../supabase_helper');
 puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
@@ -14,32 +13,42 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const { fetchBotConfig, logToWeb } = require('../supabase_helper');
+const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../supabase_helper');
 
 (async () => {
     const pm2ProcessName = 'fb-story-farmer';
     const manualFlagPath = path.resolve(__dirname, '..', `${pm2ProcessName}.manual`);
     const isGithubAction = process.env.GITHUB_ACTIONS === 'true';
 
+    const email = process.env.USER_EMAIL || 'admin@autofarm.com';
+
     // HÚT CONFIG TỪ SUPABASE TRƯỚC ĐỂ BIẾT TIER
     let dbConfig = null;
     try {
-        dbConfig = await fetchBotConfig();
+        dbConfig = await fetchBotConfig(email);
     } catch (e) {}
 
+    // Kiểm tra Quota trước khi chạy
+    const hasQuota = await checkQuota(email, 'fb_posts_count');
+    if (!hasQuota) {
+        console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);
+        await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');
+        process.exit(0);
+    }
+
     const isPromax = dbConfig?.tier === 'promax';
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', `Khởi động tool FB Story... Tier: ${dbConfig?.tier}`, 'info');
+    await logToWeb(email, 'fb-story', `Khởi động tool FB Story... Tier: ${dbConfig?.tier}`, 'info');
 
     if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
         let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
+        await logToWeb(email, 'fb-story', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
         if (fs.existsSync(manualFlagPath)) fs.unlinkSync(manualFlagPath);
     } else {
         const randomMinutes = Math.floor(Math.random() * 25) + 1;
         const msg = `⏱ Đang ngâm nick (delay ngẫu nhiên) ${randomMinutes} phút trước khi bắt đầu...`;
         console.log(msg);
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', msg, 'info');
+        await logToWeb(email, 'fb-story', msg, 'info');
         await delay(randomMinutes * 60 * 1000);
     }
     console.log("🚀 Đang khởi động FB Shopee Post & Story Bot...");
@@ -73,7 +82,7 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
     
     if (scrapedData.length === 0) {
         console.error("❌ Không tìm thấy dữ liệu sản phẩm (Chưa nhập link hoặc chưa đồng bộ).");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm Đồng Bộ trên Web!', 'error');
+        await logToWeb(email, 'fb-story', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm Đồng Bộ trên Web!', 'error');
         process.exit(1);
     }
 
@@ -131,14 +140,14 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
 
     // 2. Đăng nhập Facebook
     console.log("🌐 Đang truy cập Facebook (sau khi nạp Cookie)...");
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '🌐 Đang truy cập Facebook (sau khi nạp Cookie)...', 'info');
+    await logToWeb(email, 'fb-story', '🌐 Đang truy cập Facebook (sau khi nạp Cookie)...', 'info');
     await page.setCookie(...cleanCookies);
     await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
     await delay(5000);
 
     try {
         console.log("✍️ Đang tạo bài post mới trên trang cá nhân...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');
+        await logToWeb(email, 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');
         
         // Tìm ô "Bạn đang nghĩ gì?"
         const postBoxSelectors = [
@@ -199,7 +208,7 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
         if (fileInputs.length > 0 && imagePaths.length > 0) {
             await fileInputs[fileInputs.length - 1].uploadFile(...imagePaths);
             console.log("🖼 Đã tải ảnh lên bài post!");
-            await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '🖼 Đã tải ảnh lên bài post!', 'info');
+            await logToWeb(email, 'fb-story', '🖼 Đã tải ảnh lên bài post!', 'info');
             await delay(8000); // Tăng thời gian chờ load nhiều ảnh lên FB
         }
 
@@ -229,7 +238,7 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
         
         // Bấm nút Đăng
         console.log("🚀 Bấm Đăng (Post)...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
+        await logToWeb(email, 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
         await page.evaluate(() => {
             const btns = Array.from(document.querySelectorAll('div[role="button"]'));
             const postBtn = btns.find(b => b.innerText === 'Đăng' || b.innerText === 'Post');
@@ -241,7 +250,7 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
         
         // 3. Chuyển sang Share Story
         console.log("♻️ Đang tìm bài viết vừa đăng để Share lên Story...");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '♻️ Đang tìm bài viết vừa đăng để Share lên Story...', 'info');
+        await logToWeb(email, 'fb-story', '♻️ Đang tìm bài viết vừa đăng để Share lên Story...', 'info');
         await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
         await delay(5000);
         
@@ -278,8 +287,8 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
         });
         
         console.log("✅ Đã Share lên Story thành công!");
-        await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '✅ Đã Share lên Story thành công!', 'success');
-        await updateUsageStats('admin@autofarm.com', 'fb_posts_count', 1);
+        await logToWeb(email, 'fb-story', '✅ Đã Share lên Story thành công!', 'success');
+        await updateUsageStats(email, 'fb_posts_count', 1);
         await delay(5000);
 
     } catch (e) {
@@ -293,6 +302,6 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
         }
     }
     console.log("🎉 Hoàn tất chu trình Đăng & Share Shopee!");
-    await logToWeb(process.env.USER_EMAIL || 'admin@autofarm.com', 'fb-story', '🎉 Hoàn tất chu trình Đăng & Share Shopee!', 'success');
+    await logToWeb(email, 'fb-story', '🎉 Hoàn tất chu trình Đăng & Share Shopee!', 'success');
     await browser.close();
 })();
