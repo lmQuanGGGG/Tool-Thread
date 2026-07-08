@@ -17,6 +17,7 @@ type Tier = {
     reels: string;
     fbPost: string;
     threads: string;
+    threadsPost: string;
     crawl: string;
     links: string;
   };
@@ -30,7 +31,7 @@ const TIERS: Tier[] = [
     price: 0,
     icon: Activity,
     tone: "zinc",
-    quota: { reels: "2", fbPost: "1", threads: "10", crawl: "1", links: "2" },
+    quota: { reels: "2", fbPost: "1", threads: "10", threadsPost: "∞", crawl: "1", links: "2" },
     perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Dùng thử luồng bot", "Phù hợp test nhanh"],
   },
   {
@@ -39,7 +40,7 @@ const TIERS: Tier[] = [
     price: 59000,
     icon: Zap,
     tone: "emerald",
-    quota: { reels: "3", fbPost: "3", threads: "30", crawl: "2", links: "4" },
+    quota: { reels: "3", fbPost: "3", threads: "30", threadsPost: "∞", crawl: "2", links: "4" },
     perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
@@ -49,7 +50,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "blue",
     badge: "Phổ biến",
-    quota: { reels: "6", fbPost: "5", threads: "80", crawl: "3", links: "10" },
+    quota: { reels: "6", fbPost: "5", threads: "80", threadsPost: "∞", crawl: "3", links: "10" },
     perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 3 Reels, 1 Post (19h)", "Đủ dùng bán hàng đều"],
   },
   {
@@ -59,7 +60,7 @@ const TIERS: Tier[] = [
     icon: Crown,
     tone: "amber",
     badge: "Đề xuất",
-    quota: { reels: "12", fbPost: "10", threads: "160", crawl: "4", links: "20" },
+    quota: { reels: "12", fbPost: "10", threads: "160", threadsPost: "∞", crawl: "4", links: "20" },
     perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 5 Reels, 3 Posts rải đều", "Tối ưu cho vận hành thật"],
   },
   {
@@ -69,7 +70,7 @@ const TIERS: Tier[] = [
     icon: Rocket,
     tone: "violet",
     badge: "Max",
-    quota: { reels: "∞", fbPost: "∞", threads: "∞", crawl: "∞", links: "∞" },
+    quota: { reels: "∞", fbPost: "∞", threads: "∞", threadsPost: "∞", crawl: "∞", links: "∞" },
     perks: ["Không giới hạn", "Đăng bài Threads (Thủ công)", "Ưu tiên VIP", "Dành cho team scale"],
   },
 ];
@@ -151,10 +152,11 @@ export default function PricingPage() {
             <h2 className="text-2xl font-bold tracking-tight text-zinc-950">Chọn gói vận hành</h2>
             <p className="mt-1 text-sm text-zinc-500">So sánh nhanh giới hạn bot, nâng cấp khi cần scale.</p>
           </div>
-          <div className="hidden grid-cols-5 gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-2 text-center md:grid">
+          <div className="hidden grid-cols-6 gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-2 text-center md:grid">
             {[
               ["Reels", "ngày"],
               ["FB Post", "ngày"],
+              ["Threads Post", "ngày"],
               ["Threads Cmt", "ngày"],
               ["Crawl Data", "lần/ngày"],
               ["Links", "lưu"],
@@ -199,6 +201,7 @@ export default function PricingPage() {
                   {[
                     ["Reels", tier.quota.reels],
                     ["FB Post", tier.quota.fbPost],
+                    ["Threads Post", tier.quota.threadsPost],
                     ["Threads Cmt", tier.quota.threads],
                     ["Crawl Data", tier.quota.crawl],
                     ["Links", tier.quota.links],
