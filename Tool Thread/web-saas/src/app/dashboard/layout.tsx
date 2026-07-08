@@ -63,6 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [used, setUsed] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -71,6 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       currentUser = user;
+      setUser(user);
       setIsAdmin(user.email === ADMIN_EMAIL);
       const today = todayLocalDate();
       Promise.all([
