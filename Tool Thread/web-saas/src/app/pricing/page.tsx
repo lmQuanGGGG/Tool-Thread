@@ -165,8 +165,8 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 md:grid-cols-5">
-          {TIERS.map((tier) => {
+        <div className={`grid min-h-0 flex-1 grid-cols-1 gap-3 ${TIERS.filter((t) => t.key !== "promax" || currentTier === "promax").length === 5 ? "md:grid-cols-5" : "md:grid-cols-4"}`}>
+          {TIERS.filter((t) => t.key !== "promax" || currentTier === "promax").map((tier) => {
             const Icon = tier.icon;
             const tone = TONE_CLASS[tier.tone];
             const isCurrent = currentTier === tier.key;
