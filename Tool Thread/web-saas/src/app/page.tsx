@@ -292,7 +292,7 @@ const GlowOrb = () => {
         const a = (i / 12) * Math.PI * 2;
         const r = 48 + Math.random() * 5;
         return (
-          <div key={i} className="absolute w-1.5 h-1.5 rounded-full bg-blue-400" style={{
+          <div key={i} suppressHydrationWarning className="absolute w-1.5 h-1.5 rounded-full bg-blue-400" style={{
             left: `${50 + Math.cos(a) * r}%`, top: `${50 + Math.sin(a) * r}%`,
             animation: `orbDot ${3 + Math.random() * 2}s ease-in-out infinite alternate`,
             animationDelay: `${i * 0.3}s`, opacity: 0.6,
@@ -645,7 +645,7 @@ export default function Home() {
           <div className="rounded-[32px] bg-[#0d1117] px-8 md:px-16 py-16 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-25 pointer-events-none">
               {Array.from({ length: 40 }).map((_, i) => (
-                <div key={i} className="absolute rounded-full bg-blue-500 animate-pulse" style={{
+                <div key={i} suppressHydrationWarning className="absolute rounded-full bg-blue-500 animate-pulse" style={{
                   width: 2 + Math.random() * 3, height: 2 + Math.random() * 3,
                   left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
                   animationDuration: `${2 + Math.random() * 3}s`,
