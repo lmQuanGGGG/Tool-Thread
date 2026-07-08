@@ -82,7 +82,7 @@ type Particle = {
 
 const ATTRACT_RADIUS = 800; // px — bán kính ảnh hưởng siêu lớn để tạo hiệu ứng vũ trụ
 const ATTRACT_FORCE = 0.04; // lực hút
-const RETURN_FORCE = 0.015; // lực kéo về vị trí gốc
+const RETURN_FORCE = 0.05; // lực kéo về vị trí gốc (tăng mạnh để tụ hình trái tim nhanh hơn)
 const FRICTION = 0.92;
 
 const ConfettiCanvas = () => {
@@ -183,8 +183,8 @@ const ConfettiCanvas = () => {
           const pullDx = targetMouseX - p.baseX;
           const pullDy = targetMouseY - p.baseY;
 
-          // Tăng tốc độ đuổi theo chuột lên x4 lần để nó nhạy và bám sát hơn
-          const pullSpeed = 0.06 * p.speed;
+          // Tăng tốc độ đuổi theo chuột cực mạnh
+          const pullSpeed = 0.15 * p.speed;
           p.baseX += pullDx * pullSpeed;
           p.baseY += pullDy * pullSpeed;
         }
