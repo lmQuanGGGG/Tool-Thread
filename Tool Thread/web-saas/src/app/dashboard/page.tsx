@@ -388,35 +388,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className={`${cardClass} p-6 md:p-8`}>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 border border-pink-100/50">
-                <Rocket className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 tracking-tight">Truy cập nhanh</h3>
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: "Quản lý Cấu hình", href: "/dashboard/accounts", desc: "Thiết lập Cookie & Bot", icon: Zap },
-                { label: "Báo cáo Hiệu suất", href: "/dashboard/analytics", desc: "Xem thống kê chi tiết", icon: Activity },
-                { label: "Gói Dịch vụ", href: "/pricing", desc: "Nâng cấp tài khoản", icon: Crown },
-              ].map((item) => (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 border border-white/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:bg-white hover:-translate-y-0.5 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-colors">
-                    <item.icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-bold text-gray-900 tracking-tight">{item.label}</div>
-                    <div className="text-[11px] font-medium text-gray-500 mt-0.5">{item.desc}</div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
-                </Link>
-              ))}
-            </div>
-          </div>
+
 
         </div>
       </div>
