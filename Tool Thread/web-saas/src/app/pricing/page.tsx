@@ -31,7 +31,7 @@ const TIERS: Tier[] = [
     icon: Activity,
     tone: "zinc",
     quota: { reels: "2", fbPost: "1", threads: "10", crawl: "1", links: "2" },
-    perks: ["Chạy thủ công", "Dùng thử luồng bot", "Phù hợp test nhanh"],
+    perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Dùng thử luồng bot", "Phù hợp test nhanh"],
   },
   {
     key: "lite",
@@ -40,7 +40,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "emerald",
     quota: { reels: "3", fbPost: "3", threads: "30", crawl: "2", links: "4" },
-    perks: ["Chạy thủ công", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
+    perks: ["Chạy thủ công", "Đăng bài Threads (Thủ công)", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
     key: "plus",
@@ -50,7 +50,7 @@ const TIERS: Tier[] = [
     tone: "blue",
     badge: "Phổ biến",
     quota: { reels: "6", fbPost: "5", threads: "80", crawl: "3", links: "10" },
-    perks: ["Auto Cmt Threads (max 50%)", "Auto 1 Reel (13h), 1 Post (19h)", "Đủ dùng bán hàng đều"],
+    perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 1 Reel (13h), 1 Post (19h)", "Đủ dùng bán hàng đều"],
   },
   {
     key: "pro",
@@ -60,7 +60,7 @@ const TIERS: Tier[] = [
     tone: "amber",
     badge: "Đề xuất",
     quota: { reels: "12", fbPost: "10", threads: "160", crawl: "4", links: "20" },
-    perks: ["Auto Cmt Threads (max 50%)", "Auto 3 Reels/Posts khung giờ vàng", "Tối ưu cho vận hành thật"],
+    perks: ["Đăng bài Threads (Thủ công)", "Auto Cmt Threads (max 50%)", "Auto 3 Reels/Posts khung giờ vàng", "Tối ưu cho vận hành thật"],
   },
   {
     key: "promax",
@@ -70,7 +70,7 @@ const TIERS: Tier[] = [
     tone: "violet",
     badge: "Max",
     quota: { reels: "∞", fbPost: "∞", threads: "∞", crawl: "∞", links: "∞" },
-    perks: ["Không giới hạn", "Ưu tiên VIP", "Dành cho team scale"],
+    perks: ["Không giới hạn", "Đăng bài Threads (Thủ công)", "Ưu tiên VIP", "Dành cho team scale"],
   },
 ];
 
