@@ -1,0 +1,39 @@
+name: Facebook Auto Story Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Email khách hàng'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  run-fb-story-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd "Tool Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+
+    - name: Run FB Story Bot
+      env:
+        USER_EMAIL: ${{ github.event.inputs.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
+      run: |
+        sudo apt-get install -y xvfb
+        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum node fb_bot/4_fb_shopee_post_story.js

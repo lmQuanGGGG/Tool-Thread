@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     if (botType === 'reels') workflowId = 'reels_worker.yml';
     else if (botType === 'threads') workflowId = 'threads_comment_worker.yml';
     else if (botType === 'fb') workflowId = 'fb_worker.yml';
+    else if (botType === 'fb_story') workflowId = 'fb_story_worker.yml';
     else if (botType === 'farm') workflowId = 'farm_worker.yml';
     else if (botType === 'shopee') workflowId = 'shopee_worker.yml';
     else if (botType === 'parse_links') workflowId = 'parse_links_worker.yml';

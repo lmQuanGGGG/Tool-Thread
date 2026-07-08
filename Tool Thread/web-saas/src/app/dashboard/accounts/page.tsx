@@ -2,7 +2,7 @@
 
 import {
   Save, Cookie, Link as LinkIcon, MessageCircle, AlertCircle,
-  Zap, Loader2, CheckCircle2, Bot, Settings, Play, Terminal, Trash2
+  Zap, Loader2, CheckCircle2, Bot, Settings, Play, Terminal, Trash2, Image
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../utils/supabase";
@@ -407,7 +407,11 @@ export default function AccountsPage() {
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     FB Reels
                   </button>
-                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5`}>
+                  <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5 bg-purple-500 hover:bg-purple-600 text-white border-purple-600/20`}>
+                    {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
+                    FB Story
+                  </button>
+                  <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5 col-span-2`}>
                     {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
                     Auto Comment
                   </button>
