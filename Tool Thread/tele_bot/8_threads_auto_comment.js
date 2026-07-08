@@ -131,6 +131,8 @@ async function downloadImageFromTelegram(file_id) {
         let commentedCount = 0;
         let consecutiveErrors = 0;
         let postsToComment = getRandomInt(4, 5);
+        if (dbConfig?.tier === 'pro') postsToComment = getRandomInt(7, 8);
+        if (dbConfig?.tier === 'promax') postsToComment = getRandomInt(10, 15);
         console.log(`🎯 Mục tiêu: Đi cmt dạo ${postsToComment} bài viết...`);
         await logToWeb(email, 'threads', `Mục tiêu: Đi cmt dạo ${postsToComment} bài viết...`, 'info');
 
