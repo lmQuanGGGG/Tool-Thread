@@ -114,7 +114,8 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
           />
           <button 
             onClick={async () => {
-              if (!cloudTargetUrl) return;
+              if (!cloudTargetUrl || processing) return;
+              setProcessing(true);
               pushLog("INFO", `Đang gửi lệnh Cloud Scraper cho: ${cloudTargetUrl}`, "global");
               try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -131,13 +132,15 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
                 else pushLog("ERROR", "Lỗi kích hoạt Bot Cloud!", "global");
               } catch (e) {
                 pushLog("ERROR", "Lỗi kết nối API!", "global");
+              } finally {
+                setProcessing(false);
               }
             }}
-            disabled={!canUseCrawl || !cloudTargetUrl}
-            className={`shrink-0 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm
-              ${canUseCrawl && cloudTargetUrl ? "bg-purple-500 hover:bg-purple-600 text-white" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
+            disabled={!canUseCrawl || !cloudTargetUrl || processing}
+            className={`shrink-0 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center justify-center
+              ${canUseCrawl && cloudTargetUrl && !processing ? "bg-purple-500 hover:bg-purple-600 text-white" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
           >
-            Bắt Đầu Cào
+            {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Bắt Đầu Cào"}
           </button>
         </div>
       </div>
