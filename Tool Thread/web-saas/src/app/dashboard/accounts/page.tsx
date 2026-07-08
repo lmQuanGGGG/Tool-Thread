@@ -411,7 +411,7 @@ export default function AccountsPage() {
                             <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
                             <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
                             
-                            <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[120px] placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 mb-2" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
+                            <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 mb-2" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
                             
                             <div className="mt-3 flex items-center gap-3 shrink-0">
                               <img src={p.image_url} alt="" className="h-72 w-auto rounded-xl object-cover border border-gray-200 shadow-sm" />
@@ -493,7 +493,7 @@ export default function AccountsPage() {
                         <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
                         <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
                         
-                        <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[120px] mb-2 placeholder:text-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
+                        <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] mb-2 placeholder:text-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
                         
                         <div className="mt-3 flex items-center gap-3">
                           <img src={p.image_url} alt="" className="h-72 w-auto rounded-xl object-cover border border-gray-200 shadow-sm" />
@@ -563,7 +563,7 @@ export default function AccountsPage() {
                       <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                      <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[120px] placeholder:text-gray-400 mb-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-500" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+                      <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] placeholder:text-gray-400 mb-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-500" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
                       {post.image_urls && post.image_urls.length > 0 && (
                         <div className="mt-3 flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                           {post.image_urls.map((url: string, idx: number) => (
