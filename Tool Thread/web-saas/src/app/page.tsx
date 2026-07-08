@@ -660,6 +660,23 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
+
+          {/* Video Tutorial via Telegram S3 Proxy */}
+          <Reveal delay={300}>
+            <div className="mt-16 bg-white p-2 rounded-[28px] border border-zinc-200 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] mx-auto max-w-4xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+              <div className="rounded-[20px] overflow-hidden bg-black aspect-video relative">
+                <video 
+                  controls 
+                  className="w-full h-full object-cover"
+                  poster="/0709-poster.jpg" // optional poster if available, or just omit
+                  src="/api/telegram-file/BQACAgUAAxkDAAIJ2mpOtOgsLCEgfD433iVU3FzWtN_OAAJfHQAC_iZ4Vvj-k40hYQKSPAQ"
+                >
+                  Trình duyệt của bạn không hỗ trợ thẻ video.
+                </video>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
