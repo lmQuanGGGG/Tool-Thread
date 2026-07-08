@@ -33,40 +33,6 @@ function StatusDot({ active }: { active: boolean }) {
   );
 }
 
-/* ─── Terminal ─── */
-function TerminalPanel({ logs, logEndRef, onClear, title }: {
-  logs: LogEntry[]; logEndRef: React.RefObject<HTMLDivElement | null>; onClear: () => void; title: string;
-}) {
-  return (
-    <div className="bg-[#0F0F14] border border-white/[0.06] rounded-2xl flex flex-col h-full overflow-hidden shadow-lg">
-      {/* macOS-style title bar */}
-      <div className="bg-[#161620] border-b border-white/[0.06] px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex gap-[6px]">
-            <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
-            <span className="w-[10px] h-[10px] rounded-full bg-[#FEBC2E]" />
-            <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
-          </div>
-          <span className="text-[11px] font-mono font-medium text-zinc-500">{title}</span>
-        </div>
-        <button onClick={onClear} className="text-zinc-600 hover:text-zinc-400 transition-colors">
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[11px]">
-        {logs.map((log, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
-            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
-            <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
-          </div>
-        ))}
-        <div ref={logEndRef} />
-      </div>
-    </div>
-  );
-}
-
 /* ─── Main ──────────────────────────────────────────── */
 export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
@@ -83,6 +49,8 @@ export default function AccountsPage() {
   const [threadsLogs, setThreadsLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Threads System khởi động..." }]);
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalTab, setTerminalTab] = useState<"global" | "fb" | "threads">("global");
 
   const globalLogEndRef = useRef<HTMLDivElement>(null);
   const fbLogEndRef = useRef<HTMLDivElement>(null);
@@ -388,9 +356,7 @@ export default function AccountsPage() {
                 </div>
               </div>
 
-              <div className="h-[450px] anim-fade-up anim-d3">
-                <TerminalPanel logs={globalLogs} logEndRef={globalLogEndRef} onClear={() => setGlobalLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="global-live-logs.log" />
-              </div>
+              
             </div>
 
             {parsedLinks.length > 0 && (
@@ -456,9 +422,7 @@ export default function AccountsPage() {
                     </button>
                   </div>
                 </div>
-                <div className="h-[350px] anim-fade-up anim-d2">
-                  <TerminalPanel logs={fbLogs} logEndRef={fbLogEndRef} onClear={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="fb-live-logs.log" />
-                </div>
+                
               </div>
 
               {/* Mảng Data Shopee cho Story */}
@@ -521,9 +485,7 @@ export default function AccountsPage() {
                     Khởi động AI Commenter
                   </button>
                 </div>
-                <div className="h-[350px] anim-fade-up anim-d2">
-                  <TerminalPanel logs={threadsLogs} logEndRef={threadsLogEndRef} onClear={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} title="threads-live-logs.log" />
-                </div>
+                
               </div>
 
               {/* Posts Editor */}
@@ -569,6 +531,66 @@ export default function AccountsPage() {
           </div>
         )}
       </main>
+
+      {/* Global Terminal Toggle */}
+      <button 
+        onClick={() => setIsTerminalOpen(!isTerminalOpen)}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-[#0F0F14] hover:bg-[#161620] text-white rounded-full flex items-center justify-center shadow-2xl border border-white/[0.1] z-50 transition-all hover:scale-105"
+      >
+        <Terminal className="w-5 h-5" />
+      </button>
+
+      {/* Global Terminal Panel */}
+      <div className={`fixed bottom-0 right-0 w-[450px] h-[550px] bg-[#0F0F14] border-t border-l border-white/[0.06] shadow-2xl z-40 transition-transform duration-300 flex flex-col rounded-tl-2xl ${isTerminalOpen ? "translate-y-0" : "translate-y-full"}`}>
+        {/* Header */}
+        <div className="bg-[#161620] border-b border-white/[0.06] px-4 py-3 flex items-center justify-between shrink-0">
+          <div className="flex gap-[6px]">
+            <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
+            <span className="w-[10px] h-[10px] rounded-full bg-[#FEBC2E]" />
+            <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
+          </div>
+          
+          <div className="flex bg-white/5 rounded-lg p-0.5">
+            {(["global", "fb", "threads"] as const).map(tab => (
+              <button 
+                key={tab} 
+                onClick={() => setTerminalTab(tab)}
+                className={`px-3 py-1 rounded-md text-[10px] font-mono font-bold uppercase transition-all ${terminalTab === tab ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => {
+                if (terminalTab === "global") setGlobalLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+                if (terminalTab === "fb") setFbLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+                if (terminalTab === "threads") setThreadsLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+              }} 
+              className="text-zinc-600 hover:text-zinc-400 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setIsTerminalOpen(false)} className="text-zinc-600 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Log Body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[11px]">
+          {(terminalTab === "global" ? globalLogs : terminalTab === "fb" ? fbLogs : threadsLogs).map((log, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
+              <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
+            </div>
+          ))}
+          <div ref={terminalTab === "global" ? globalLogEndRef : terminalTab === "fb" ? fbLogEndRef : threadsLogEndRef} />
+        </div>
+      </div>
     </div>
   );
 }
