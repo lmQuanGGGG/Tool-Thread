@@ -53,11 +53,11 @@ function parseCookieString(cookieStr, domain = '.facebook.com') {
  */
 async function getTierLimits(tier = 'free') {
   const defaults = {
-    free:   { auto_run: false, reels_per_day: 1,  threads_per_day: 10,  fb_post_per_day: 0,  max_links: 1  },
-    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 1,  max_links: 3  },
-    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 4,  fb_post_per_day: 4,  max_links: 10 },
-    pro:    { auto_run: true,  reels_per_day: 9,  threads_per_day: 6, fb_post_per_day: 7,  max_links: 20 },
-    promax: { auto_run: true,  reels_per_day: -1, threads_per_day: -1,  fb_post_per_day: -1, max_links: -1 },
+    free:   { auto_run: false, reels_per_day: 2,  threads_per_day: 10,  fb_post_per_day: 1,  crawl_per_day: 1,  max_links: 2  },
+    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 3,  crawl_per_day: 2,  max_links: 4  },
+    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 80,  fb_post_per_day: 5,  crawl_per_day: 3,  max_links: 10 },
+    pro:    { auto_run: true,  reels_per_day: 12, threads_per_day: 160, fb_post_per_day: 10, crawl_per_day: 4,  max_links: 20 },
+    promax: { auto_run: true,  reels_per_day: -1, threads_per_day: -1,  fb_post_per_day: -1, crawl_per_day: -1,  max_links: -1 },
   };
 
   if (!supabase) return defaults[tier] || defaults.free;

@@ -16,8 +16,8 @@ type Tier = {
   quota: {
     reels: string;
     fbPost: string;
-    fbCmt: string;
     threads: string;
+    crawl: string;
     links: string;
   };
   perks: string[];
@@ -30,7 +30,7 @@ const TIERS: Tier[] = [
     price: 0,
     icon: Activity,
     tone: "zinc",
-    quota: { reels: "2", fbPost: "1", fbCmt: "10", threads: "10", links: "2" },
+    quota: { reels: "2", fbPost: "1", threads: "10", crawl: "1", links: "2" },
     perks: ["Chạy thủ công", "Dùng thử luồng bot", "Phù hợp test nhanh"],
   },
   {
@@ -39,7 +39,7 @@ const TIERS: Tier[] = [
     price: 59000,
     icon: Zap,
     tone: "emerald",
-    quota: { reels: "3", fbPost: "3", fbCmt: "15", threads: "30", links: "4" },
+    quota: { reels: "3", fbPost: "3", threads: "30", crawl: "2", links: "4" },
     perks: ["Thông báo Telegram", "Lưu nhiều link hơn", "Dành cho shop nhỏ"],
   },
   {
@@ -49,7 +49,7 @@ const TIERS: Tier[] = [
     icon: Zap,
     tone: "blue",
     badge: "Phổ biến",
-    quota: { reels: "6", fbPost: "5", fbCmt: "35", threads: "80", links: "10" },
+    quota: { reels: "6", fbPost: "5", threads: "80", crawl: "3", links: "10" },
     perks: ["Chạy tự động", "Tăng giới hạn mỗi ngày", "Đủ dùng bán hàng đều"],
   },
   {
@@ -59,7 +59,7 @@ const TIERS: Tier[] = [
     icon: Crown,
     tone: "amber",
     badge: "Đề xuất",
-    quota: { reels: "12", fbPost: "10", fbCmt: "70", threads: "160", links: "20" },
+    quota: { reels: "12", fbPost: "10", threads: "160", crawl: "4", links: "20" },
     perks: ["Chạy tự động", "Hỗ trợ ưu tiên", "Tối ưu cho vận hành thật"],
   },
   {
@@ -69,7 +69,7 @@ const TIERS: Tier[] = [
     icon: Rocket,
     tone: "violet",
     badge: "Max",
-    quota: { reels: "∞", fbPost: "∞", fbCmt: "∞", threads: "∞", links: "∞" },
+    quota: { reels: "∞", fbPost: "∞", threads: "∞", crawl: "∞", links: "∞" },
     perks: ["Không giới hạn", "Ưu tiên VIP", "Dành cho team scale"],
   },
 ];
@@ -155,8 +155,8 @@ export default function PricingPage() {
             {[
               ["Reels", "ngày"],
               ["FB Post", "ngày"],
-              ["FB Comment", "ngày"],
               ["Threads Cmt", "ngày"],
+              ["Crawl Data", "lần/ngày"],
               ["Links", "lưu"],
             ].map(([label, unit]) => (
               <div key={label} className="min-w-[74px] rounded-lg bg-white px-2 py-2 shadow-sm">
@@ -199,8 +199,8 @@ export default function PricingPage() {
                   {[
                     ["Reels", tier.quota.reels],
                     ["FB Post", tier.quota.fbPost],
-                    ["FB Comment", tier.quota.fbCmt],
                     ["Threads Cmt", tier.quota.threads],
+                    ["Crawl Data", tier.quota.crawl],
                     ["Links", tier.quota.links],
                   ].map(([label, value]) => (
                     <div key={label} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50/80 px-3 py-1.5">
