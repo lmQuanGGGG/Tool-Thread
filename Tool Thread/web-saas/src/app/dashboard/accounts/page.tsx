@@ -50,6 +50,25 @@ export default function AccountsPage() {
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(320);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = window.innerHeight - e.clientY;
+      if (newHeight > 150 && newHeight < window.innerHeight - 150) {
+        setTerminalHeight(newHeight);
+      }
+    };
+    const handleMouseUp = () => setIsDragging(false);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
   const [terminalTab, setTerminalTab] = useState<"global" | "fb" | "threads">("global");
 
   const globalLogEndRef = useRef<HTMLDivElement>(null);
@@ -532,57 +551,55 @@ export default function AccountsPage() {
         )}
       </main>
 
-      {/* Global Terminal Toggle */}
-      <button 
-        onClick={() => setIsTerminalOpen(!isTerminalOpen)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-[#0F0F14] hover:bg-[#161620] text-white rounded-full flex items-center justify-center shadow-2xl border border-white/[0.1] z-50 transition-all hover:scale-105"
+      {/* VS Code Style Terminal Panel */}
+      <div 
+        className={`fixed bottom-0 right-0 left-0 lg:left-[256px] bg-[#0F0F14] shadow-2xl z-50 flex flex-col transition-transform ${isDragging ? "duration-0" : "duration-300"} ${isTerminalOpen ? "translate-y-0" : "translate-y-full border-transparent"}`}
+        style={{ height: isTerminalOpen ? terminalHeight : 0 }}
       >
-        <Terminal className="w-5 h-5" />
-      </button>
-
-      {/* Global Terminal Panel */}
-      <div className={`fixed bottom-0 right-0 w-[450px] h-[550px] bg-[#0F0F14] border-t border-l border-white/[0.06] shadow-2xl z-40 transition-transform duration-300 flex flex-col rounded-tl-2xl ${isTerminalOpen ? "translate-y-0" : "translate-y-full"}`}>
-        {/* Header */}
-        <div className="bg-[#161620] border-b border-white/[0.06] px-4 py-3 flex items-center justify-between shrink-0">
-          <div className="flex gap-[6px]">
-            <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
-            <span className="w-[10px] h-[10px] rounded-full bg-[#FEBC2E]" />
-            <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
-          </div>
-          
-          <div className="flex bg-white/5 rounded-lg p-0.5">
+        {/* Drag Handle */}
+        <div 
+          onMouseDown={() => { setIsTerminalOpen(true); setIsDragging(true); }}
+          className="h-1.5 w-full bg-[#161620] cursor-row-resize hover:bg-blue-500/50 transition-colors shrink-0"
+        />
+        {/* Header / Tabs */}
+        <div className="flex items-center justify-between px-4 bg-[#161620] shrink-0 border-b border-white/[0.05]">
+          <div className="flex gap-4">
             {(["global", "fb", "threads"] as const).map(tab => (
               <button 
                 key={tab} 
                 onClick={() => setTerminalTab(tab)}
-                className={`px-3 py-1 rounded-md text-[10px] font-mono font-bold uppercase transition-all ${terminalTab === tab ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"}`}
+                className={`py-2 text-[11px] font-mono uppercase tracking-wider relative transition-colors ${terminalTab === tab ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
               >
-                {tab}
+                {tab === "global" ? "Global Logs" : tab === "fb" ? "FB Logs" : "Threads Logs"}
+                {terminalTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-blue-500" />
+                )}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => {
                 if (terminalTab === "global") setGlobalLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
                 if (terminalTab === "fb") setFbLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
                 if (terminalTab === "threads") setThreadsLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
               }} 
-              className="text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="text-zinc-500 hover:text-white transition-colors"
+              title="Clear Terminal"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
-            <button onClick={() => setIsTerminalOpen(false)} className="text-zinc-600 hover:text-white transition-colors">
+            <button onClick={() => setIsTerminalOpen(false)} className="text-zinc-500 hover:text-white transition-colors" title="Close Panel">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
         
         {/* Log Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[11px]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[12px] bg-[#0F0F14]">
           {(terminalTab === "global" ? globalLogs : terminalTab === "fb" ? fbLogs : threadsLogs).map((log, i) => (
-            <div key={i} className="flex items-start gap-2">
+            <div key={i} className="flex items-start gap-2 hover:bg-white/[0.02] px-2 py-0.5 rounded transition-colors -mx-2">
               <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
               <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
@@ -591,6 +608,17 @@ export default function AccountsPage() {
           <div ref={terminalTab === "global" ? globalLogEndRef : terminalTab === "fb" ? fbLogEndRef : threadsLogEndRef} />
         </div>
       </div>
+
+      {/* Global Terminal Toggle Button (when closed) */}
+      {!isTerminalOpen && (
+        <button 
+          onClick={() => setIsTerminalOpen(true)}
+          className="fixed bottom-6 right-6 w-12 h-12 bg-[#0F0F14] hover:bg-[#161620] text-white rounded-full flex items-center justify-center shadow-2xl border border-white/[0.1] z-40 transition-all hover:scale-105"
+          title="Open Terminal"
+        >
+          <Terminal className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }
