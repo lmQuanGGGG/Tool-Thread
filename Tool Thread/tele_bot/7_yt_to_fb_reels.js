@@ -233,10 +233,19 @@ async function fetchLatestVideos(channels) {
 
     // 3. Đăng lên Facebook Reels
     // Lấy cookie
-    const cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
+    let cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
     
+    if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
+        try {
+            cookies = JSON.parse(process.env.FB_COOKIE);
+            console.log("⚠️ Lấy FB_COOKIE từ biến môi trường (.env) do Supabase không có.");
+        } catch (e) {
+            console.error("❌ Lỗi parse FB_COOKIE từ .env:", e.message);
+        }
+    }
+
     if (!cookies || cookies.length === 0) {
-        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config.");
+        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
         process.exit(1);
     }
     console.log(`🍪 Đã load ${cookies.length} cookies cho Facebook.`);

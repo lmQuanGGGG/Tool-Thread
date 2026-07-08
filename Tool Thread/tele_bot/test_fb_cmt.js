@@ -7,14 +7,22 @@ const { fetchBotConfig } = require('./supabase_helper');
 (async () => {
     // 1. Lấy Cookie từ DB Supabase (thay vì dùng biến môi trường cứng)
     const dbConfig = await fetchBotConfig(process.env.USER_EMAIL || 'admin@autofarm.com');
-    const cookieData = dbConfig?.fb_cookies_arr || [];
+    let cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
+    
+    if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
+        try {
+            cookies = JSON.parse(process.env.FB_COOKIE);
+        } catch (e) {
+            console.error("❌ Lỗi parse FB_COOKIE từ .env:", e.message);
+        }
+    }
 
-    if (!cookieData || cookieData.length === 0) {
-        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config.");
+    if (!cookies || cookies.length === 0) {
+        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
         process.exit(1);
     }
 
-    let cookies = cookieData.map(c => {
+    cookies = cookies.map(c => {
         if (c.sameSite === 'no_restriction') c.sameSite = 'None';
         delete c.storeId; delete c.id; delete c.hostOnly; delete c.session;
         return c;
