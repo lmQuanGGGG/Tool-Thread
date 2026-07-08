@@ -208,7 +208,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
     // Upsert: tạo nếu chưa có, update nếu có
     const { data: existing } = await supabase
       .from('usage_stats')
-      .select('id, ' + type)
+      .select(type)
       .eq('user_id', userId)
       .eq('date', today)
       .maybeSingle();
@@ -216,7 +216,8 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
     if (existing) {
       await supabase.from('usage_stats')
         .update({ [type]: (existing[type] || 0) + count })
-        .eq('id', existing.id);
+        .eq('user_id', userId)
+        .eq('date', today);
     } else {
       await supabase.from('usage_stats')
         .insert([{ user_id: userId, date: today, [type]: count }]);
