@@ -186,8 +186,8 @@ async function fetchLatestVideos(channels) {
 
             console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
             
-            // Tải file bằng curl (-L để theo dõi redirect, -# để hiện thanh trình diễn)
-            const downloadCmd = `curl -L -# -o "${outputPath}" "${bestFormat.url}"`;
+            // Tải file bằng curl (-sL để tải âm thầm, tránh spam log trên Github Actions)
+            const downloadCmd = `curl -sL -o "${outputPath}" "${bestFormat.url}"`;
             execSync(downloadCmd, { stdio: 'inherit' });
     } catch (err) {
         console.error("❌ Lỗi tải video:", err.message);
