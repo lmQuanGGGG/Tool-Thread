@@ -222,16 +222,23 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             await textBoxes[textBoxes.length - 1].click(); 
             // Đợi lâu hơn một chút để FB focus con trỏ vào ô nhập liệu
             await delay(1500); 
-            const lines = caption.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                await page.keyboard.type(lines[i], { delay: 50 });
-                if (i < lines.length - 1) {
-                    await page.keyboard.down('Shift');
-                    await page.keyboard.press('Enter');
-                    await page.keyboard.up('Shift');
-                    await delay(100);
-                }
-            }
+            
+            // Sử dụng clipboard/insertText để paste nội dung thay vì type từng chữ, tránh lỗi emoji trên Ubuntu (Github Actions)
+            await page.evaluate((text) => {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.setData('text/plain', text);
+                const event = new ClipboardEvent('paste', {
+                    clipboardData: dataTransfer,
+                    bubbles: true,
+                    cancelable: true
+                });
+                document.activeElement.dispatchEvent(event);
+                
+                // Fallback nếu paste event không ăn (tuỳ phiên bản Draft.js của FB)
+                document.execCommand('insertText', false, text);
+            }, caption);
+            
+            await delay(2000);
         }
         
         await delay(3000);
