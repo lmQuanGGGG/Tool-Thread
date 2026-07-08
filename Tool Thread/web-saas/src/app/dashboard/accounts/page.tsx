@@ -390,9 +390,9 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-white/80 backdrop-blur-3xl border border-zinc-200/60 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.06)] hover:border-zinc-200/90 transition-all duration-500";
-  const inputClass = "w-full bg-zinc-50/50 border border-zinc-200/60 rounded-2xl p-4 text-[13px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-inner";
-  const editorCardClass = "bg-white border border-zinc-100 rounded-[24px] p-4 relative group/post shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.1)] hover:border-zinc-200 transition-all";
+  const cardClass = "bg-transparent border-none shadow-none transition-all duration-500";
+  const inputClass = "w-full bg-zinc-50/80 border border-zinc-200/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-sm";
+  const editorCardClass = "bg-white border border-zinc-100 rounded-[24px] p-4 relative group/post shadow-[0_8px_30px_-12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] hover:border-zinc-200 transition-all";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnGreen = "btn-shimmer flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-emerald-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
