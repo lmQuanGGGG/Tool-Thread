@@ -192,9 +192,21 @@ export default function AccountsPage() {
 
   const handleSave = async () => {
     if (!userId) return;
+    
+    // Tự động lọc trùng và làm sạch link rỗng
+    const rawLinks = formData.affiliate_links.split("\n").map(l => l.trim()).filter(Boolean);
+    const uniqueLinks = Array.from(new Set(rawLinks));
+    const cleanedText = uniqueLinks.join("\n");
+    
+    if (cleanedText !== formData.affiliate_links) {
+        setFormData(prev => ({ ...prev, affiliate_links: cleanedText }));
+    }
+    
+    const payloadToSave = { ...formData, affiliate_links: cleanedText };
+
     const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 2; };
     const maxLinks = getMaxLinks(userTier);
-    const linkCount = formData.affiliate_links.split("\n").filter(Boolean).length;
+    const linkCount = uniqueLinks.length;
     if (linkCount > maxLinks) { 
         alert(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
         pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global"); 
@@ -205,7 +217,7 @@ export default function AccountsPage() {
     pushLog("INFO", "Đang lưu cấu hình...", "fb");
     pushLog("INFO", "Đang lưu cấu hình...", "threads");
     
-    const { error } = await supabase.from("profiles").update(formData).eq("id", userId);
+    const { error } = await supabase.from("profiles").update(payloadToSave).eq("id", userId);
     if (error) { 
         pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global");
         pushLog("ERROR", `Lưu thất bại: ${error.message}`, "fb");
