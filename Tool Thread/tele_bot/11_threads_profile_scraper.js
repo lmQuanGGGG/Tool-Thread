@@ -138,28 +138,54 @@ async function run() {
         console.log("✅ Đã nạp Cookie Threads!");
     }
 
-    let rawThreadsData = [];
+    await page.evaluateOnNewDocument(() => {
+        window.rawThreadsData = [];
+        const originalFetch = window.fetch;
+        window.fetch = async function (...args) {
+            const response = await originalFetch.apply(this, args);
+            const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+            if (url.includes('graphql')) {
+                const clone = response.clone();
+                clone.text().then(text => {
+                    text.split('\n').forEach(chunk => {
+                        try {
+                            const json = JSON.parse(chunk);
+                            const str = JSON.stringify(json);
+                            if (str.includes('thread_items') || str.includes('text_post_app_info')) {
+                                window.rawThreadsData.push(json);
+                            }
+                        } catch (e) {}
+                    });
+                }).catch(() => {});
+            }
+            return response;
+        };
 
-    // Intercept GraphQL
-    page.on('response', async (response) => {
-        const url = response.url();
-        if (url.includes('graphql')) {
-            try {
-                const text = await response.text();
-                const chunks = text.split('\n');
-                for (const chunk of chunks) {
-                    if (!chunk.trim()) continue;
+        const XHR = XMLHttpRequest.prototype;
+        const open = XHR.open;
+        const send = XHR.send;
+        XHR.open = function (method, url) {
+            this._reqUrl = url;
+            return open.apply(this, arguments);
+        };
+        XHR.send = function () {
+            this.addEventListener('load', function () {
+                if (this._reqUrl && this._reqUrl.includes('graphql')) {
                     try {
-                        const json = JSON.parse(chunk);
-                        const str = JSON.stringify(json);
-                        if (str.includes('thread_items') || str.includes('text_post_app_info')) {
-                            rawThreadsData.push(json);
-                            console.log(`[+] Bắt được 1 mẻ data GraphQL! (Tổng: ${rawThreadsData.length} chunks)`);
-                        }
+                        this.responseText.split('\n').forEach(chunk => {
+                            try {
+                                const json = JSON.parse(chunk);
+                                const str = JSON.stringify(json);
+                                if (str.includes('thread_items') || str.includes('text_post_app_info')) {
+                                    window.rawThreadsData.push(json);
+                                }
+                            } catch (e) {}
+                        });
                     } catch (e) {}
                 }
-            } catch (e) {}
-        }
+            });
+            return send.apply(this, arguments);
+        };
     });
 
     console.log("🌐 Đi đến trang profile...");
@@ -177,8 +203,10 @@ async function run() {
     console.log("✅ Đã cuộn xong, đóng browser...");
     await browser.close();
 
-    if (rawThreadsData.length === 0) {
-        console.log("❌ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
+    const rawThreadsData = await page.evaluate(() => window.rawThreadsData || []);
+
+    if (!rawThreadsData || rawThreadsData.length === 0) {
+        console.error("❌ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
         process.exit(1);
     }
 
