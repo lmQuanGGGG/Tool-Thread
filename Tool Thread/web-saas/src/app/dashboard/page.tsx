@@ -24,7 +24,7 @@ const TIER_CONFIG: Record<string, {
 
 function UsageBar({ label, used, limit, color }: { label: string; used: number; limit: number; color: string }) {
   const isUnlimited = limit === -1;
-  const pct = isUnlimited ? 20 : Math.min(100, (used / limit) * 100);
+  const pct = isUnlimited ? 20 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
   const isNearLimit = !isUnlimited && pct >= 80;
 
   return (
@@ -45,6 +45,32 @@ function UsageBar({ label, used, limit, color }: { label: string; used: number; 
   );
 }
 
+function todayLocalDate() {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+function toCount(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function normalizeStats(stats: any) {
+  return {
+    reels_posted: toCount(stats?.reels_posted),
+    threads_commented: toCount(stats?.threads_commented),
+    fb_story_posted: toCount(stats?.fb_story_posted ?? stats?.fb_posts_count),
+  };
+}
+
+function normalizeLimits(limits: any) {
+  return {
+    ...(limits || {}),
+    reels_per_day: toCount(limits?.reels_per_day),
+    threads_per_day: toCount(limits?.threads_per_day),
+    fb_story_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
+    price_vnd: toCount(limits?.price_vnd),
+  };
+}
+
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [limits, setLimits] = useState<any>(null);
@@ -58,25 +84,32 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { setError("Chưa đăng nhập"); setLoading(false); return; }
 
-        // Load profile + tier_limits + today stats song song
+        const today = todayLocalDate();
+
+        // Load profile + today stats song song. Select * để hỗ trợ cả schema cũ/mới.
         const [profileRes, statsRes] = await Promise.all([
-          supabase.from("profiles").select("tier, email, fb_cookie, threads_cookie").eq("id", user.id).single(),
+          supabase.from("profiles").select("tier, email, fb_cookie, threads_cookie, credits").eq("id", user.id).maybeSingle(),
           supabase.from("usage_stats")
-            .select("reels_posted, threads_commented, fb_story_posted")
+            .select("*")
             .eq("user_id", user.id)
-            .eq("date", new Date().toISOString().split("T")[0])
-            .single(),
+            .eq("date", today)
+            .maybeSingle(),
         ]);
+
+        if (profileRes.error) throw profileRes.error;
+        if (statsRes.error) throw statsRes.error;
 
         const tier = profileRes.data?.tier || "free";
         setProfile(profileRes.data);
 
         // Lấy giới hạn từ tier_limits
-        const limitsRes = await supabase.from("tier_limits").select("*").eq("tier", tier).single();
-        setLimits(limitsRes.data);
-        setTodayStats(statsRes.data || { reels_posted: 0, threads_commented: 0, fb_story_posted: 0 });
+        const limitsRes = await supabase.from("tier_limits").select("*").eq("tier", tier).maybeSingle();
+        if (limitsRes.error) throw limitsRes.error;
+        setLimits(normalizeLimits(limitsRes.data));
+        setTodayStats(normalizeStats(statsRes.data));
       } catch (e) {
         console.error(e);
+        setError(e instanceof Error ? e.message : "Không tải được dữ liệu dashboard");
       } finally {
         setLoading(false);
       }
@@ -112,6 +145,13 @@ export default function DashboardPage() {
           </span>
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 text-red-800 text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+          <p>{error}</p>
+        </div>
+      )}
 
       {/* Warning nếu chưa cài Cookie */}
       {!hasCookie && (

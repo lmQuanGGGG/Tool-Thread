@@ -20,12 +20,36 @@ const TIER_META: Record<string, { label: string; icon: React.ElementType; color:
 const NAV_ITEMS = [
   { name: "Dashboard",    href: "/dashboard",          icon: Grid },
   { name: "Bots & Config", href: "/dashboard/accounts", icon: Video },
-  { name: "Proxies",      href: "/dashboard/proxies",  icon: Network },
   { name: "Analytics",    href: "/dashboard/analytics", icon: BarChart },
   { name: "Pricing",      href: "/pricing",             icon: CreditCard },
 ];
 
 const SIDEBAR_W = 256;
+
+function todayLocalDate() {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+function toCount(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function normalizeUsage(stats: any) {
+  return {
+    reels_posted: toCount(stats?.reels_posted),
+    threads_commented: toCount(stats?.threads_commented),
+    fb_story_posted: toCount(stats?.fb_story_posted ?? stats?.fb_posts_count),
+  };
+}
+
+function normalizeLimits(limits: any) {
+  return {
+    ...(limits || {}),
+    reels_per_day: toCount(limits?.reels_per_day),
+    threads_per_day: toCount(limits?.threads_per_day),
+    fb_story_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
+  };
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -37,22 +61,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayLocalDate();
       Promise.all([
         supabase.from("usage_stats")
-          .select("reels_posted, threads_commented, fb_posts_count")
-          .eq("user_id", user.id).eq("date", today).single(),
+          .select("*")
+          .eq("user_id", user.id).eq("date", today).maybeSingle(),
         supabase.from("profiles")
           .select("tier")
-          .eq("id", user.id).single()
+          .eq("id", user.id).maybeSingle()
       ]).then(([statsRes, profileRes]) => {
         const t = profileRes.data?.tier || "free";
         setTier(t);
-        setUsed(statsRes.data || { reels_posted: 0, threads_commented: 0, fb_posts_count: 0 });
+        setUsed(normalizeUsage(statsRes.data));
         supabase.from("tier_limits")
-          .select("reels_per_day, threads_per_day, fb_post_per_day")
-          .eq("tier", t).single()
-          .then(({ data }) => setLimits(data));
+          .select("*")
+          .eq("tier", t).maybeSingle()
+          .then(({ data }) => setLimits(normalizeLimits(data)));
       });
     });
   }, []);
@@ -145,7 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {[
                       { label: "Reels", used: used.reels_posted || 0, limit: limits.reels_per_day, color: "bg-blue-500" },
                       { label: "Comment", used: used.threads_commented || 0, limit: limits.threads_per_day, color: "bg-violet-500" },
-                      { label: "FB Post", used: used.fb_posts_count || 0, limit: limits.fb_post_per_day, color: "bg-amber-500" },
+                      { label: "FB Post", used: used.fb_story_posted || 0, limit: limits.fb_story_per_day, color: "bg-amber-500" },
                     ].map(({ label, used: u, limit: l, color }) => {
                       const unlimited = l === -1;
                       const remaining = unlimited ? "∞" : Math.max(0, l - u);

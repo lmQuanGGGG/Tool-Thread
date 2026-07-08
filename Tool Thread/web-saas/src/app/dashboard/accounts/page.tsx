@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  Save, Cookie, Link as LinkIcon, MessageCircle, AlertCircle,
-  Zap, Loader2, CheckCircle2, Bot, Settings, Play, Terminal, Trash2, Image, Info, FileText, LogOut, ChevronLeft, ChevronRight, X, Image as ImageIcon
+  Cookie, Link as LinkIcon, MessageCircle,
+  Zap, Loader2, Bot, Play, Terminal, Trash2, Info, FileText, ChevronLeft, ChevronRight, Image as ImageIcon, Video
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ElementType } from "react";
 import { supabase } from "../../../utils/supabase";
 import ThreadsCrawler from "@/components/ThreadsCrawler";
 
@@ -33,10 +33,59 @@ function StatusDot({ active }: { active: boolean }) {
   );
 }
 
+function StatusPill({ active, label = "SAVED" }: { active: boolean; label?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
+      active
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : "border-gray-200 bg-gray-50 text-gray-400"
+    }`}>
+      <StatusDot active={active} />
+      {active ? label : "UNSAVED"}
+    </span>
+  );
+}
+
+function CardTitle({
+  icon: Icon,
+  title,
+  subtitle,
+  active,
+  tone = "blue",
+}: {
+  icon: ElementType;
+  title: string;
+  subtitle: string;
+  active?: boolean;
+  tone?: "blue" | "emerald" | "violet" | "purple";
+}) {
+  const toneClass = {
+    blue: "bg-blue-50 text-blue-600 ring-blue-100",
+    emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    violet: "bg-violet-50 text-violet-600 ring-violet-100",
+    purple: "bg-purple-50 text-purple-600 ring-purple-100",
+  }[tone];
+
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start gap-3 min-w-0">
+        <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${toneClass}`}>
+          <Icon className="h-[18px] w-[18px]" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-[14px] font-semibold text-gray-950 tracking-tight">{title}</h3>
+          <p className="mt-1 text-[12px] leading-relaxed text-gray-500">{subtitle}</p>
+        </div>
+      </div>
+      {typeof active === "boolean" && <StatusPill active={active} />}
+    </div>
+  );
+}
+
 /* ─── Main ──────────────────────────────────────────── */
 export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [, setSaving] = useState(false);
   const [triggering, setTriggering] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -49,43 +98,64 @@ export default function AccountsPage() {
   const [threadsLogs, setThreadsLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Threads System khởi động..." }]);
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
-  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-  const threadsCarouselRef = useRef<HTMLDivElement>(null);
+  const [pausedCarousel, setPausedCarousel] = useState<"global" | "fb" | "threads" | null>(null);
   const shopeeCarouselRef = useRef<HTMLDivElement>(null);
+  const fbStoryCarouselRef = useRef<HTMLDivElement>(null);
+  const threadsPosterCarouselRef = useRef<HTMLDivElement>(null);
 
   const scrollShopee = (direction: "left" | "right") => {
-    if (shopeeCarouselRef.current) {
-      const scrollAmount = direction === "left" ? -350 : 350;
-      shopeeCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
+    scrollLoopCarousel(shopeeCarouselRef.current, direction, 280);
   };
 
-  const scrollThreads = (direction: "left" | "right") => {
-    if (threadsCarouselRef.current) {
-      const scrollAmount = direction === "left" ? -350 : 350;
-      threadsCarouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
+  const scrollFbStory = (direction: "left" | "right") => {
+    scrollLoopCarousel(fbStoryCarouselRef.current, direction, 300);
   };
-  const [terminalHeight, setTerminalHeight] = useState(320);
-  const [isDragging, setIsDragging] = useState(false);
+
+  const scrollThreadsPoster = (direction: "left" | "right") => {
+    scrollLoopCarousel(threadsPosterCarouselRef.current, direction, 360);
+  };
+
+  const scrollLoopCarousel = (el: HTMLDivElement | null, direction: "left" | "right", step: number) => {
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    const loopWidth = el.scrollWidth / 2;
+    if (direction === "left" && el.scrollLeft <= step) {
+      el.scrollTo({ left: loopWidth + el.scrollLeft, behavior: "instant" });
+    }
+    if (direction === "right" && el.scrollLeft >= loopWidth - step) {
+      el.scrollTo({ left: el.scrollLeft - loopWidth, behavior: "instant" });
+    }
+    el.scrollBy({ left: direction === "left" ? -step : step, behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (!isDragging) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = window.innerHeight - e.clientY;
-      if (newHeight > 150 && newHeight < window.innerHeight - 150) {
-        setTerminalHeight(newHeight);
+    const getActiveCarousel = () => {
+      if (activeTab === "global") return { el: shopeeCarouselRef.current, step: 280 };
+      if (activeTab === "fb") return { el: fbStoryCarouselRef.current, step: 300 };
+      return { el: threadsPosterCarouselRef.current, step: 360 };
+    };
+
+    const timer = window.setInterval(() => {
+      if (pausedCarousel === activeTab) return;
+      const { el, step } = getActiveCarousel();
+      if (!el || el.scrollWidth <= el.clientWidth) return;
+      const loopWidth = el.scrollWidth / 2;
+      if (el.scrollLeft >= loopWidth) {
+        el.scrollTo({ left: el.scrollLeft - loopWidth, behavior: "instant" });
       }
-    };
-    const handleMouseUp = () => setIsDragging(false);
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging]);
-  const [terminalTab, setTerminalTab] = useState<"global" | "fb" | "threads">("global");
+      el.scrollBy({ left: step, behavior: "smooth" });
+    }, 3200);
+
+    return () => window.clearInterval(timer);
+  }, [activeTab, pausedCarousel]);
+
+  const carouselPauseHandlers = (tab: "global" | "fb" | "threads") => ({
+    onPointerEnter: () => setPausedCarousel(tab),
+    onPointerLeave: () => setPausedCarousel(prev => prev === tab ? null : prev),
+    onPointerDown: () => setPausedCarousel(tab),
+    onPointerUp: () => setPausedCarousel(prev => prev === tab ? null : prev),
+    onTouchStart: () => setPausedCarousel(tab),
+    onTouchEnd: () => setPausedCarousel(prev => prev === tab ? null : prev),
+  });
 
   const globalLogEndRef = useRef<HTMLDivElement>(null);
   const fbLogEndRef = useRef<HTMLDivElement>(null);
@@ -297,12 +367,49 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-white border border-gray-200/80 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-300/80 transition-all duration-300";
-  const inputClass = "w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-[13px] font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/10 transition-all";
+  const cardClass = "bg-white/95 border border-gray-200/80 rounded-2xl shadow-[0_18px_50px_-34px_rgba(15,23,42,0.45)] hover:shadow-[0_24px_70px_-38px_rgba(15,23,42,0.55)] hover:border-gray-300/90 transition-all duration-300";
+  const inputClass = "w-full bg-gray-50/80 border border-gray-200 rounded-xl p-3.5 text-[13px] font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/10 transition-all";
+  const editorCardClass = "bg-white border border-gray-200/90 rounded-2xl p-4 relative group/post shadow-sm hover:shadow-md hover:border-gray-300 transition-all";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnGreen = "btn-shimmer flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-emerald-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnViolet = "btn-shimmer flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-violet-600/25 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
+
+  const renderInlineTerminal = (tab: "global" | "fb" | "threads") => {
+    const logs = tab === "global" ? globalLogs : tab === "fb" ? fbLogs : threadsLogs;
+    const endRef = tab === "global" ? globalLogEndRef : tab === "fb" ? fbLogEndRef : threadsLogEndRef;
+    const clearLogs = () => {
+      if (tab === "global") setGlobalLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+      if (tab === "fb") setFbLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+      if (tab === "threads") setThreadsLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
+    };
+
+    return (
+      <div className="h-[180px] shrink-0 overflow-hidden rounded-2xl bg-[#0F0F14] shadow-[0_18px_50px_-34px_rgba(15,23,42,0.65)] border border-white/[0.08] flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#161620] border-b border-white/[0.06] shrink-0">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-[11px] font-mono uppercase tracking-wider text-white">
+              {tab === "global" ? "Global Logs" : tab === "fb" ? "FB Logs" : "Threads Logs"}
+            </span>
+          </div>
+          <button onClick={clearLogs} className="text-zinc-500 hover:text-white transition-colors" title="Clear Terminal">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-[11px] bg-[#0F0F14]">
+          {logs.map((log, i) => (
+            <div key={i} className="flex items-start gap-2 hover:bg-white/[0.02] px-2 py-0.5 rounded transition-colors -mx-2">
+              <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
+              <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -351,20 +458,20 @@ export default function AccountsPage() {
         
         {/* ═══ CẤU HÌNH CHUNG ═══ */}
         {activeTab === "global" && (
-          <div className="space-y-7 anim-fade-up">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Cấu Hình Chung</h1>
-              <p className="text-sm text-gray-500">Quản lý kho link Affiliate và nhận thông báo qua Telegram.</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
+          <div className="anim-fade-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              <div className="space-y-6 h-full">
                 
 
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Affiliate Link Pool</h3>
-                    <StatusDot active={!!formData.affiliate_links} />
+                  <div className="mb-5">
+                    <CardTitle
+                      icon={LinkIcon}
+                      title="Affiliate Link Pool"
+                      subtitle="Dán danh sách link, hệ thống tự lọc trùng và sinh nội dung bán hàng."
+                      active={!!formData.affiliate_links}
+                      tone="blue"
+                    />
                   </div>
                   <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-4`} />
                   <button onClick={() => handleTrigger("parse_links")} disabled={triggering || !formData.affiliate_links} className={`${btnPrimary} w-full py-2.5`}>
@@ -374,23 +481,35 @@ export default function AccountsPage() {
                 </div>
 
                 <div className={`${cardClass} p-6 h-fit anim-fade-up anim-d2`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Telegram Notify</h3>
-                    <StatusDot active={!!formData.tele_chat_id} />
+                  <div className="mb-5">
+                    <CardTitle
+                      icon={MessageCircle}
+                      title="Telegram Notify"
+                      subtitle="Nhận log chạy bot, cảnh báo lỗi cookie và báo cáo crawl ngay trên Telegram."
+                      active={!!formData.tele_chat_id}
+                      tone="emerald"
+                    />
                   </div>
                   <input type="text" value={formData.tele_chat_id} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
-                  <p className="mt-3.5 text-[12px] text-gray-400 leading-relaxed">Nhận cảnh báo real-time khi bot post bài thành công, lỗi cookie, hoặc các thống kê crawl định kỳ.</p>
+                  <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3.5 py-3 text-[12px] text-emerald-700 leading-relaxed">
+                    Bot sẽ gửi thông báo realtime khi đăng bài thành công, lỗi cookie hoặc hoàn tất crawl định kỳ.
+                  </div>
                 </div>
               </div>
 
               {/* Right Column Wrapper */}
-              <div className="flex flex-col gap-6 h-[600px] lg:h-0 lg:min-h-full overflow-hidden">
+              <div className="flex flex-col gap-5 h-[700px] lg:h-full lg:min-h-[660px] overflow-hidden">
                 {/* Shopee Editor (AI Parsing Results) */}
                 {parsedLinks.length > 0 && (
-                  <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
-                    <div className="flex items-center justify-between mb-5">
-                      <h3 className="text-[13px] font-semibold text-gray-900">Shopee Data (AI Parsing)</h3>
-                      <span className="px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-100 text-[11px] font-mono text-emerald-600 font-semibold">{parsedLinks.length} items</span>
+                  <div className={`${cardClass} p-5 flex flex-col h-[480px] shrink-0 min-h-0 anim-fade-up anim-d3`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <CardTitle
+                        icon={FileText}
+                        title="Shopee Data"
+                        subtitle="Duyệt lại tiêu đề, ảnh và comment trước khi bot sử dụng."
+                        tone="emerald"
+                      />
+                      <span className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-mono text-emerald-600 font-semibold">{parsedLinks.length} items</span>
                     </div>
                     
                     <div className="relative flex-1 min-h-0">
@@ -401,31 +520,36 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
                       
-                      <div ref={shopeeCarouselRef} className="flex overflow-x-auto gap-5 h-full snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden">
-                        {parsedLinks.map((p, i) => (
-                          <div key={i} className="w-[320px] shrink-0 h-full flex flex-col bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all snap-center">
-                            <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                        {[...parsedLinks, ...parsedLinks].map((p, i) => {
+                          const sourceIndex = i % parsedLinks.length;
+                          return (
+	                          <div key={`shopee-${i}`} className="w-[280px] shrink-0 min-h-full flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-6 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+                            <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                             
-                            <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
-                            <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
-                            
-                            <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 mb-2" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
-                            
-                            <div className="mt-3 flex items-center gap-3 shrink-0">
-                              <img src={p.image_url} alt="" className="h-72 w-auto rounded-xl object-cover border border-gray-200 shadow-sm" />
+                            <div className="pr-9">
+                              <p className="text-[13px] font-semibold text-gray-950 truncate mb-1">{p.title}</p>
+                              <p className="text-[10px] text-gray-400 font-mono truncate">{p.aff_link}</p>
                             </div>
                             
-                            <div className="mt-auto flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-4">
+                            <textarea className="mt-2 w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-[3px] focus:ring-emerald-500/10" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
+                            
+	                            <div className="mt-2 h-[200px] w-full shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+                              <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-contain shadow-sm" />
+                            </div>
+                            
+	                            <div className="mt-auto mb-1 flex justify-end gap-2 shrink-0 border-t border-gray-200/60 pt-3">
                               <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
                             </div>
                           </div>
-                        ))}
+                        )})}
                       </div>
                     </div>
                   </div>
                 )}
+                {renderInlineTerminal("global")}
               </div>
             </div>
 
@@ -436,97 +560,120 @@ export default function AccountsPage() {
 
         {/* ═══ FACEBOOK ═══ */}
         {activeTab === "fb" && (
-          <div className="space-y-7 anim-fade-up">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Facebook Engine</h1>
-                  <p className="text-sm text-gray-500">Thiết lập Cookie và chạy tiến trình Facebook.</p>
-                </div>
+          <div className="anim-fade-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              <div className="space-y-5 h-full">
                 <div className={`${cardClass} p-6 min-h-[500px] flex flex-col justify-between anim-fade-up anim-d1`}>
                   <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Kênh Video Nguồn (Youtube/TikTok)</h3>
-                    <StatusDot active={!!formData.target_channels} />
+                  <div className="mb-5">
+                    <CardTitle
+                      icon={Video}
+                      title="Kênh Video Nguồn"
+                      subtitle="Thêm kênh YouTube, TikTok hoặc Reels để bot quét video mới."
+                      active={!!formData.target_channels}
+                      tone="blue"
+                    />
                   </div>
                   <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-1`} />
-                  <p className="text-[11px] text-gray-500 mb-5 leading-relaxed">
-                    💡 Hỗ trợ quét và lấy video 1080p đa nền tảng: <span className="font-medium text-blue-600">YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels, Twitter</span>.
-                  </p>
+                  <div className="mb-6 mt-3 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/70 px-3.5 py-3 text-[12px] text-blue-700 leading-relaxed">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
+                  </div>
                   
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">FB Access Cookie</h3>
-                    <StatusDot active={!!formData.fb_cookie} />
+                  <div className="mb-5">
+                    <CardTitle
+                      icon={Cookie}
+                      title="FB Access Cookie"
+                      subtitle="Cookie dùng để đăng Reels, Story và chạy comment trên Facebook."
+                      active={!!formData.fb_cookie}
+                      tone="emerald"
+                    />
                   </div>
                   <textarea rows={3} value={formData.fb_cookie} onChange={(e) => setFormData({ ...formData, fb_cookie: e.target.value })} onBlur={handleSave} placeholder="c_user=...; xs=...; datr=...;" className={`${inputClass} text-emerald-700 font-semibold resize-none mb-5 focus:border-emerald-500 focus:ring-emerald-500/10`} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5`}>
-                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                      FB Reels
-                    </button>
-                    <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all shadow-sm bg-purple-500 hover:bg-purple-600">
-                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
-                      FB Story
-                    </button>
-                    <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5 col-span-2`}>
-                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-                      Auto Comment
-                    </button>
+	                  <div className="grid grid-cols-2 gap-3">
+	                    <button onClick={() => handleTrigger("reels")} disabled={triggering || !formData.fb_cookie} className={`${btnSecondary} py-2.5`}>
+	                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+	                      FB Reels
+	                    </button>
+			                    <button onClick={() => handleTrigger("fb_comment")} disabled={triggering || !formData.fb_cookie} className={`${btnGreen} py-2.5 col-span-2`}>
+	                      {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+	                      Auto Comment
+	                    </button>
                   </div>
                   </div>
                 </div>
                 
               </div>
 
+              <div className="flex h-[740px] lg:h-full lg:min-h-[740px] flex-col gap-5">
               {parsedLinks.length > 0 ? (
-                <div className={`${cardClass} p-6 flex flex-col h-[600px] lg:h-0 lg:min-h-full overflow-hidden anim-fade-up anim-d3`}>
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[13px] font-semibold text-gray-900">FB Story Poster (Shopee Data)</h3>
-                    <span className="px-2.5 py-1 rounded-md bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
+                <div className={`${cardClass} p-5 flex flex-col h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <CardTitle
+                      icon={ImageIcon}
+                      title="FB Story Poster"
+                      subtitle="Danh sách sản phẩm dùng để dựng story bán hàng."
+                      tone="purple"
+                    />
+                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
                   </div>
-                  <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
-                    {parsedLinks.map((p, i) => (
-                      <div key={i} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
-                        <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
-                        <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
-                        
-                        <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] mb-2 placeholder:text-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
-                        
-                        <div className="mt-3 flex items-center gap-3">
-                          <img src={p.image_url} alt="" className="h-72 w-auto rounded-xl object-cover border border-gray-200 shadow-sm" />
+                  <div className="relative flex-1 min-h-0">
+                    <button onClick={() => scrollFbStory('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                      <ChevronLeft className="w-5 h-5 pr-0.5" />
+                    </button>
+                    <button onClick={() => scrollFbStory('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                      <ChevronRight className="w-5 h-5 pl-0.5" />
+                    </button>
+
+                    <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                      {[...parsedLinks, ...parsedLinks].map((p, i) => {
+                        const sourceIndex = i % parsedLinks.length;
+                        return (
+			                        <div key={`fb-story-${i}`} className="w-[280px] shrink-0 self-start flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-5 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+                          <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="pr-9">
+                            <p className="text-[13px] font-semibold text-gray-950 truncate mb-1">{p.title}</p>
+                            <p className="text-[10px] text-gray-400 font-mono truncate">{p.aff_link}</p>
+                          </div>
+                          
+                          <textarea className="mt-2 w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-purple-500 focus:ring-[3px] focus:ring-purple-500/10" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
+                          
+		                          <div className="mt-2 h-[200px] w-full shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+                            <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-contain shadow-sm" />
+                          </div>
+                          
+					                          <div className="mt-3 mb-1 grid grid-cols-2 gap-2 shrink-0 border-t border-gray-200/60 pt-3">
+			                            <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-2 py-1.5`}>Lưu Thay Đổi</button>
+			                            <button onClick={() => handleTrigger("fb_story")} disabled={triggering || !formData.fb_cookie} className="flex items-center justify-center gap-1.5 rounded-xl bg-purple-500 px-2 py-1.5 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-purple-600 disabled:opacity-40">
+			                              {triggering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+			                              FB Post
+			                            </button>
+		                          </div>
                         </div>
-                        
-                        <div className="mt-4 flex justify-end gap-2">
-                          <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
-                        </div>
-                      </div>
-                    ))}
+                      )})}
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[600px] lg:h-0 lg:min-h-full overflow-hidden anim-fade-up anim-d3 text-center`}>
-                  <Image className="w-10 h-10 text-gray-300 mb-3" />
+                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3 text-center`}>
+                  <ImageIcon className="w-10 h-10 text-gray-300 mb-3" />
                   <p className="text-[13px] font-medium text-gray-600">Chưa có Data Shopee</p>
                   <p className="text-[11px] text-gray-400 mt-1 max-w-[250px]">Hãy sang tab Cấu Hình Chung, dán link Affiliate và nhấn Đồng bộ để lấy dữ liệu nhé!</p>
                 </div>
               )}
+              {renderInlineTerminal("fb")}
+              </div>
             </div>
           </div>
         )}
 
         {/* ═══ THREADS ═══ */}
         {activeTab === "threads" && (
-          <div className="space-y-7 anim-fade-up">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1.5">Threads Workspace</h1>
-                  <p className="text-sm text-gray-500">Tự động lấy bài viết và cấu hình Bot Threads.</p>
-                </div>
-
+          <div className="anim-fade-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              <div className="space-y-5 h-full">
                 <ThreadsCrawler 
                   userId={userId || ""} 
                   tier={userTier} 
@@ -537,9 +684,14 @@ export default function AccountsPage() {
                 />
 
                 <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Threads Access Cookie</h3>
-                    <StatusDot active={!!formData.threads_cookie} />
+                  <div className="mb-5">
+                    <CardTitle
+                      icon={Cookie}
+                      title="Threads Access Cookie"
+                      subtitle="Cookie dùng để đăng bài và chạy AI commenter trên Threads."
+                      active={!!formData.threads_cookie}
+                      tone="violet"
+                    />
                   </div>
                   <textarea rows={4} value={formData.threads_cookie} onChange={(e) => setFormData({ ...formData, threads_cookie: e.target.value })} onBlur={handleSave} placeholder="sessionid=...; ds_user_id=...;" className={`${inputClass} text-violet-700 font-semibold resize-none mb-5 focus:border-violet-500 focus:ring-violet-500/10`} />
                   <button onClick={() => handleTrigger("threads")} disabled={triggering || !formData.threads_cookie} className={`${btnViolet} w-full py-2.5`}>
@@ -550,121 +702,74 @@ export default function AccountsPage() {
                 
               </div>
 
-              <div className="flex flex-col gap-6 h-[600px] lg:h-0 lg:min-h-full overflow-hidden">
-{/* Posts Editor */}
-                <div className={`${cardClass} p-6 flex flex-col flex-1 min-h-0 anim-fade-up anim-d3`}>
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
-                    <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
+              <div className="flex h-[760px] lg:h-full lg:min-h-[740px] flex-col gap-5">
+                <div className={`${cardClass} p-6 flex flex-col h-[560px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+                  <div className="flex items-center justify-between gap-4 mb-5">
+                    <CardTitle
+                      icon={MessageCircle}
+                      title="Threads Crawl Poster"
+                      subtitle="Chỉnh nội dung và ảnh trước khi đăng thủ công lên Threads."
+                      tone="violet"
+                    />
+                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
                   </div>
-                  <div className="flex-1 overflow-y-auto pr-1 space-y-4 dim-siblings [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                  {threadsPosts.map((post) => (
-                    <div key={post.id} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
-                      <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[70px] placeholder:text-gray-400 mb-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-500" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
-                      {post.image_urls && post.image_urls.length > 0 && (
-                        <div className="mt-3 flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                          {post.image_urls.map((url: string, idx: number) => (
-                            <div key={idx} className="relative group shrink-0">
-                              <img src={url} className="h-72 w-auto rounded-xl object-cover border border-gray-200 transition-all group-hover:opacity-80 shadow-sm" />
-                              <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-4 flex justify-end gap-2 border-t border-gray-200/60 pt-4">
-                        <button onClick={() => handleSavePost(post)} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
-                        <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} text-[12px] px-4 py-1.5`}>Đăng Threads</button>
-                      </div>
-                    </div>
-                  ))}
-                  {threadsPosts.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                      <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
-                      <p className="text-sm">Không có dữ liệu Crawl nào.</p>
-                    </div>
-                  )}
-                </div>
-                </div>
+	                  <div className="relative flex-1 min-h-0">
+	                    {threadsPosts.length > 0 && (
+	                      <>
+	                        <button onClick={() => scrollThreadsPoster('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+	                          <ChevronLeft className="w-5 h-5 pr-0.5" />
+	                        </button>
+	                        <button onClick={() => scrollThreadsPoster('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+	                          <ChevronRight className="w-5 h-5 pl-0.5" />
+	                        </button>
+	                      </>
+	                    )}
 
-                              </div>
+		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+		                      {[...threadsPosts, ...threadsPosts].map((post, i) => (
+				                        <div key={`threads-${post.id}-${i}`} className="w-[340px] shrink-0 self-start flex flex-col bg-white border border-gray-200/90 rounded-2xl p-3 pb-5 relative group/post hover:border-gray-300 hover:shadow-md transition-all snap-center">
+	                          <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-white/95 hover:bg-red-50 text-red-500 rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 border border-red-100 shadow-sm" title="Xoá">
+	                            <Trash2 className="w-3.5 h-3.5" />
+	                          </button>
+			                          <textarea className="w-full bg-gray-50/80 border border-gray-200/80 rounded-xl p-2.5 pr-10 text-[12px] text-gray-800 resize-none outline-none leading-relaxed min-h-[52px] placeholder:text-gray-400 focus:bg-white focus:border-violet-500 focus:ring-[3px] focus:ring-violet-500/10" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+	                          {post.image_urls && post.image_urls.length > 0 && (
+	                            <div className="mt-3 flex gap-3 overflow-x-auto overflow-y-hidden pb-1 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+	                              {post.image_urls.map((url: string, idx: number) => (
+	                                <div key={idx} className="relative group shrink-0">
+				                                  <img src={url} alt="Threads post media" className="h-64 w-auto rounded-xl object-contain border border-gray-200 transition-all group-hover:opacity-80 shadow-sm bg-gray-100" />
+	                                  <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
+	                                    <Trash2 className="w-3.5 h-3.5" />
+	                                  </button>
+	                                </div>
+	                              ))}
+	                            </div>
+	                          )}
+				                          <div className="mt-3 mb-1 flex justify-center gap-2 border-t border-gray-200/60 pt-3">
+	                            <button onClick={() => handleSavePost(post)} className={`${btnSecondary} min-w-[128px] text-[12px] px-4 py-1.5`}>Lưu Thay Đổi</button>
+	                            <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} min-w-[128px] text-[12px] px-4 py-1.5`}>Đăng Threads</button>
+	                          </div>
+	                        </div>
+	                      ))}
+	                      {threadsPosts.length === 0 && (
+	                        <div className="h-full w-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 text-center text-gray-400 px-6">
+	                          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
+	                            <MessageCircle className="w-5 h-5 opacity-40" />
+	                          </div>
+	                          <p className="text-sm font-medium text-gray-600">Không có dữ liệu Crawl nào.</p>
+	                          <p className="mt-1 max-w-[260px] text-[12px] leading-relaxed text-gray-400">Chạy crawler bên trái để đưa bài mới vào hàng chờ đăng Threads.</p>
+	                        </div>
+	                      )}
+	                    </div>
+	                  </div>
+	                </div>
+                {renderInlineTerminal("threads")}
+
+              </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* VS Code Style Terminal Panel */}
-      <div 
-        className={`fixed bottom-0 right-0 left-0 lg:left-[256px] bg-[#0F0F14] shadow-2xl z-50 flex flex-col transition-transform ${isDragging ? "duration-0" : "duration-300"} ${isTerminalOpen ? "translate-y-0" : "translate-y-full border-transparent"}`}
-        style={{ height: isTerminalOpen ? terminalHeight : 0 }}
-      >
-        {/* Drag Handle */}
-        <div 
-          onMouseDown={() => { setIsTerminalOpen(true); setIsDragging(true); }}
-          className="h-1.5 w-full bg-[#161620] cursor-row-resize hover:bg-blue-500/50 transition-colors shrink-0"
-        />
-        {/* Header / Tabs */}
-        <div className="flex items-center justify-between px-4 bg-[#161620] shrink-0 border-b border-white/[0.05]">
-          <div className="flex gap-4">
-            {(["global", "fb", "threads"] as const).map(tab => (
-              <button 
-                key={tab} 
-                onClick={() => setTerminalTab(tab)}
-                className={`py-2 text-[11px] font-mono uppercase tracking-wider relative transition-colors ${terminalTab === tab ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
-              >
-                {tab === "global" ? "Global Logs" : tab === "fb" ? "FB Logs" : "Threads Logs"}
-                {terminalTab === tab && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-blue-500" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => {
-                if (terminalTab === "global") setGlobalLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
-                if (terminalTab === "fb") setFbLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
-                if (terminalTab === "threads") setThreadsLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
-              }} 
-              className="text-zinc-500 hover:text-white transition-colors"
-              title="Clear Terminal"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => setIsTerminalOpen(false)} className="text-zinc-500 hover:text-white transition-colors" title="Close Panel">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Log Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[12px] bg-[#0F0F14]">
-          {(terminalTab === "global" ? globalLogs : terminalTab === "fb" ? fbLogs : threadsLogs).map((log, i) => (
-            <div key={i} className="flex items-start gap-2 hover:bg-white/[0.02] px-2 py-0.5 rounded transition-colors -mx-2">
-              <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${LEVEL_BG[log.level]}`}>{log.level}</span>
-              <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
-            </div>
-          ))}
-          <div ref={terminalTab === "global" ? globalLogEndRef : terminalTab === "fb" ? fbLogEndRef : threadsLogEndRef} />
-        </div>
-      </div>
-
-      {/* Global Terminal Toggle Button (when closed) */}
-      {!isTerminalOpen && (
-        <button 
-          onClick={() => setIsTerminalOpen(true)}
-          className="fixed bottom-6 right-6 w-12 h-12 bg-[#0F0F14] hover:bg-[#161620] text-white rounded-full flex items-center justify-center shadow-2xl border border-white/[0.1] z-40 transition-all hover:scale-105"
-          title="Open Terminal"
-        >
-          <Terminal className="w-5 h-5" />
-        </button>
-      )}
-    </div>
+	    </div>
   );
 }
