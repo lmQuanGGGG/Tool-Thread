@@ -157,6 +157,26 @@ export default function AccountsPage() {
   };
 
   // Realtime
+  const handleUpdateParsedLinkText = (index: number, newText: string) => {
+    setParsedLinks(prev => prev.map((p, i) => i === index ? { ...p, suggested_comment: newText } : p));
+  };
+  const handleSaveParsedLink = async () => {
+    pushLog("INFO", `Đang lưu thay đổi Shopee Data...`, "global");
+    const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: parsedLinks }).eq('id', userId);
+    if (error) { pushLog("ERROR", `Lỗi lưu Shopee Data: ${error.message}`, "global"); return false; }
+    pushLog("SUCCESS", `Đã lưu Shopee Data thành công.`, "global");
+    return true;
+  };
+  const handleDeleteParsedLink = async (index: number) => {
+    if (!confirm("Xoá link này khỏi danh sách?")) return;
+    pushLog("INFO", `Đang xoá link...`, "global");
+    const updated = parsedLinks.filter((_, i) => i !== index);
+    const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: updated }).eq('id', userId);
+    if (error) { pushLog("ERROR", `Lỗi xoá link: ${error.message}`, "global"); return; }
+    setParsedLinks(updated);
+    pushLog("SUCCESS", `Đã xoá link thành công.`, "global");
+  };
+
   useEffect(() => {
     if (!userEmail) return;
     const channel = supabase.channel('realtime_logs').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bot_logs', filter: `email=eq.${userEmail}` }, (payload) => {
@@ -357,19 +377,28 @@ export default function AccountsPage() {
             </div>
 
             {parsedLinks.length > 0 && (
-              <div className={`${cardClass} p-6 anim-fade-up anim-d3`}>
+              <div className={`${cardClass} p-6 flex flex-col max-h-[700px] anim-fade-up anim-d3`}>
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[13px] font-semibold text-gray-900">AI Parsing Results</h3>
-                  <span className="px-2 py-1 rounded-md bg-gray-100 text-[11px] font-mono text-gray-500 border border-gray-200/80">{parsedLinks.length} items</span>
+                  <h3 className="text-[13px] font-semibold text-gray-900">Shopee Data (Sẵn sàng đăng Story)</h3>
+                  <span className="px-2.5 py-1 rounded-md bg-sky-50 border border-sky-100 text-[11px] font-mono text-sky-600 font-semibold">{parsedLinks.length} items</span>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 dim-siblings">
+                <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
                   {parsedLinks.map((p, i) => (
-                    <div key={i} className="flex gap-3.5 bg-gray-50 border border-gray-200/80 p-3.5 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all">
-                      <img src={p.image_url} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-200 border border-gray-200/80 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-gray-900 truncate mb-0.5">{p.title}</p>
-                        <p className="text-[10px] text-gray-400 font-mono truncate mb-1">{p.aff_link}</p>
-                        <p className="text-[11px] text-gray-500 italic leading-snug">"{p.suggested_comment}"</p>
+                    <div key={i} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
+                      <button onClick={() => handleDeleteParsedLink(i)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <p className="text-[13px] font-semibold text-gray-900 truncate mb-1 pr-8">{p.title}</p>
+                      <p className="text-[10px] text-gray-400 font-mono truncate mb-3">{p.aff_link}</p>
+                      
+                      <textarea className="w-full bg-white border border-gray-200/80 rounded-lg p-3 text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(i, e.target.value)} placeholder="Nội dung thả thính..." />
+                      
+                      <div className="mt-3 flex items-center gap-3">
+                        <img src={p.image_url} alt="" className="h-20 w-auto rounded-lg object-cover border border-gray-200" />
+                      </div>
+                      
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button onClick={handleSaveParsedLink} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
                       </div>
                     </div>
                   ))}
