@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       });
 
       // Lắng nghe realtime
-      channel = supabase.channel('realtime_usage')
+      channel = supabase.channel('realtime_usage_profile')
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
@@ -94,6 +94,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           const today = todayLocalDate();
           if (payload.new && (payload.new as any).date === today) {
             setUsed(normalizeUsage(payload.new));
+          }
+        })
+        .on('postgres_changes', { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'profiles', 
+          filter: `id=eq.${user.id}` 
+        }, (payload) => {
+          if (payload.new && (payload.new as any).tier) {
+            const newTier = (payload.new as any).tier;
+            setTier(newTier);
+            supabase.from("tier_limits")
+              .select("*")
+              .eq("tier", newTier).maybeSingle()
+              .then(({ data }) => setLimits(normalizeLimits(data)));
           }
         })
         .subscribe();
