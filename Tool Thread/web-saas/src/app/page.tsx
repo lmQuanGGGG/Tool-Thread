@@ -39,7 +39,7 @@ export default function Home() {
         </h1>
 
         <p className="text-zinc-500 text-sm md:text-base max-w-2xl leading-relaxed mb-10">
-          Giải pháp nuôi tài khoản và tự động tương tác dành cho nhà sáng tạo và người bán hàng. Tự động lấy video YouTube Shorts đăng lên Reels, tự động comment dạo Threads kéo traffic — tất cả quản lý qua Telegram.
+          Giải pháp nuôi tài khoản và tự động tương tác dành cho nhà sáng tạo và Affiliate. Tự động lấy video YouTube Shorts đăng lên Reels, đăng bài Facebook kèm link Shopee, comment dạo Threads kéo traffic — tất cả quản lý qua Telegram.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -54,6 +54,37 @@ export default function Home() {
         </div>
       </main>
 
+      {/* Core Features */}
+      <section id="features" className="px-4 py-24 max-w-6xl mx-auto border-t border-zinc-100">
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold tracking-tight text-black">Chức năng hệ thống</h2>
+          <p className="text-zinc-500 text-sm mt-2">Vận hành tự động hoàn toàn (Cloud), không cần treo máy.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4"><Copy className="w-5 h-5" /></div>
+            <h3 className="font-bold text-lg mb-2">Auto Up Reels</h3>
+            <p className="text-sm text-zinc-500">Bot tự động cào video Youtube Shorts, tải về và render đăng lên FB Reels để kéo view.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4"><MessageSquare className="w-5 h-5" /></div>
+            <h3 className="font-bold text-lg mb-2">Auto Cmt Threads</h3>
+            <p className="text-sm text-zinc-500">Hệ thống nuôi nick mồi, tự động đi comment dạo trên Threads để kéo follow và traffic.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4"><CheckCircle2 className="w-5 h-5" /></div>
+            <h3 className="font-bold text-lg mb-2">Auto Đăng Facebook</h3>
+            <p className="text-sm text-zinc-500">Cào sản phẩm Shopee, sinh caption AI và tự động đăng bài lên FB kèm link Affiliate.</p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4"><Bot className="w-5 h-5" /></div>
+            <h3 className="font-bold text-lg mb-2">Bot Telegram</h3>
+            <p className="text-sm text-zinc-500">Nhận thông báo trạng thái đăng bài, tương tác với nick, đổi cấu hình trực tiếp qua Telegram.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Hướng dẫn cài đặt */}
       <section id="tutorial" className="px-4 py-20 bg-zinc-50/50 border-y border-zinc-100">
         <div className="max-w-5xl mx-auto">
@@ -63,16 +94,13 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative flex flex-col">
+            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative">
               <div className="absolute -top-5 left-8 w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">1</div>
-              <div className="flex justify-end mb-2">
-                <img src="https://lh3.googleusercontent.com/B701FkQ_HjQy-N_u_7hJ6v-r327oB2aH-p2V_K7Qx4Yh1_Qk_32w5J0_z7H_1Z5X6k1rZ_R1_q5_5z5w_E9-Q2M=s120" alt="EditThisCookie" className="w-12 h-12 rounded-xl shadow-sm border border-zinc-100" />
-              </div>
-              <h4 className="font-bold text-zinc-900 text-lg mb-3">Cài đặt Extension</h4>
-              <p className="text-sm text-zinc-500 mb-6 leading-relaxed flex-1">
+              <h4 className="font-bold text-zinc-900 text-lg mb-3 mt-4">Cài đặt Extension</h4>
+              <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
                 Tải và cài đặt tiện ích <strong>EditThisCookie (V3)</strong> hoặc J2TEAM Security trên trình duyệt Chrome hoặc Cốc Cốc của bạn.
               </p>
-              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors mt-auto">
+              <a href="https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 py-3 rounded-xl transition-colors">
                 <Download className="w-4 h-4" />
                 Cài EditThisCookie
               </a>
@@ -122,9 +150,9 @@ export default function Home() {
             <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Dùng thử nhanh</p>
             <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />2 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />10 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />2 Threads Post / ngày</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />1 FB Post / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />10 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-zinc-300" />1 Lượt cào SP Shopee</li>
               <li className="flex items-center gap-2 text-zinc-300 line-through">Không có thông báo Tele</li>
             </ul>
             <Link href="/login" className="block w-full py-3 rounded-xl border border-zinc-200 text-[12px] font-bold text-zinc-600 hover:bg-zinc-50 transition-colors text-center">Bắt đầu</Link>
@@ -140,9 +168,9 @@ export default function Home() {
             <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Cho shop nhỏ</p>
             <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />3 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />30 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />3 Threads Post / ngày</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />3 FB Post / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />30 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />2 Lượt cào SP Shopee</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" />Bot gửi thông báo</li>
             </ul>
             <Link href="/login" className="block w-full py-3 rounded-xl bg-emerald-50 text-emerald-700 text-[12px] font-bold hover:bg-emerald-100 transition-colors text-center">Mua gói LITE</Link>
@@ -161,9 +189,9 @@ export default function Home() {
             <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Bán hàng ổn định</p>
             <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
               <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />6 Reels / ngày</li>
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />80 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />6 Threads Post / ngày</li>
               <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />5 FB Post / ngày</li>
+              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />80 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-2 font-medium text-black"><Check className="w-3.5 h-3.5 text-blue-500" />3 Lượt cào SP Shopee</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-blue-500" />✅ Tự động chạy hàng ngày</li>
             </ul>
             <Link href="/login" className="block w-full py-3 rounded-xl bg-blue-600 text-white text-[12px] font-bold hover:bg-blue-700 shadow-md shadow-blue-200 transition-colors text-center">Mua gói PLUS</Link>
@@ -179,9 +207,9 @@ export default function Home() {
             <p className="text-[11px] font-medium text-zinc-400 mb-6 border-b border-zinc-100 pb-4">Tối ưu vận hành</p>
             <ul className="space-y-3 mb-8 text-[12px] text-zinc-600 flex-1">
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />12 Reels / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />160 Cmt Threads / ngày</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />12 Threads Post / ngày</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />10 FB Post / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />160 Cmt Threads / ngày</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />4 Lượt cào SP Shopee</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-amber-500" />✅ Tự động chạy hàng ngày</li>
             </ul>
             <Link href="/login" className="block w-full py-3 rounded-xl bg-amber-50 text-amber-700 text-[12px] font-bold hover:bg-amber-100 transition-colors text-center">Mua gói PRO</Link>
@@ -198,7 +226,7 @@ export default function Home() {
             <ul className="space-y-3 mb-8 text-[12px] text-zinc-300 flex-1">
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Reels</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Cmt</li>
-              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Post</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Không giới hạn Cào bài</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Chỉ chạy thủ công (chống spam)</li>
               <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-white" />Ưu tiên Support</li>
             </ul>

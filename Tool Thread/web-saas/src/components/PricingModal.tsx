@@ -13,8 +13,8 @@ const TIERS = [
     price: 0,
     icon: Activity,
     tone: "zinc",
-    quota: { reels: "2", fbPost: "1", threads: "10", threadsPost: "2", crawl: "1", links: "2" },
-    perks: ["Auto Cmt Threads (10/10)", "Auto hết 2 Reels, 1 FB, 2 Threads", "Chia 2 khung giờ chạy", "Phù hợp test nhanh"],
+    quota: { reels: "2", fbPost: "1", threads: "10", crawl: "1", links: "2" },
+    perks: ["Auto Cmt Threads (10/10)", "Auto hết 2 Reels, 1 FB, 10 Threads", "Chia 2 khung giờ chạy", "Phù hợp test nhanh"],
   },
   {
     key: "lite" as TierKey,
@@ -22,8 +22,8 @@ const TIERS = [
     price: 59000,
     icon: Zap,
     tone: "emerald",
-    quota: { reels: "3", fbPost: "3", threads: "30", threadsPost: "3", crawl: "2", links: "4" },
-    perks: ["Auto Cmt Threads (20/30)", "Auto hết 3 Reels, 3 FB, 3 Threads", "Chia 3 khung giờ chạy", "Dành cho shop nhỏ"],
+    quota: { reels: "3", fbPost: "3", threads: "30", crawl: "2", links: "4" },
+    perks: ["Auto Cmt Threads (20/30)", "Auto hết 3 Reels, 3 FB, 30 Threads", "Chia 3 khung giờ chạy", "Dành cho shop nhỏ"],
   },
   {
     key: "plus" as TierKey,
@@ -32,8 +32,8 @@ const TIERS = [
     icon: Zap,
     tone: "blue",
     badge: "Phổ biến",
-    quota: { reels: "6", fbPost: "5", threads: "80", threadsPost: "6", crawl: "3", links: "10" },
-    perks: ["Auto đăng 6 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 6 Reels, 5 FB Posts (rải đều)", "Đủ dùng bán hàng đều"],
+    quota: { reels: "6", fbPost: "5", threads: "80", crawl: "3", links: "10" },
+    perks: ["Auto Cmt Threads (80 cmt)", "Auto 6 Reels, 5 FB Posts", "Auto Cào Shopee (3 Lượt)", "Đủ dùng bán hàng đều"],
   },
   {
     key: "pro" as TierKey,
@@ -42,8 +42,8 @@ const TIERS = [
     icon: Crown,
     tone: "amber",
     badge: "Đề xuất",
-    quota: { reels: "12", fbPost: "10", threads: "160", threadsPost: "12", crawl: "4", links: "20" },
-    perks: ["Auto đăng 12 bài Threads", "Auto Cmt Threads (max 50%)", "Auto 12 Reels, 10 FB Posts (rải đều)", "Tối ưu cho vận hành thật"],
+    quota: { reels: "12", fbPost: "10", threads: "160", crawl: "4", links: "20" },
+    perks: ["Auto Cmt Threads (160 cmt)", "Auto 12 Reels, 10 FB Posts", "Auto Cào Shopee (4 Lượt)", "Tối ưu cho vận hành thật"],
   },
   {
     key: "promax" as TierKey,
@@ -52,8 +52,8 @@ const TIERS = [
     icon: Rocket,
     tone: "violet",
     badge: "Max",
-    quota: { reels: "∞", fbPost: "∞", threads: "∞", threadsPost: "∞", crawl: "∞", links: "∞" },
-    perks: ["Không giới hạn", "Đăng bài Threads (Thủ công)", "Ưu tiên VIP", "Dành cho team scale"],
+    quota: { reels: "∞", fbPost: "∞", threads: "∞", crawl: "∞", links: "∞" },
+    perks: ["Không giới hạn", "Cào bài, up bài thủ công", "Ưu tiên VIP Support", "Dành cho team scale"],
   },
 ];
 
@@ -169,10 +169,9 @@ export default function PricingModal({ open, onClose }: PricingModalProps) {
                     {[
                       ["Reels", tier.quota.reels],
                       ["FB Post", tier.quota.fbPost],
-                      ["Threads Post", tier.quota.threadsPost],
                       ["Threads Cmt", tier.quota.threads],
-                      ["Crawl Data", tier.quota.crawl],
-                      ["Links", tier.quota.links],
+                      ["Cào Shopee", tier.quota.crawl],
+                      ["Affiliate Link", tier.quota.links],
                     ].map(([label, value]) => (
                       <div key={label} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50/80 px-3 py-1.5">
                         <div className="text-[11px] font-medium text-zinc-500">{label}</div>
