@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Play, Check, Download, Link2, CheckCircle2, Sparkles, Zap, Shield, Infinity, ChevronRight } from "lucide-react";
+import { ArrowRight, Play, Check, Download, Link2, CheckCircle2, Sparkles, Zap, Shield, Infinity, ChevronRight, Bot } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
