@@ -51,7 +51,12 @@ async function run() {
 
         const stat = statsMap[p.email];
         const used = stat ? (stat.threads_commented || 0) : 0;
-        const limit = tierLimit.threads_per_day;
+        let limit = tierLimit.threads_per_day;
+        
+        // Auto bot chỉ chạy tối đa 50% quota tổng của gói
+        if (limit !== -1) {
+            limit = Math.floor(limit / 2);
+        }
 
         // Check quota
         if (limit !== -1 && used >= limit) {
