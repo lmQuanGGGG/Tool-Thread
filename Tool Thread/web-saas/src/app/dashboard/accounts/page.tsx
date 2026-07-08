@@ -437,9 +437,10 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 px-6 h-14 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-200/80">
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-50 px-4 md:px-6 h-14 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-200/80">
+        <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
+          {/* Logo — ẩn trên mobile */}
+          <div className="hidden md:flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
               <Bot className="w-3.5 h-3.5 text-white" />
             </div>
@@ -447,13 +448,13 @@ export default function AccountsPage() {
             <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-[9px] font-mono text-gray-400 border border-gray-200/80 uppercase tracking-wider">v3.5</span>
           </div>
 
-          {/* Tab bar */}
-          <nav className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-1">
+          {/* Tab bar — full width trên mobile */}
+          <nav className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-1 w-full md:w-auto justify-around md:justify-start">
             {(["global", "fb", "threads"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all ${
+                className={`flex-1 md:flex-none px-3 md:px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all ${
                   activeTab === t
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -465,7 +466,8 @@ export default function AccountsPage() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* User info — ẩn trên mobile */}
+        <div className="hidden md:flex items-center gap-3">
           <div className="flex flex-col items-end">
             <span className="text-[11px] font-medium text-gray-600">{userEmail}</span>
             <span className="text-[10px] font-mono text-emerald-600 uppercase tracking-widest font-semibold">{userTier} tier</span>
