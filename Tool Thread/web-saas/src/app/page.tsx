@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, Github, Database } from "lucide-react";
+import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 
@@ -287,7 +287,7 @@ const ServerlessIllustration = () => {
       <div className="absolute inset-0" style={{ animation: 'orbSpin 30s linear infinite' }}>
         {/* Node 1: GitHub */}
         <div className="absolute top-[17.5%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
-          <Github className="w-6 h-6 text-zinc-900" />
+          <GitBranch className="w-6 h-6 text-zinc-900" />
         </div>
         {/* Node 2: Database */}
         <div className="absolute bottom-[27.5%] left-[21.5%] -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center" style={{ animation: 'orbSpin 30s linear infinite reverse' }}>
