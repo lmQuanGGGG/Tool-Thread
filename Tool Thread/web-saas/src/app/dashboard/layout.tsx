@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
 
         {/* Logo */}
-        <div className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px]">
+        <Link href="/" className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px] hover:opacity-80 transition-opacity">
           <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${collapsed ? "w-0 opacity-0 hidden" : "w-full opacity-100"}`}>
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
               <Rocket className="w-4 h-4" />
@@ -165,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Rocket className="w-4 h-4" />
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5 overflow-hidden">
