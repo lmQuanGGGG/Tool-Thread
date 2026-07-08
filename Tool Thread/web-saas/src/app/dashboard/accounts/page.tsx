@@ -781,7 +781,8 @@ export default function AccountsPage() {
 	                            </button>
 	                          </div>
 	                        </div>
-	                      ))}
+	                      );
+                        })}
 	                      {threadsPosts.length === 0 && (
 	                        <div className="h-full w-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 text-center text-gray-400 px-6">
 	                          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
