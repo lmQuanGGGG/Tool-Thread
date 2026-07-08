@@ -183,7 +183,8 @@ const ConfettiCanvas = () => {
           const pullDx = targetMouseX - p.baseX;
           const pullDy = targetMouseY - p.baseY;
 
-          const pullSpeed = 0.015 * p.speed;
+          // Tăng tốc độ đuổi theo chuột lên x4 lần để nó nhạy và bám sát hơn
+          const pullSpeed = 0.06 * p.speed;
           p.baseX += pullDx * pullSpeed;
           p.baseY += pullDy * pullSpeed;
         }
