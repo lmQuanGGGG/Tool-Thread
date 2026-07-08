@@ -127,48 +127,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="aurora-bg opacity-30"><div className="aurora-blob-3" /></div>
 
       {/* ═══════════════════════════════════════════════════════
-          MOBILE DRAWER — full-screen dark overlay, tách biệt
+          MOBILE DRAWER — full-screen white overlay
           ═══════════════════════════════════════════════════════ */}
       <div className={`md:hidden fixed inset-0 z-[100] ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
         {/* Backdrop */}
         <div
           onClick={() => setMobileOpen(false)}
-          className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
         />
 
         {/* Slide-in panel */}
-        <div className={`absolute inset-y-0 left-0 w-[300px] bg-[#111111] flex flex-col transition-transform duration-300 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className={`absolute inset-y-0 left-0 w-[300px] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-out ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 pt-6 pb-5">
+          <div className="flex items-center justify-between px-5 pt-6 pb-5 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
+              <div className="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md">
                 <Rocket className="w-4.5 h-4.5 text-white" />
               </div>
               <div>
-                <p className="text-[14px] font-bold text-white tracking-tight leading-tight">Automation Hub</p>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">V3.5</p>
+                <p className="text-[14px] font-bold text-gray-900 tracking-tight leading-tight">Automation Hub</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">V3.5</p>
               </div>
             </div>
             <button
               onClick={() => setMobileOpen(false)}
-              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-white/20 hover:text-white transition-all active:scale-95"
+              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-all active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+          <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
             {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map((item) => {
               if (item.href === "/pricing") {
                 return (
                   <button
                     key={item.name}
                     onClick={() => { setPricingOpen(true); setMobileOpen(false); }}
-                    className="flex items-center gap-3.5 w-full px-4 py-3.5 rounded-2xl text-gray-400 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98]"
+                    className="flex items-center gap-3.5 w-full px-4 py-3.5 rounded-2xl text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all active:scale-[0.98]"
                   >
-                    <item.icon className="w-[18px] h-[18px] shrink-0" />
+                    <item.icon className="w-[18px] h-[18px] shrink-0 text-gray-400" />
                     <span className="text-[15px] font-medium">{item.name}</span>
                   </button>
                 );
@@ -181,24 +181,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98] ${
                     active
-                      ? "bg-white/15 text-white"
-                      : "text-gray-400 hover:bg-white/10 hover:text-white"
+                      ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium"
                   }`}
                 >
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-400" : ""}`} />
-                  <span className="text-[15px] font-medium">{item.name}</span>
-                  {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-600" : "text-gray-400"}`} />
+                  <span className="text-[15px]">{item.name}</span>
+                  {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]" />}
                 </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
-          <div className="px-4 pb-8 pt-4 border-t border-white/10 space-y-3">
+          <div className="px-4 pb-8 pt-4 border-t border-gray-100 space-y-3">
             {/* Usage widget */}
             {limits && used && (
-              <div className="bg-white/5 rounded-2xl p-3.5 border border-white/[0.08]">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Hôm nay</p>
+              <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Hôm nay</p>
                 <div className="space-y-3">
                   {usageRows.map(({ label, used: u, limit: l, color }) => {
                     const unlimited = l === -1;
@@ -208,13 +208,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     return (
                       <div key={label}>
                         <div className="flex justify-between mb-1.5">
-                          <span className="text-[11px] text-gray-500">{label}</span>
-                          <span className={`text-[11px] font-semibold ${nearLimit ? "text-red-400" : "text-gray-400"}`}>
+                          <span className="text-[11px] text-gray-400">{label}</span>
+                          <span className={`text-[11px] font-semibold ${nearLimit ? "text-red-500" : "text-gray-500"}`}>
                             {l === 0 ? "—" : unlimited ? "∞" : `còn ${remaining}`}
                           </span>
                         </div>
                         {l !== 0 && (
-                          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div className={`h-full rounded-full transition-all duration-500 ${nearLimit ? "bg-red-500" : color}`} style={{ width: `${pct}%` }} />
                           </div>
                         )}
@@ -229,7 +229,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {tier !== "promax" && (
               <button
                 onClick={() => { setPricingOpen(true); setMobileOpen(false); }}
-                className="flex items-center justify-between w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold text-[13px] py-3.5 px-4 rounded-2xl transition-colors group"
+                className="flex items-center justify-between w-full bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white font-semibold text-[13px] py-3.5 px-4 rounded-2xl transition-colors group"
               >
                 <span>⚡ Nâng cấp gói</span>
                 <ChevronRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
@@ -237,20 +237,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
 
             {/* User + Logout row */}
-            <div className="flex items-center gap-3 px-1">
-              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-white/20">
+            <div className="flex items-center gap-3 px-1 py-1">
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2 border-gray-200">
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-white truncate">{user?.email}</p>
+                <p className="text-[12px] font-semibold text-gray-900 truncate">{user?.email}</p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <metaDark.icon className={`w-3 h-3 ${metaDark.color}`} />
-                  <span className={`text-[10px] font-bold ${metaDark.color} uppercase tracking-wider`}>{metaDark.label}</span>
+                  <metaLight.icon className={`w-3 h-3 ${metaLight.color}`} />
+                  <span className={`text-[10px] font-bold ${metaLight.color} uppercase tracking-wider`}>{metaLight.label}</span>
                 </div>
               </div>
               <button
                 onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-red-400 hover:bg-red-900/40 hover:text-red-300 transition-all active:scale-95"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all active:scale-95"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
