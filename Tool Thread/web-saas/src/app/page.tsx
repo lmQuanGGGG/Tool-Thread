@@ -3,11 +3,12 @@
 import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
-import dynamic from "next/dynamic";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
-const Serverless3DScene = dynamic(() => import("../components/Serverless3DScene"), {
-  ssr: false,
-});
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(useGSAP);
+}
 
 /* ═══════════════════════════════════════════════
    useScrollReveal — IntersectionObserver hook
@@ -271,18 +272,91 @@ const ConfettiCanvas = () => {
    ═══════════════════════════════════════════════ */
 const ServerlessIllustration = () => {
   const { ref, visible } = useScrollReveal(0.2);
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!visible) return;
+
+    // Rotate the rings
+    gsap.to(".ring-1", { rotation: 360, duration: 25, repeat: -1, ease: "none", transformOrigin: "center center" });
+    gsap.to(".ring-2", { rotation: -360, duration: 35, repeat: -1, ease: "none", transformOrigin: "center center" });
+    
+    // Pulse the center
+    gsap.to(".center-hub", { scale: 1.05, duration: 2, yoyo: true, repeat: -1, ease: "sine.inOut" });
+
+    // Counter-rotate the nodes so they stay upright
+    gsap.to(".node-icon-1", { rotation: -360, duration: 25, repeat: -1, ease: "none", transformOrigin: "center center" });
+    gsap.to(".node-icon-2", { rotation: 360, duration: 35, repeat: -1, ease: "none", transformOrigin: "center center" });
+
+    // Floating effect for the whole container (3D Tilt-like)
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!container.current) return;
+      const rect = container.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      
+      gsap.to(".tilt-wrapper", {
+        rotationY: x * 25,
+        rotationX: -y * 25,
+        ease: "power2.out",
+        duration: 0.6
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gsap.to(".tilt-wrapper", { rotationY: 0, rotationX: 0, ease: "power2.out", duration: 0.8 });
+    };
+
+    const el = container.current;
+    el?.addEventListener("mousemove", handleMouseMove);
+    el?.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      el?.removeEventListener("mousemove", handleMouseMove);
+      el?.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, { scope: container, dependencies: [visible] });
 
   return (
     <div 
       ref={ref} 
       className={`relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto flex items-center justify-center transition-all duration-[1500ms] ${visible ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+      style={{ perspective: "1000px" }}
     >
       {/* Background glowing gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/60 to-indigo-100/60 rounded-full blur-3xl opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/60 to-indigo-100/60 rounded-full blur-3xl opacity-60 pointer-events-none" />
       
-      {/* Real 3D Scene */}
-      <div className="relative z-10 w-[120%] h-[120%]">
-        <Serverless3DScene />
+      <div ref={container} className="absolute inset-0 w-full h-full cursor-pointer z-10">
+        <div className="tilt-wrapper relative w-full h-full flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
+          
+          {/* Ring 1 (Outer) */}
+          <div className="ring-1 absolute w-[260px] h-[260px] md:w-[340px] md:h-[340px] rounded-full border border-blue-200/60 border-dashed flex items-center justify-center">
+            <div className="absolute -top-6 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-1">
+              <GitBranch className="w-5 h-5 text-zinc-900" />
+            </div>
+            <div className="absolute -bottom-6 w-12 h-12 bg-white rounded-2xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-1">
+              <MessageSquare className="w-5 h-5 text-blue-500" />
+            </div>
+          </div>
+
+          {/* Ring 2 (Inner) */}
+          <div className="ring-2 absolute w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-full border border-indigo-200/80 border-dotted flex items-center justify-center">
+            <div className="absolute -left-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
+              <Database className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="absolute -right-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+            </div>
+          </div>
+
+          {/* Central Hub */}
+          <div className="center-hub relative z-10 w-24 h-24 bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-zinc-100 flex items-center justify-center">
+            <div className="absolute inset-0 bg-blue-500/10 rounded-3xl animate-pulse" />
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-inner relative z-10">
+              <Cloud className="w-7 h-7" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

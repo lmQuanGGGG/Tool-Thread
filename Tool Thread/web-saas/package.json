@@ -9,11 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@payos/node": "^2.0.5",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.109.0",
     "@types/three": "^0.185.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.23.0",
     "motion": "^12.42.2",
     "next": "16.2.10",
