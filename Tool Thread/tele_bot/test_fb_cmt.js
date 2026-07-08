@@ -2,9 +2,19 @@ const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
+const { fetchBotConfig } = require('./supabase_helper');
 
 (async () => {
-    let cookies = JSON.parse(process.env.FB_COOKIE).map(c => {
+    // 1. Lấy Cookie từ DB Supabase (thay vì dùng biến môi trường cứng)
+    const dbConfig = await fetchBotConfig(process.env.USER_EMAIL || 'admin@autofarm.com');
+    const cookieData = dbConfig?.fb_cookies_arr || [];
+
+    if (!cookieData || cookieData.length === 0) {
+        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config.");
+        process.exit(1);
+    }
+
+    let cookies = cookieData.map(c => {
         if (c.sameSite === 'no_restriction') c.sameSite = 'None';
         delete c.storeId; delete c.id; delete c.hostOnly; delete c.session;
         return c;
