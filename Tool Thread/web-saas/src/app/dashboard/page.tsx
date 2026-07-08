@@ -57,7 +57,8 @@ function normalizeStats(stats: any) {
   return {
     reels_posted: toCount(stats?.reels_posted),
     threads_commented: toCount(stats?.threads_commented),
-    fb_story_posted: toCount(stats?.fb_story_posted ?? stats?.fb_posts_count),
+    fb_story_posted: Math.max(toCount(stats?.fb_story_posted), toCount(stats?.fb_posts_count)),
+    threads_posts_count: toCount(stats?.threads_posts_count),
   };
 }
 
