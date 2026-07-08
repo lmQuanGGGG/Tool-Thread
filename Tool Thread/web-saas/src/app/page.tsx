@@ -130,8 +130,8 @@ const ConfettiCanvas = () => {
 
         if (mouseActive && dist < ATTRACT_RADIUS) {
           // Lực "di cư": Thay vì tác động vật lý bạo lực, ta chỉ nhẹ nhàng dời điểm neo (base) của hạt về phía chuột.
-          // Hạt vẫn sẽ trôi bồng bềnh theo hàm sin/cos như cũ, nhưng cả cụm sẽ từ từ đi theo chuột.
-          const pullSpeed = 0.002 * p.speed;
+          // Hạt vẫn sẽ trôi bồng bềnh theo hàm sin/cos như cũ, nhưng cả cụm sẽ đi theo chuột nhanh hơn một chút.
+          const pullSpeed = 0.015 * p.speed;
           p.baseX += dx * pullSpeed;
           p.baseY += dy * pullSpeed;
         }
