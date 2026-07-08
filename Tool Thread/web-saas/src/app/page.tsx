@@ -476,7 +476,8 @@ export default function Home() {
                   loop
                   muted
                   playsInline
-                  controls 
+                  controls
+                  preload="auto"
                   className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity duration-300"
                   poster="/0709-poster.jpg"
                   src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"

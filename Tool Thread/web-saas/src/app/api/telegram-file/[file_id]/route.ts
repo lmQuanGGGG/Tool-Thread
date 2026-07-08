@@ -36,6 +36,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     // Important: we don't want to expose upstream caching headers sometimes, 
     // but for Telegram files it's usually fine. We explicitly set CORS if needed.
     
+    // Thêm Cache-Control mạnh tay vì file Telegram theo file_id là bất biến
+    responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    
     return new NextResponse(videoRes.body, {
       status: videoRes.status,
       headers: responseHeaders
