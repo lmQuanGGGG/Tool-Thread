@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database, Clapperboard, CircleDollarSign, AlertTriangle } from "lucide-react";
+import { ArrowRight, Check, Download, Link2, CheckCircle2, Zap, Shield, Infinity, Bot, MessageSquare, BarChart2, Terminal, Activity, Crown, Cloud, GitBranch, Database, Clapperboard, CircleDollarSign, AlertTriangle, Send } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 import gsap from "gsap";
@@ -232,7 +232,7 @@ const TerminalCLI = () => {
 /* ═══════════════════════════════════════════════ */
 const iconItems = [
   { icon: Terminal, label: "CLI" }, { icon: Bot, label: "Bot" }, { icon: MessageSquare, label: "Comment" },
-  { icon: Zap, label: "Reels" }, { icon: BarChart2, label: "Analytics" }, { icon: Shield, label: "Security" },
+  { icon: Send, label: "Post" }, { icon: Zap, label: "Reels" }, { icon: BarChart2, label: "Analytics" }, { icon: Shield, label: "Security" },
 ];
 
 /* ═══════════════════════════════════════════════
@@ -246,6 +246,10 @@ export default function Home() {
     <div className="min-h-screen bg-[#f8f9fa] text-zinc-900 font-sans selection:bg-blue-100 relative overflow-x-hidden">
       {/* Global keyframes */}
       <style jsx global>{`
+        @keyframes floatWave {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+        }
         @keyframes orbSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes orbDot {
           0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
@@ -309,8 +313,10 @@ export default function Home() {
           <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap mb-14">
             {iconItems.map(({ icon: Ic, label }, i) => (
               <div key={label} className="flex flex-col items-center gap-2 group" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="w-14 h-14 rounded-full bg-white border border-zinc-200 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300">
-                  <Ic className="w-5 h-5 text-zinc-700" />
+                <div style={{ animation: `floatWave 3s ease-in-out infinite`, animationDelay: `${i * 0.15}s` }}>
+                  <div className="w-14 h-14 rounded-full bg-white border border-zinc-200 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300">
+                    <Ic className="w-5 h-5 text-zinc-700" />
+                  </div>
                 </div>
                 <span className="text-[11px] font-medium text-zinc-400 group-hover:text-zinc-700 transition-colors">{label}</span>
               </div>
@@ -318,7 +324,7 @@ export default function Home() {
           </div>
         </Reveal>
         <Reveal delay={150}>
-          <p className="text-[28px] md:text-[36px] font-bold tracking-tight text-zinc-900 leading-snug max-w-3xl text-center mx-auto">
+          <p className="text-[28px] md:text-[36px] font-bold tracking-tight text-zinc-900 leading-snug max-w-3xl text-left">
             AutoFarm là hệ thống tự động hoá social media,{" "}
             <span className="text-zinc-400">cho phép bất kỳ ai cũng có thể nuôi nick và kiếm tiền trên Threads & Reels thông qua Shopee Affiliate một cách chuyên nghiệp.</span>
           </p>
