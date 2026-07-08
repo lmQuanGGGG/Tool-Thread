@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { getDeviceFingerprint } from "../../utils/fingerprint";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -46,7 +47,28 @@ export default function LoginPage() {
         }
       }
 
-      // 2. Chuyển hướng vào Dashboard
+      // 2. Kiểm tra giới hạn IP + Device Fingerprint — tối đa 2 tài khoản
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        // Thu thập fingerprint của thiết bị đang đăng nhập
+        const fingerprint = await getDeviceFingerprint().catch(() => undefined);
+        const ipRes = await fetch('/api/auth/verify-ip', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fingerprint }),
+        });
+        if (!ipRes.ok) {
+          const ipData = await ipRes.json();
+          // Vượt giới hạn → kick ngay, không cho vào dashboard
+          await supabase.auth.signOut();
+          throw new Error(ipData.error || 'Thiết bị/mạng của bạn đã đạt giới hạn số tài khoản.');
+        }
+      }
+
+      // 3. Chuyển hướng vào Dashboard
       router.push("/dashboard/accounts");
       router.refresh(); // Force refresh to update layout auth states if any
     } catch (err: any) {
