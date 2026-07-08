@@ -36,8 +36,8 @@ async function run() {
     const vnHour = (new Date().getUTCHours() + 7) % 24;
     console.log(`Current VN Hour: ${vnHour}h`);
 
-    // We only run on specific golden hours: 8, 13, 19
-    if (![8, 13, 19].includes(vnHour)) {
+    // We only run on specific golden hours: 8, 11, 13, 16, 19
+    if (![8, 11, 13, 16, 19].includes(vnHour)) {
         console.log("Not a scheduled hour. Exiting.");
         return;
     }
@@ -59,27 +59,18 @@ async function run() {
 
         if (!isPlus && !isProOrMax) continue;
 
-        if (vnHour === 13) {
-            // 13h: Plus -> Reels, Pro -> Reels + Post
-            if (isPlus || isProOrMax) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (isProOrMax) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-            }
-        } 
+        if (vnHour === 8 || vnHour === 13) {
+            // 8h, 13h: Plus -> Reels, Pro -> Reels + Post
+            if (isPlus || isProOrMax) await dispatchWorkflow('reels_worker.yml', p.email);
+            if (isProOrMax) await dispatchWorkflow('fb_worker.yml', p.email);
+        }
+        else if (vnHour === 11 || vnHour === 16) {
+            // 11h, 16h: Plus -> None, Pro -> Reels
+            if (isProOrMax) await dispatchWorkflow('reels_worker.yml', p.email);
+        }
         else if (vnHour === 19) {
-            // 19h: Plus -> Post, Pro -> Reels + Post
+            // 19h: Plus -> Reels + Post, Pro -> Reels + Post
             if (isPlus || isProOrMax) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-            }
-            if (isProOrMax) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-        } 
-        else if (vnHour === 8) {
-            // 8h: Plus -> Nothing, Pro -> Reels + Post
-            if (isProOrMax) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
