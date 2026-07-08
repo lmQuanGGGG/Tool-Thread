@@ -114,7 +114,33 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
-    loadData();
+
+    async function verifyPayment() {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      const orderCode = params.get('orderCode');
+      const paymentStatus = params.get('payment');
+      const cancel = params.get('cancel');
+
+      if (orderCode && paymentStatus === 'success' && cancel !== 'true') {
+        try {
+          console.log("Verifying payment locally for orderCode:", orderCode);
+          await fetch("/api/payos/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderCode })
+          });
+          // Remove query params to clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (err) {
+          console.error("Local payment verification failed", err);
+        }
+      }
+    }
+
+    verifyPayment().then(() => {
+      loadData();
+    });
   }, []);
 
   const tier = profile?.tier || "free";
