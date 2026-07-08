@@ -391,7 +391,7 @@ export default function Home() {
                   <div key={i} className="flex flex-col items-start animate-fade-in" style={{ animationDelay: `${i * 150}ms`, animationFillMode: 'both' }}>
                     <div className="bg-[#182533] text-zinc-200 rounded-2xl rounded-bl-sm p-3 shadow-sm relative max-w-[92%] border border-white/[0.02]">
                       <div className={`flex items-center gap-1.5 ${m.color} font-medium text-[13px] mb-1.5`}>
-                        <CheckCircle2 className="w-[14px] h-[14px] flex-shrink-0" fill="currentColor" className="w-[14px] h-[14px] text-white" />
+                        <CheckCircle2 fill="currentColor" className="w-[14px] h-[14px] flex-shrink-0 text-white" />
                         <span className="truncate">{m.title}</span>
                       </div>
                       <div className="text-[13px] leading-[1.6] mb-1">
