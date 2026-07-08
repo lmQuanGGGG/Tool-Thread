@@ -34,18 +34,24 @@ const Reveal = ({ children, className = "", delay = 0 }: { children: ReactNode; 
 };
 
 /* ═══════════════════════════════════════════════
-   Canvas Confetti — mouse-reactive, multi-shape
+   Canvas Confetti — magnetic attraction to cursor
    ═══════════════════════════════════════════════ */
 type Particle = {
   x: number; y: number; baseX: number; baseY: number;
-  size: number; color: string; shape: number; // 0=circle, 1=rect, 2=line
-  angle: number; speed: number; depth: number; rotation: number; rotSpeed: number;
+  vx: number; vy: number;
+  size: number; color: string; shape: number;
+  angle: number; speed: number; depth: number;
+  rotation: number; rotSpeed: number;
 };
+
+const ATTRACT_RADIUS = 200; // px — bán kính hút
+const ATTRACT_FORCE = 0.04; // lực hút
+const RETURN_FORCE = 0.015; // lực kéo về vị trí gốc
+const FRICTION = 0.92;
 
 const ConfettiCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5 });
-  const particlesRef = useRef<Particle[]>([]);
+  const mouseRef = useRef({ x: -9999, y: -9999, active: false });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,14 +69,14 @@ const ConfettiCanvas = () => {
     resize();
     window.addEventListener("resize", resize);
 
-    // Tạo hạt ban đầu
     const count = Math.min(150, Math.floor(w * h / 8000));
     const pts: Particle[] = [];
     for (let i = 0; i < count; i++) {
-      const depth = 0.3 + Math.random() * 0.7; // depth 0.3–1.0 dùng cho parallax
+      const depth = 0.3 + Math.random() * 0.7;
       pts.push({
         x: Math.random() * w, y: Math.random() * h,
         baseX: Math.random() * w, baseY: Math.random() * h,
+        vx: 0, vy: 0,
         size: (2 + Math.random() * 4) * depth,
         color: colors[Math.floor(Math.random() * colors.length)],
         shape: Math.floor(Math.random() * 3),
@@ -81,61 +87,86 @@ const ConfettiCanvas = () => {
         rotSpeed: (Math.random() - 0.5) * 0.02,
       });
     }
-    particlesRef.current = pts;
 
     const onMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX / w, y: e.clientY / h };
+      mouseRef.current = { x: e.clientX, y: e.clientY, active: true };
+    };
+    const onLeave = () => {
+      mouseRef.current = { ...mouseRef.current, active: false };
     };
     window.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseleave", onLeave);
 
     let raf: number;
     let t = 0;
+
     const draw = () => {
       t += 0.005;
       ctx.clearRect(0, 0, w, h);
 
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
+      const mouseActive = mouseRef.current.active;
 
       for (const p of pts) {
-        // Parallax offset dựa theo depth + vị trí chuột
-        const parallaxX = (mx - 0.5) * 60 * p.depth;
-        const parallaxY = (my - 0.5) * 40 * p.depth;
-
-        // Drift nhẹ để hạt ko đứng yên
-        p.baseX += Math.cos(p.angle) * p.speed * 0.3;
-        p.baseY += Math.sin(p.angle) * p.speed * 0.3;
-
-        // Wrap around
+        // Drift nhẹ cho base position
+        p.baseX += Math.cos(p.angle) * p.speed * 0.2;
+        p.baseY += Math.sin(p.angle) * p.speed * 0.2;
         if (p.baseX < -20) p.baseX = w + 20;
         if (p.baseX > w + 20) p.baseX = -20;
         if (p.baseY < -20) p.baseY = h + 20;
         if (p.baseY > h + 20) p.baseY = -20;
 
-        p.x = p.baseX + parallaxX + Math.sin(t * 2 + p.angle) * 8;
-        p.y = p.baseY + parallaxY + Math.cos(t * 1.5 + p.angle) * 6;
-        p.rotation += p.rotSpeed;
+        // Tính khoảng cách đến chuột
+        const dx = mx - p.x;
+        const dy = my - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        const alpha = 0.25 + p.depth * 0.35;
+        if (mouseActive && dist < ATTRACT_RADIUS) {
+          // Lực hút — càng gần càng mạnh
+          const force = ATTRACT_FORCE * (1 - dist / ATTRACT_RADIUS) * p.depth;
+          p.vx += dx * force;
+          p.vy += dy * force;
+        } else {
+          // Kéo về vị trí base + oscillation nhẹ
+          const targetX = p.baseX + Math.sin(t * 2 + p.angle) * 8;
+          const targetY = p.baseY + Math.cos(t * 1.5 + p.angle) * 6;
+          p.vx += (targetX - p.x) * RETURN_FORCE;
+          p.vy += (targetY - p.y) * RETURN_FORCE;
+        }
+
+        // Apply velocity
+        p.vx *= FRICTION;
+        p.vy *= FRICTION;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotSpeed + (Math.abs(p.vx) + Math.abs(p.vy)) * 0.01;
+
+        // Alpha tăng khi gần chuột
+        let alpha = 0.25 + p.depth * 0.3;
+        if (mouseActive && dist < ATTRACT_RADIUS) {
+          alpha += (1 - dist / ATTRACT_RADIUS) * 0.35;
+        }
+
+        // Hiệu ứng nhấp nhô (bobbing) liên tục
+        const bobbingY = Math.sin(t * 10 + p.angle * 4) * 12 * p.depth;
+
         ctx.save();
-        ctx.translate(p.x, p.y);
+        ctx.translate(p.x, p.y + bobbingY);
         ctx.rotate(p.rotation);
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = Math.min(alpha, 0.85);
         ctx.fillStyle = p.color;
 
         if (p.shape === 0) {
-          // Circle
           ctx.beginPath();
           ctx.arc(0, 0, p.size, 0, Math.PI * 2);
           ctx.fill();
         } else if (p.shape === 1) {
-          // Rounded rect
           const s = p.size * 1.8;
           ctx.beginPath();
           ctx.roundRect(-s / 2, -p.size / 2, s, p.size, p.size * 0.3);
           ctx.fill();
         } else {
-          // Line/dash
           ctx.strokeStyle = p.color;
           ctx.lineWidth = Math.max(1.5, p.size * 0.5);
           ctx.lineCap = "round";
@@ -144,7 +175,6 @@ const ConfettiCanvas = () => {
           ctx.lineTo(p.size * 1.5, 0);
           ctx.stroke();
         }
-
         ctx.restore();
       }
       raf = requestAnimationFrame(draw);
@@ -155,6 +185,7 @@ const ConfettiCanvas = () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 
