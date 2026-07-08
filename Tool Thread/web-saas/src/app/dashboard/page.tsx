@@ -190,9 +190,15 @@ export default function DashboardPage() {
               />
               <UsageBar
                 label="📝 FB Post đã đăng"
-                used={todayStats?.fb_story_posted || 0}
-                limit={limits?.fb_story_per_day ?? 0}
+                used={todayStats?.fb_posts_count || 0}
+                limit={limits?.fb_post_per_day ?? 0}
                 color="bg-pink-500"
+              />
+              <UsageBar
+                label="🧵 Threads Post đã đăng"
+                used={todayStats?.threads_posts_count || 0}
+                limit={limits?.threads_post_per_day ?? 0}
+                color="bg-emerald-500"
               />
             </div>
           </div>

@@ -232,7 +232,35 @@ export default function PricingPage() {
                       <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
                     </div>
                   ) : (
-                    <button className={`btn-shimmer h-10 w-full rounded-xl text-[12px] font-bold transition-colors ${tone.button}`}>
+                    <button 
+                      onClick={async () => {
+                        if (tier.price === 0) return; // Không nâng cấp gói free
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (!session) {
+                            alert("Bạn cần đăng nhập để nâng cấp!");
+                            return;
+                          }
+                          const res = await fetch("/api/payos/create-payment", {
+                            method: "POST",
+                            headers: { 
+                              "Content-Type": "application/json",
+                              "Authorization": `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify({ tier: tier.key, price_vnd: tier.price })
+                          });
+                          const data = await res.json();
+                          if (data.checkoutUrl) {
+                            window.location.href = data.checkoutUrl;
+                          } else {
+                            alert(data.error || "Lỗi tạo thanh toán");
+                          }
+                        } catch (e) {
+                          alert("Lỗi kết nối");
+                        }
+                      }}
+                      className={`btn-shimmer h-10 w-full rounded-xl text-[12px] font-bold transition-colors ${tone.button}`}
+                    >
                       {tier.price === 0 ? "Dùng miễn phí" : "Nâng cấp"}
                     </button>
                   )}
