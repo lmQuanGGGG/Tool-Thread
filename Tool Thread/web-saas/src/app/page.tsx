@@ -460,7 +460,7 @@ export default function Home() {
             <div>
               <h2 className="text-[32px] md:text-[40px] font-bold tracking-tight text-zinc-900 mb-5">AutoFarm Bot</h2>
               <p className="text-zinc-500 text-[15px] leading-relaxed mb-6">
-                Bot Telegram điều khiển từ xa. Gửi lệnh, nhận báo cáo doanh thu, kiểm tra trạng thái cookie — tất cả ngay trong Telegram.
+                Bot Telegram theo dõi hệ thống. Nhận báo cáo doanh thu, cảnh báo trạng thái cookie tự động — tất cả ngay trong Telegram.
               </p>
               <Link href="/login" className="inline-flex items-center gap-2 bg-[#eef0f3] hover:bg-[#e4e6ea] text-zinc-800 text-[14px] font-semibold px-6 py-3 rounded-full transition-colors">
                 Khám phá tính năng <ArrowRight className="w-4 h-4" />
@@ -517,7 +517,7 @@ export default function Home() {
                   Toàn bộ hệ thống chạy trên GitHub Actions + Cloudflare Workers. Không server, không chi phí vận hành, uptime 99.9%.
                 </p>
                 <ul className="space-y-3 text-[14px] text-zinc-600">
-                  {["GitHub Actions — cron job tự động 24/7", "Cloudflare Workers — proxy API tốc độ cao", "Supabase — database PostgreSQL miễn phí", "Telegram Bot API — điều khiển từ xa"].map((t) => (
+                  {["GitHub Actions — cron job tự động 24/7", "Cloudflare Workers — proxy API tốc độ cao", "Supabase — database PostgreSQL miễn phí", "Telegram Bot API — nhận thông báo tự động"].map((t) => (
                     <li key={t} className="flex items-center gap-3"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" />{t}</li>
                   ))}
                 </ul>
