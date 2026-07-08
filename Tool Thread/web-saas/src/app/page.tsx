@@ -246,10 +246,6 @@ export default function Home() {
     <div className="min-h-screen bg-[#f8f9fa] text-zinc-900 font-sans selection:bg-blue-100 relative overflow-x-hidden">
       {/* Global keyframes */}
       <style jsx global>{`
-        @keyframes floatWave {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-30px); }
-        }
         @keyframes orbSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes orbDot {
           0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
