@@ -375,6 +375,46 @@ export default function AccountsPage() {
                 </div>
               </div>
 
+              {/* Posts Editor */}
+              <div className={`${cardClass} p-6 flex flex-col h-[700px] anim-fade-up anim-d3`}>
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
+                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
+                </div>
+                <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
+                  {threadsPosts.map((post) => (
+                    <div key={post.id} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
+                      <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <textarea className="w-full bg-transparent text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+                      {post.image_urls && post.image_urls.length > 0 && (
+                        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                          {post.image_urls.map((url: string, idx: number) => (
+                            <div key={idx} className="relative group shrink-0">
+                              <img src={url} className="h-20 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
+                              <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-4 flex justify-end gap-2">
+                        <button onClick={() => handleSavePost(post)} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
+                        <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} text-[12px] px-4 py-1.5`}>Đăng Lên Threads</button>
+                      </div>
+                    </div>
+                  ))}
+                  {threadsPosts.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                      <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
+                      <p className="text-sm">Không có dữ liệu Crawl nào.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               
             </div>
 
@@ -507,45 +547,7 @@ export default function AccountsPage() {
                 
               </div>
 
-              {/* Posts Editor */}
-              <div className={`${cardClass} p-6 flex flex-col h-[700px] anim-fade-up anim-d3`}>
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Threads Crawl Poster</h3>
-                  <span className="px-2.5 py-1 rounded-md bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
-                </div>
-                <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 dim-siblings">
-                  {threadsPosts.map((post) => (
-                    <div key={post.id} className="bg-gray-50 border border-gray-200/80 rounded-xl p-5 relative group/post hover:border-gray-300 hover:shadow-sm transition-all">
-                      <button onClick={() => handleDeletePost(post.id)} className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg w-7 h-7 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10" title="Xoá">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      <textarea className="w-full bg-transparent text-[13px] text-gray-800 resize-none outline-none leading-relaxed min-h-[72px] placeholder:text-gray-400" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
-                      {post.image_urls && post.image_urls.length > 0 && (
-                        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-                          {post.image_urls.map((url: string, idx: number) => (
-                            <div key={idx} className="relative group shrink-0">
-                              <img src={url} className="h-20 w-auto rounded-lg object-cover border border-gray-200 transition-all group-hover:opacity-30" />
-                              <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 group-hover:scale-100">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-4 flex justify-end gap-2">
-                        <button onClick={() => handleSavePost(post)} className={`${btnSecondary} text-[12px] px-4 py-1.5`}>Lưu</button>
-                        <button onClick={() => handlePostToThreads(post)} className={`${btnViolet} text-[12px] px-4 py-1.5`}>Đăng Lên Threads</button>
-                      </div>
-                    </div>
-                  ))}
-                  {threadsPosts.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                      <MessageCircle className="w-10 h-10 mb-3 opacity-30" />
-                      <p className="text-sm">Không có dữ liệu Crawl nào.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              
             </div>
           </div>
         )}
