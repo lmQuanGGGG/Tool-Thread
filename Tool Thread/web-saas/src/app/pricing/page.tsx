@@ -189,7 +189,7 @@ export default function PricingPage() {
                   <h3 className="text-lg font-bold tracking-tight text-zinc-950">{tier.name}</h3>
                   <div className="mt-1 flex items-baseline gap-1">
                     <span className="text-2xl font-black tracking-tight text-zinc-950">{formatPrice(tier.price)}</span>
-                    {tier.price > 0 && <span className="text-xs font-medium text-zinc-400">/tháng</span>}
+                    {tier.price > 0 && <span className="text-xs font-medium text-zinc-400">{tier.key === "promax" ? "/vĩnh viễn" : "/tháng"}</span>}
                   </div>
                 </div>
 
