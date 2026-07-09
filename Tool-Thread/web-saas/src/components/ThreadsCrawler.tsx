@@ -20,8 +20,8 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
 
   const canUseCrawl = true; // Cho phép tất cả các gói kể cả free vì đã giới hạn số lần crawl
 
-  const inputClass = "w-full bg-white border border-gray-200/80 rounded-xl px-4 py-2.5 text-[13px] text-gray-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-gray-400";
-  const cardClass = "bg-white border border-gray-200/60 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.03)]";
+  const inputClass = "w-full bg-zinc-50/80 rounded-xl px-4 py-2.5 text-[13px] text-gray-900 focus:outline-none focus:bg-white focus:ring-[4px] focus:ring-sky-500/10 transition-all placeholder:text-gray-400 border-none shadow-none appearance-none";
+  const cardClass = "bg-transparent border-none shadow-none";
 
   async function handleJsonFile(file: File) {
     if (!userId) return;
@@ -92,7 +92,7 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
   }
 
   return (
-    <div className={`${cardClass} p-6 anim-fade-up anim-d1`}>
+    <div className={`${cardClass} anim-fade-up anim-d1`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[13px] font-semibold text-gray-900">Threads Auto Crawler</h3>
         {!canUseCrawl && (
@@ -156,7 +156,7 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
             setIsDragging(false);
             if (canUseCrawl && e.dataTransfer.files[0]) handleJsonFile(e.dataTransfer.files[0]);
           }}
-          className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${!canUseCrawl ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50' : isDragging ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+          className={`relative border-none bg-zinc-50/80 rounded-xl p-6 text-center transition-all ${!canUseCrawl ? 'opacity-50 cursor-not-allowed' : isDragging ? 'bg-sky-50' : 'hover:bg-zinc-100/80'}`}
         >
           {processing ? (
             <div className="flex flex-col items-center justify-center space-y-3 py-2">

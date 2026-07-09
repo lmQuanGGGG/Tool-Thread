@@ -526,7 +526,7 @@ export default function AccountsPage() {
               <div className="space-y-6 h-full">
 
 
-                <div className={`${cardClass} p-8 anim-fade-up anim-d1 flex flex-col`}>
+                <div className={`${cardClass} p-2 md:p-8 anim-fade-up anim-d1 flex flex-col`}>
                   {/* Cấu Hình Mạng Lưới */}
                   <div className="mb-6">
                     <CardTitle
@@ -572,7 +572,7 @@ export default function AccountsPage() {
               <div className="flex flex-col gap-5 h-[700px] lg:h-full lg:min-h-[660px] overflow-hidden">
                 {/* Shopee Editor (AI Parsing Results) */}
                 {parsedLinks.length > 0 && (
-                  <div className={`${cardClass} p-4 md:p-5 flex flex-col h-[480px] shrink-0 min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+                  <div className={`${cardClass} p-2 md:p-5 flex flex-col h-[480px] shrink-0 min-h-0 overflow-hidden anim-fade-up anim-d3`}>
                     <div className="flex items-center justify-between mb-4">
                       <CardTitle
                         icon={FileText}
@@ -633,7 +633,7 @@ export default function AccountsPage() {
           <div className="anim-fade-up px-4 md:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               <div className="space-y-5 h-full">
-                <div className={`${cardClass} p-8 flex flex-col justify-between anim-fade-up anim-d1`}>
+                <div className={`${cardClass} p-2 md:p-8 flex flex-col justify-between anim-fade-up anim-d1`}>
                   <div>
                     <div className="mb-6">
                       <CardTitle
@@ -746,7 +746,7 @@ export default function AccountsPage() {
                   onCrawlSuccess={() => { if (userId) fetchThreadsPosts(userId); setActiveTab("threads"); }}
                 />
 
-                <div className={`${cardClass} p-8 anim-fade-up anim-d1`}>
+                <div className={`${cardClass} p-2 md:p-8 anim-fade-up anim-d1`}>
                   <div className="mb-6">
                     <CardTitle
                       icon={Cookie}
@@ -766,7 +766,7 @@ export default function AccountsPage() {
               </div>
 
               <div className="flex h-[760px] lg:h-full lg:min-h-[740px] flex-col gap-5">
-                <div className={`${cardClass} p-4 md:p-6 flex flex-col h-[560px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+                <div className={`${cardClass} p-2 md:p-6 flex flex-col h-[560px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
                   <div className="flex items-center justify-between gap-4 mb-5">
                     <CardTitle
                       icon={MessageCircle}
