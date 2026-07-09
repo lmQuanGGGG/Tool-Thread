@@ -239,7 +239,7 @@ export default function AccountsPage() {
     pushLog("SUCCESS", `Đã xoá bài viết vĩnh viễn.`, "threads");
   };
   const handlePostToThreads = async (post: any) => {
-    showToast("!!! Vui lòng không ghim bài viết nào ở trang cá nhân để bot chạy chính xác nhất nhé sếp!");
+    showToast("Vui lòng không ghim bài viết nào ở trang cá nhân để bot chạy chính xác nhất nhé sếp!", 'info');
     const saved = await handleSavePost(post);
     if (saved) handleTrigger("threads_post_" + post.id);
   };
@@ -277,10 +277,10 @@ export default function AccountsPage() {
       const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
       
       if (newLog.level === 'success') {
-         showToast(`${newLog.message}`);
+         showToast(`${newLog.message}`, 'success');
       }
       if (newLog.level === 'error') {
-         showToast(`!!! ${newLog.message}`);
+         showToast(`${newLog.message}`, 'error');
       }
 
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
@@ -369,7 +369,7 @@ export default function AccountsPage() {
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
 
     if (userCredits <= 0) {
-      showToast("!!! Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!");
+      showToast("Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!", 'error');
       pushLog("ERROR", "Hết lượt chạy (Credits). Yêu cầu đã bị huỷ.", target);
       return;
     }
