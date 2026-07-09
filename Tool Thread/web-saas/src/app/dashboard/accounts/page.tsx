@@ -277,10 +277,10 @@ export default function AccountsPage() {
       const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
       
       if (newLog.level === 'success') {
-         showToast(`🎉 ${newLog.message}`);
+         showToast(`${newLog.message}`);
       }
       if (newLog.level === 'error') {
-         showToast(`❌ ${newLog.message}`);
+         showToast(`!!! ${newLog.message}`);
       }
 
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
@@ -369,7 +369,7 @@ export default function AccountsPage() {
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
 
     if (userCredits <= 0) {
-      showToast("❌ Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!");
+      showToast("!!! Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!");
       pushLog("ERROR", "Hết lượt chạy (Credits). Yêu cầu đã bị huỷ.", target);
       return;
     }
