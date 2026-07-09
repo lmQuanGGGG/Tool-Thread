@@ -591,7 +591,7 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
 
-                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-5 px-4 md:px-5 [&::-webkit-scrollbar]:hidden">
+                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-2 md:-mx-5 px-2 md:px-5 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
@@ -692,11 +692,11 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
 
-                      <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-6 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                      <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-4 md:gap-6 h-full snap-x snap-mandatory pb-2 -mx-2 md:-mx-8 px-2 md:px-8 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
-                            <div key={`fb-story-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                            <div key={`fb-story-${i}`} className="w-[75vw] md:w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
                               <div className="relative w-full aspect-[9/16] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
                                 <img src={p.image_url} alt={p.title || "FB Story"} className="h-full w-full object-cover" />
                                 <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
@@ -788,7 +788,7 @@ export default function AccountsPage() {
                       </>
                     )}
 
-                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 px-4 md:px-6 [&::-webkit-scrollbar]:hidden">
+                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-2 md:-mx-6 px-2 md:px-6 [&::-webkit-scrollbar]:hidden">
                       {[...threadsPosts, ...threadsPosts].map((post, i) => {
                         const hasImages = post.image_urls && post.image_urls.length > 0;
                         return (
