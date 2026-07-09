@@ -1,0 +1,38 @@
+name: 🕒 Auto Facebook (Reels/Post) Dispatcher
+
+on:
+  schedule:
+    # Chạy mỗi giờ vào phút thứ 5 (vd: 00:05, 01:05...)
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd "Tool Thread"/tele_bot
+          npm install @supabase/supabase-js axios dotenv
+
+      - name: Run Dispatcher
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          cd "Tool Thread"/tele_bot
+          node cron_facebook_dispatcher.js

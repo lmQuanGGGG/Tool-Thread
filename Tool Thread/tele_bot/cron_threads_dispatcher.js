@@ -33,7 +33,8 @@ async function run() {
         return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const vnTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+    const today = vnTime.toISOString().split('T')[0];
     
     // 3. Fetch usage stats for today
     const { data: statsData } = await supabase.from('usage_stats').select('*').eq('date', today);
