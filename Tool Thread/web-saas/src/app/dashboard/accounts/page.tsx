@@ -7,6 +7,7 @@ import {
 import { useState, useEffect, useRef, type ElementType } from "react";
 import { supabase } from "../../../utils/supabase";
 import ThreadsCrawler from "@/components/ThreadsCrawler";
+import { showToast } from "@/components/Toast";
 
 /* ─── Types ─────────────────────────────────────────── */
 interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; target_channels: string; }
@@ -502,7 +503,7 @@ export default function AccountsPage() {
                   </div>
                   <input type="text" value={formData.tele_chat_id} onChange={(e) => {
                     if (userTier === "free" || userTier === "lite") {
-                       alert("Gói Free và Lite không hỗ trợ nhận thông báo qua Telegram. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
+                       showToast("Gói Free và Lite không hỗ trợ nhận thông báo. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
                        return;
                     }
                     setFormData({ ...formData, tele_chat_id: e.target.value })

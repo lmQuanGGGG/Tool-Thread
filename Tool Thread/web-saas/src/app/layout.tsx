@@ -56,6 +56,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toast } from "@/components/Toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -67,6 +69,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F7F7F8] text-[#1A1A2E]">
+        <Toast />
         {children}
         <script
           dangerouslySetInnerHTML={{
