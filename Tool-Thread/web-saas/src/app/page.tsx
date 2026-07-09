@@ -484,7 +484,7 @@ export default function Home() {
                   preload="auto"
                   className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity duration-300"
                   poster="/0709-poster.jpg"
-                  src="/api/telegram-file/BAACAgUAAxkDAAIJ22pOtdluZkk4ebgo8xpZh0zV6EmPAAJhHQAC_iZ4Vm50r2EWYBfxPAQ"
+                  src="/api/telegram-file/BAACAgUAAxkDAAILhmpPuALL-wAB_edCfS4eWprjykuzvgACHSIAAmzfeFY6xTy0vJzjijwE"
                 >
                   Trình duyệt của bạn không hỗ trợ thẻ video.
                 </video>
