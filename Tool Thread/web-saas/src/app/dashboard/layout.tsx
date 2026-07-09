@@ -151,8 +151,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-6 pb-5 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md">
-                <Rocket className="w-4.5 h-4.5 text-white" />
+              <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center shadow-sm">
+                <img src="/rocket_logo.png" alt="AutoFarm" className="w-full h-full object-cover" />
               </div>
               <div>
                 <p className="text-[14px] font-bold text-gray-900 tracking-tight leading-tight">AutoFarm</p>
@@ -282,8 +282,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/" className="flex items-center justify-center px-4 pt-6 pb-6 shrink-0 min-h-[80px] hover:opacity-80 transition-opacity">
             {!collapsed ? (
               <div className="flex items-center gap-3 w-full">
-                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
-                  <Rocket className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-[9px] overflow-hidden shadow-sm shrink-0">
+                  <img src="/rocket_logo.png" alt="AutoFarm" className="w-full h-full object-cover" />
                 </div>
                 <div className="whitespace-nowrap">
                   <h1 className="font-semibold text-sm text-gray-900 tracking-tight leading-tight">AutoFarm</h1>
@@ -291,8 +291,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm mx-auto">
-                <Rocket className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-[9px] overflow-hidden shadow-sm mx-auto">
+                <img src="/rocket_logo.png" alt="AutoFarm" className="w-full h-full object-cover" />
               </div>
             )}
           </Link>
