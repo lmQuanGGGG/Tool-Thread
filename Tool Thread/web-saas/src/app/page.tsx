@@ -157,7 +157,7 @@ const ServerlessIllustration = () => {
             </div>
             {/* Cloudflare (Workers) */}
             <div className="absolute -right-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2 p-2">
-              <img src="/image.png" alt="Node" className="w-full h-full object-contain" />
+              <img src="/cloudflare-logo.png" alt="Cloudflare" className="w-full h-full object-contain" />
             </div>
           </div>
 
