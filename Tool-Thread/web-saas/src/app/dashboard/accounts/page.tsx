@@ -36,11 +36,10 @@ function StatusDot({ active }: { active: boolean }) {
 
 function StatusPill({ active, label = "SAVED" }: { active: boolean; label?: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-      active
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${active
         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
         : "border-gray-200 bg-gray-50 text-gray-400"
-    }`}>
+      }`}>
       <StatusDot active={active} />
       {active ? label : "UNSAVED"}
     </span>
@@ -225,10 +224,10 @@ export default function AccountsPage() {
   const handleSavePost = async (post: any) => {
     pushLog("INFO", `Đang lưu bài viết...`, "threads");
     const { error } = await supabase.from('crawl_data').update({ text_content: post.text_content, image_urls: post.image_urls }).eq('id', post.id);
-    if (error) { 
-      pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads"); 
+    if (error) {
+      pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads");
       showToast(`Lỗi lưu bài viết: ${error.message}`);
-      return false; 
+      return false;
     }
     pushLog("SUCCESS", `Đã lưu thay đổi bài viết.`, "threads");
     showToast("Đã lưu thay đổi bài viết thành công.");
@@ -288,15 +287,15 @@ export default function AccountsPage() {
 
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
         setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
-        
+
         if (newLog.level === 'success' && newLog.bot_type === 'threads_post' && newLog.message.includes('ID:')) {
           const match = newLog.message.match(/\[ID:\s*([a-zA-Z0-9-]+)\]/);
           if (match && match[1]) {
-             const postedId = match[1];
-             setThreadsPosts(prev => prev.filter(p => p.id !== postedId));
-             setThreadsTotalCount(prev => Math.max(0, prev - 1));
+            const postedId = match[1];
+            setThreadsPosts(prev => prev.filter(p => p.id !== postedId));
+            setThreadsTotalCount(prev => Math.max(0, prev - 1));
           }
-          supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({data}) => { if (data) setThreadsPosts(data); });
+          supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({ data }) => { if (data) setThreadsPosts(data); });
         }
       } else if (newLog.bot_type === 'parse_links') {
         setGlobalLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
@@ -304,65 +303,65 @@ export default function AccountsPage() {
         setFbLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
       }
       if (newLog.bot_type === 'parse_links' && newLog.level === 'success') {
-        supabase.from("profiles").select("parsed_affiliate_links").eq("email", userEmail).single().then(({data}) => { if (data && data.parsed_affiliate_links) setParsedLinks(data.parsed_affiliate_links); });
+        supabase.from("profiles").select("parsed_affiliate_links").eq("email", userEmail).single().then(({ data }) => { if (data && data.parsed_affiliate_links) setParsedLinks(data.parsed_affiliate_links); });
       }
     }).subscribe();
-    
+
     // Realtime lắng nghe dữ liệu crawl mới nhất
     const crawlChannel = supabase.channel('realtime_crawl_data')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crawl_data', filter: `user_id=eq.${userId}` }, (payload) => {
-          setThreadsPosts(prev => {
-              // Bỏ qua nếu đã tồn tại
-              if (prev.find(p => p.id === payload.new.id)) return prev;
-              return [payload.new, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
-          });
-          setThreadsTotalCount(prev => prev + 1);
+        setThreadsPosts(prev => {
+          // Bỏ qua nếu đã tồn tại
+          if (prev.find(p => p.id === payload.new.id)) return prev;
+          return [payload.new, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
+        });
+        setThreadsTotalCount(prev => prev + 1);
       }).subscribe();
 
-    return () => { 
-        supabase.removeChannel(channel); 
-        supabase.removeChannel(crawlChannel);
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(crawlChannel);
     };
   }, [userEmail, userId]);
 
   const handleSave = async () => {
     if (!userId) return;
-    
+
     // Tự động lọc trùng và làm sạch link rỗng
     const rawLinks = formData.affiliate_links.split("\n").map(l => l.trim()).filter(Boolean);
     const uniqueLinks = Array.from(new Set(rawLinks));
     const cleanedText = uniqueLinks.join("\n");
-    
+
     if (cleanedText !== formData.affiliate_links) {
-        setFormData(prev => ({ ...prev, affiliate_links: cleanedText }));
+      setFormData(prev => ({ ...prev, affiliate_links: cleanedText }));
     }
-    
+
     const payloadToSave = { ...formData, affiliate_links: cleanedText };
 
     const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 2; };
     const maxLinks = getMaxLinks(userTier);
     const linkCount = uniqueLinks.length;
-    if (linkCount > maxLinks) { 
-        showToast(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
-        pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global"); 
-        return; 
+    if (linkCount > maxLinks) {
+      showToast(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
+      pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global");
+      return;
     }
     setSaving(true);
     pushLog("INFO", "Đang lưu cấu hình...", "global");
     pushLog("INFO", "Đang lưu cấu hình...", "fb");
     pushLog("INFO", "Đang lưu cấu hình...", "threads");
-    
+
     const { error } = await supabase.from("profiles").update(payloadToSave).eq("id", userId);
-    if (error) { 
-        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global");
-        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "fb");
-        pushLog("ERROR", `Lưu thất bại: ${error.message}`, "threads");
-        showToast(`Lưu thất bại: ${error.message}`);
-    } else { 
-        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global"); 
-        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "fb"); 
-        pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "threads"); 
-        showToast("Cấu hình đã được lưu thành công.");
+    if (error) {
+      pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global");
+      pushLog("ERROR", `Lưu thất bại: ${error.message}`, "fb");
+      pushLog("ERROR", `Lưu thất bại: ${error.message}`, "threads");
+      showToast(`Lưu thất bại: ${error.message}`);
+    } else {
+      pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global");
+      pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "fb");
+      pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "threads");
+      showToast("Cấu hình đã được lưu thành công.");
     }
     setSaving(false);
   };
@@ -376,15 +375,15 @@ export default function AccountsPage() {
     try {
       if (userTier !== 'promax') {
         const today = new Date().toLocaleDateString("en-CA");
-        const [{data: stat}, {data: limitData}] = await Promise.all([
+        const [{ data: stat }, { data: limitData }] = await Promise.all([
           supabase.from("usage_stats").select("*").eq("user_id", userId).eq("date", today).maybeSingle(),
           supabase.from("tier_limits").select("*").eq("tier", userTier).maybeSingle()
         ]);
-        
+
         let isOverLimit = false;
         let limitMsg = "";
         const safeCount = (v: any) => typeof v === 'number' ? v : 0;
-        
+
         if (botType.includes('threads_post')) {
           const used = safeCount(stat?.threads_posts_count);
           let limit = limitData?.threads_post_per_day ?? limitData?.reels_per_day ?? 2;
@@ -409,7 +408,7 @@ export default function AccountsPage() {
           return;
         }
       }
-    } catch(e) {
+    } catch (e) {
       console.error('Limit check error:', e);
     }
 
@@ -419,13 +418,13 @@ export default function AccountsPage() {
     pushLog("INFO", `Đang kích hoạt Bot [${botType.toUpperCase()}]...`, target);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/trigger-bot", { 
-        method: "POST", 
-        headers: { 
+      const res = await fetch("/api/trigger-bot", {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.access_token}` 
-        }, 
-        body: JSON.stringify({ email: userEmail, botType: botType.split('_card')[0] }) 
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ email: userEmail, botType: botType.split('_card')[0] })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -453,7 +452,7 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-white border border-zinc-200 rounded-[32px] shadow-sm transition-all duration-500";
+  const cardClass = "bg-white rounded-[32px] shadow-sm transition-all duration-500 border-none";
   const inputClass = "w-full bg-zinc-50/80 border border-zinc-200/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-sm";
   const editorCardClass = "bg-white/60 backdrop-blur-3xl border border-white/80 rounded-[32px] p-5 relative group/post shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:bg-white/80 hover:border-white transition-all duration-500 ring-1 ring-black/[0.02]";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
@@ -506,11 +505,10 @@ export default function AccountsPage() {
             <button
               key={t}
               onClick={() => setActiveTab(t)}
-              className={`text-[14px] font-medium transition-colors ${
-                activeTab === t
+              className={`text-[14px] font-medium transition-colors ${activeTab === t
                   ? "text-zinc-900 font-semibold"
                   : "text-zinc-500 hover:text-zinc-900"
-              }`}
+                }`}
             >
               {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
             </button>
@@ -520,13 +518,13 @@ export default function AccountsPage() {
 
       {/* ── WORKSPACE ── */}
       <main className="flex-1 max-w-[1200px] w-full mx-auto px-0 md:px-8 py-4 md:py-8">
-        
+
         {/* ═══ CẤU HÌNH CHUNG ═══ */}
         {activeTab === "global" && (
           <div className="anim-fade-up px-4 md:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               <div className="space-y-6 h-full">
-                
+
 
                 <div className={`${cardClass} p-8 anim-fade-up anim-d1 flex flex-col`}>
                   {/* Cấu Hình Mạng Lưới */}
@@ -544,9 +542,9 @@ export default function AccountsPage() {
                     {triggeringType === "parse_links" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                     Đồng Bộ Tên & Sinh Comment AI
                   </button>
-                  
+
                   <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-10"></div>
-                  
+
                   {/* Thông báo Telegram */}
                   <div className="mb-6">
                     <CardTitle
@@ -559,8 +557,8 @@ export default function AccountsPage() {
                   </div>
                   <input type="text" value={formData.tele_chat_id} onChange={(e) => {
                     if (userTier === "free" || userTier === "lite") {
-                       showToast("Gói Free và Lite không hỗ trợ nhận thông báo. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
-                       return;
+                      showToast("Gói Free và Lite không hỗ trợ nhận thông báo. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
+                      return;
                     }
                     setFormData({ ...formData, tele_chat_id: e.target.value })
                   }} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
@@ -584,7 +582,7 @@ export default function AccountsPage() {
                       />
                       <span className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-mono text-emerald-600 font-semibold">{parsedLinks.length} items</span>
                     </div>
-                    
+
                     <div className="relative flex-1 min-h-0">
                       <button onClick={() => scrollShopee('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
                         <ChevronLeft className="w-5 h-5 pr-0.5" />
@@ -592,7 +590,7 @@ export default function AccountsPage() {
                       <button onClick={() => scrollShopee('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
-                      
+
                       <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-5 px-4 md:px-5 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
@@ -604,10 +602,10 @@ export default function AccountsPage() {
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
-                              
+
                               <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
                               <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
-                              
+
                               <div className="mt-auto flex justify-between items-center pt-2">
                                 <span className="text-[12px] text-gray-400 font-mono truncate max-w-[140px]">{p.aff_link}</span>
                                 <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors group">
@@ -615,7 +613,8 @@ export default function AccountsPage() {
                                 </button>
                               </div>
                             </div>
-                        )})}
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -650,9 +649,9 @@ export default function AccountsPage() {
                       <Info className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
                     </div>
-                    
+
                     <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-10"></div>
-                    
+
                     <div className="mb-6">
                       <CardTitle
                         icon={Cookie}
@@ -674,59 +673,60 @@ export default function AccountsPage() {
               </div>
 
               <div className="flex h-[740px] lg:h-full lg:min-h-[740px] flex-col gap-5">
-              {parsedLinks.length > 0 ? (
-                <div className={`${cardClass} p-5 flex flex-col h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
-                  <div className="flex items-center justify-between gap-4 mb-4">
-                    <CardTitle
-                      icon={ImageIcon}
-                      title="FB Story Poster"
-                      subtitle="Danh sách sản phẩm dùng để dựng story bán hàng."
-                      tone="purple"
-                    />
-                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
-                  </div>
-                  <div className="relative flex-1 min-h-0">
-                    <button onClick={() => scrollFbStory('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-                      <ChevronLeft className="w-5 h-5 pr-0.5" />
-                    </button>
-                    <button onClick={() => scrollFbStory('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-                      <ChevronRight className="w-5 h-5 pl-0.5" />
-                    </button>
+                {parsedLinks.length > 0 ? (
+                  <div className={`${cardClass} p-5 flex flex-col h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <CardTitle
+                        icon={ImageIcon}
+                        title="FB Story Poster"
+                        subtitle="Danh sách sản phẩm dùng để dựng story bán hàng."
+                        tone="purple"
+                      />
+                      <span className="shrink-0 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-100 text-[11px] font-mono text-purple-600 font-semibold">{parsedLinks.length} items</span>
+                    </div>
+                    <div className="relative flex-1 min-h-0">
+                      <button onClick={() => scrollFbStory('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                        <ChevronLeft className="w-5 h-5 pr-0.5" />
+                      </button>
+                      <button onClick={() => scrollFbStory('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                        <ChevronRight className="w-5 h-5 pl-0.5" />
+                      </button>
 
-                    <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-6 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
-                      {[...parsedLinks, ...parsedLinks].map((p, i) => {
-                        const sourceIndex = i % parsedLinks.length;
-                        return (
-                          <div key={`fb-story-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
-                            <div className="relative w-full aspect-[9/16] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
-                              <img src={p.image_url} alt={p.title || "FB Story"} className="h-full w-full object-cover" />
-                              <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                      <div ref={fbStoryCarouselRef} {...carouselPauseHandlers("fb")} className="flex overflow-x-auto overflow-y-hidden gap-6 h-full snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden">
+                        {[...parsedLinks, ...parsedLinks].map((p, i) => {
+                          const sourceIndex = i % parsedLinks.length;
+                          return (
+                            <div key={`fb-story-${i}`} className="w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                              <div className="relative w-full aspect-[9/16] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
+                                <img src={p.image_url} alt={p.title || "FB Story"} className="h-full w-full object-cover" />
+                                <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+
+                              <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
+                              <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
+
+                              <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
+                                <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                                <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="text-[14px] font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 transition-colors group">
+                                  {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng FB"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                              </div>
                             </div>
-                            
-                            <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
-                            <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
-                            
-                            <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
-                              <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
-                              <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="text-[14px] font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 transition-colors group">
-                                {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng FB"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                              </button>
-                            </div>
-                          </div>
-                      )})}
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3 text-center`}>
-                  <ImageIcon className="w-10 h-10 text-gray-300 mb-3" />
-                  <p className="text-[13px] font-medium text-gray-600">Chưa có Data Shopee</p>
-                  <p className="text-[11px] text-gray-400 mt-1 max-w-[250px]">Hãy sang tab Cấu Hình Chung, dán link Affiliate và nhấn Đồng bộ để lấy dữ liệu nhé!</p>
-                </div>
-              )}
-              {renderInlineTerminal("fb")}
+                ) : (
+                  <div className={`${cardClass} p-6 flex flex-col items-center justify-center h-[540px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3 text-center`}>
+                    <ImageIcon className="w-10 h-10 text-gray-300 mb-3" />
+                    <p className="text-[13px] font-medium text-gray-600">Chưa có Data Shopee</p>
+                    <p className="text-[11px] text-gray-400 mt-1 max-w-[250px]">Hãy sang tab Cấu Hình Chung, dán link Affiliate và nhấn Đồng bộ để lấy dữ liệu nhé!</p>
+                  </div>
+                )}
+                {renderInlineTerminal("fb")}
               </div>
             </div>
           </div>
@@ -737,13 +737,13 @@ export default function AccountsPage() {
           <div className="anim-fade-up px-4 md:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               <div className="space-y-5 h-full">
-                <ThreadsCrawler 
-                  userId={userId || ""} 
-                  tier={userTier} 
-                  credits={userCredits} 
+                <ThreadsCrawler
+                  userId={userId || ""}
+                  tier={userTier}
+                  credits={userCredits}
                   setCredits={setUserCredits}
                   pushLog={pushLog}
-                  onCrawlSuccess={() => { if(userId) fetchThreadsPosts(userId); setActiveTab("threads"); }} 
+                  onCrawlSuccess={() => { if (userId) fetchThreadsPosts(userId); setActiveTab("threads"); }}
                 />
 
                 <div className={`${cardClass} p-8 anim-fade-up anim-d1`}>
@@ -762,7 +762,7 @@ export default function AccountsPage() {
                     Khởi động AI Commenter
                   </button>
                 </div>
-                
+
               </div>
 
               <div className="flex h-[760px] lg:h-full lg:min-h-[740px] flex-col gap-5">
@@ -776,88 +776,88 @@ export default function AccountsPage() {
                     />
                     <span className="shrink-0 px-2.5 py-1 rounded-full bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
                   </div>
-	                  <div className="relative flex-1 min-h-0">
-	                    {threadsPosts.length > 0 && (
-	                      <>
-	                        <button onClick={() => scrollThreadsPoster('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-	                          <ChevronLeft className="w-5 h-5 pr-0.5" />
-	                        </button>
-	                        <button onClick={() => scrollThreadsPoster('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
-	                          <ChevronRight className="w-5 h-5 pl-0.5" />
-	                        </button>
-	                      </>
-	                    )}
+                  <div className="relative flex-1 min-h-0">
+                    {threadsPosts.length > 0 && (
+                      <>
+                        <button onClick={() => scrollThreadsPoster('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                          <ChevronLeft className="w-5 h-5 pr-0.5" />
+                        </button>
+                        <button onClick={() => scrollThreadsPoster('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-9 h-9 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-200 transition-all hover:scale-110">
+                          <ChevronRight className="w-5 h-5 pl-0.5" />
+                        </button>
+                      </>
+                    )}
 
-		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 px-4 md:px-6 [&::-webkit-scrollbar]:hidden">
-		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
-                          const hasImages = post.image_urls && post.image_urls.length > 0;
-                          return (
-                            <div key={`threads-${post.id}-${i}`} className="w-[75vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
-                              {hasImages ? (
-                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
-                                  {post.image_urls.length > 1 && (
-                                    <>
-                                      <button onClick={(e) => {
-                                        const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
-                                        if (c) c.scrollBy({ left: -c.clientWidth, behavior: 'smooth' });
-                                      }} className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
-                                        <ChevronLeft className="w-4 h-4 pr-0.5" />
+                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 px-4 md:px-6 [&::-webkit-scrollbar]:hidden">
+                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
+                        const hasImages = post.image_urls && post.image_urls.length > 0;
+                        return (
+                          <div key={`threads-${post.id}-${i}`} className="w-[75vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
+                            {hasImages ? (
+                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
+                                {post.image_urls.length > 1 && (
+                                  <>
+                                    <button onClick={(e) => {
+                                      const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
+                                      if (c) c.scrollBy({ left: -c.clientWidth, behavior: 'smooth' });
+                                    }} className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
+                                      <ChevronLeft className="w-4 h-4 pr-0.5" />
+                                    </button>
+                                    <button onClick={(e) => {
+                                      const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
+                                      if (c) c.scrollBy({ left: c.clientWidth, behavior: 'smooth' });
+                                    }} className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
+                                      <ChevronRight className="w-4 h-4 pl-0.5" />
+                                    </button>
+                                  </>
+                                )}
+                                <div className="scroll-container flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+                                  {post.image_urls.map((url: string, idx: number) => (
+                                    <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
+                                      <img src={url} alt="Threads media" className="h-full w-full object-cover" />
+                                      <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all shadow-md">
+                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
-                                      <button onClick={(e) => {
-                                        const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
-                                        if (c) c.scrollBy({ left: c.clientWidth, behavior: 'smooth' });
-                                      }} className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-700 hover:text-black hover:bg-white opacity-0 group-hover/img-carousel:opacity-100 transition-all shadow-sm">
-                                        <ChevronRight className="w-4 h-4 pl-0.5" />
-                                      </button>
-                                    </>
-                                  )}
-                                  <div className="scroll-container flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
-                                    {post.image_urls.map((url: string, idx: number) => (
-                                      <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
-                                        <img src={url} alt="Threads media" className="h-full w-full object-cover" />
-                                        <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all shadow-md">
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá Post">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                    </div>
+                                  ))}
                                 </div>
-                              ) : (
-                                <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
-                                  <MessageCircle className="w-12 h-12 text-violet-300 mb-3" />
-                                  <p className="text-violet-400 font-medium text-sm">Text Only Post</p>
-                                  <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                              
-                              <textarea className="w-full bg-transparent border-none p-0 text-[15px] font-medium text-gray-900 resize-none outline-none leading-relaxed min-h-[80px] placeholder:text-gray-300 focus:ring-0 mb-4" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
-                              
-                              <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
-                                <button onClick={() => handleSavePost(post)} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
-                                <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className="text-[14px] font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors group">
-                                  {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng Threads"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá Post">
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
+                            ) : (
+                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
+                                <MessageCircle className="w-12 h-12 text-violet-300 mb-3" />
+                                <p className="text-violet-400 font-medium text-sm">Text Only Post</p>
+                                <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+
+                            <textarea className="w-full bg-transparent border-none p-0 text-[15px] font-medium text-gray-900 resize-none outline-none leading-relaxed min-h-[80px] placeholder:text-gray-300 focus:ring-0 mb-4" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
+
+                            <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
+                              <button onClick={() => handleSavePost(post)} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                              <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className="text-[14px] font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors group">
+                                {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng Threads"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </button>
                             </div>
-                          );
-                        })}
-	                      {threadsPosts.length === 0 && (
-	                        <div className="h-full w-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 text-center text-gray-400 px-6">
-	                          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
-	                            <MessageCircle className="w-5 h-5 opacity-40" />
-	                          </div>
-	                          <p className="text-sm font-medium text-gray-600">Không có dữ liệu Crawl nào.</p>
-	                          <p className="mt-1 max-w-[260px] text-[12px] leading-relaxed text-gray-400">Chạy crawler bên trái để đưa bài mới vào hàng chờ đăng Threads.</p>
-	                        </div>
-	                      )}
-	                    </div>
-	                  </div>
-	                </div>
+                          </div>
+                        );
+                      })}
+                      {threadsPosts.length === 0 && (
+                        <div className="h-full w-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 text-center text-gray-400 px-6">
+                          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
+                            <MessageCircle className="w-5 h-5 opacity-40" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600">Không có dữ liệu Crawl nào.</p>
+                          <p className="mt-1 max-w-[260px] text-[12px] leading-relaxed text-gray-400">Chạy crawler bên trái để đưa bài mới vào hàng chờ đăng Threads.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 {renderInlineTerminal("threads")}
 
               </div>
@@ -866,6 +866,6 @@ export default function AccountsPage() {
         )}
       </main>
 
-	    </div>
+    </div>
   );
 }
