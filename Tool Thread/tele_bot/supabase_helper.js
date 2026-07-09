@@ -160,12 +160,16 @@ async function checkQuota(email, type = 'reels_posted') {
     const limitKey = type === 'reels_posted' ? 'reels_per_day'
                    : type === 'threads_commented' ? 'threads_per_day'
                    : type === 'threads_posts_count' ? 'threads_post_per_day'
+                   : type === 'fb_posts_count' ? 'fb_post_per_day'
                    : 'fb_story_per_day';
                    
     let limit = limits[limitKey];
-    // Fallback nếu DB thiếu column threads_post_per_day (dùng chung limit với reels hoặc gán mặc định)
+    // Fallback nếu DB thiếu column
     if (limit === undefined && type === 'threads_posts_count') {
         limit = limits['reels_per_day'] || 2; 
+    }
+    if (limit === undefined && type === 'fb_posts_count') {
+        limit = 3; 
     }
     if (limit === -1) return true; // unlimited
 
