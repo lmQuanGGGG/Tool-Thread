@@ -36,7 +36,7 @@ jobs:
       - name: ⚙️ Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Cài dependencies
         run: cd "Tool-Thread"/tele_bot && npm install
@@ -89,7 +89,7 @@ jobs:
       - name: ⚙️ Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Cài dependencies
         run: cd "Tool-Thread"/tele_bot && npm install
@@ -127,7 +127,7 @@ jobs:
       - name: ⚙️ Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Cài dependencies
         run: cd "Tool-Thread"/tele_bot && npm install
@@ -192,7 +192,7 @@ jobs:
       - name: ⚙️ Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Cài dependencies
         run: cd "Tool-Thread"/tele_bot && npm install
