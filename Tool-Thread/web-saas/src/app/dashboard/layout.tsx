@@ -436,12 +436,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className={`flex-1 flex flex-col min-h-screen relative z-10 transition-all duration-300 ${collapsed ? "md:pl-[64px]" : "md:pl-[256px]"}`}>
           {/* Mobile Top Bar */}
           <div className="md:hidden flex items-center justify-between bg-white/90 backdrop-blur-md border-b border-zinc-200/40 px-4 py-3 sticky top-0 z-30">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
-                <Rocket className="w-3.5 h-3.5 text-white" />
+            <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+              <div className="w-7 h-7 rounded-[7px] overflow-hidden shadow-sm shrink-0">
+                <img src="/rocket_logo.png" alt="AutoFarm" className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-[14px] text-gray-900 tracking-tight">AutoFarm</span>
-            </div>
+            </Link>
             <button
               onClick={() => setMobileOpen(true)}
               className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors"
