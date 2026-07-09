@@ -279,14 +279,13 @@ export default function AccountsPage() {
       if (newLog.level === 'success') {
          showToast(`🎉 ${newLog.message}`);
       }
+      if (newLog.level === 'error') {
+         showToast(`❌ ${newLog.message}`);
+      }
 
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
         setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
         
-        // Show toast if cookie error
-        if (newLog.level === 'error' && (newLog.message.includes('Cookie') || newLog.message.includes('hết hạn') || newLog.message.includes('chết'))) {
-          showToast(`🚨 ${newLog.message}`);
-        }
         if (newLog.level === 'success' && newLog.bot_type === 'threads_post' && newLog.message.includes('ID:')) {
           const match = newLog.message.match(/\[ID:\s*([a-zA-Z0-9-]+)\]/);
           if (match && match[1]) {
@@ -368,6 +367,13 @@ export default function AccountsPage() {
     const isGlobal = botType === 'parse_links';
     const target = isGlobal ? 'global' : (isThreads ? 'threads' : 'fb');
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
+
+    if (userCredits <= 0) {
+      showToast("❌ Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!");
+      pushLog("ERROR", "Hết lượt chạy (Credits). Yêu cầu đã bị huỷ.", target);
+      return;
+    }
+
     if (isThreads && !formData.threads_cookie) { pushLog("WARN", "Thiếu Threads Cookie!", target); return; }
     else if (!isThreads && !isGlobal && !formData.fb_cookie) { pushLog("WARN", "Thiếu FB Cookie!", target); return; }
     setTriggeringType(botType);
