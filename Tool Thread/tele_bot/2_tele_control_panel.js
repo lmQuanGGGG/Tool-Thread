@@ -18,7 +18,7 @@ function triggerLocalPM2(processName, chatId, displayName) {
     // Tạo cờ để báo hiệu cho bot biết là chạy bằng tay (bỏ qua bước ngâm nick)
     fs.writeFileSync(path.resolve(__dirname, `${processName}.manual`), 'true');
     
-    exec(`pm2 start ${processName}`, (error, stdout, stderr) => {
+    exec(`pm2 start ecosystem.config.js --only ${processName}`, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             bot.sendMessage(chatId, `✗ Gửi lệnh thất bại: ${error.message}`);
