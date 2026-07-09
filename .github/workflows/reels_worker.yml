@@ -37,7 +37,7 @@ jobs:
             echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
           else
             # Cron auto: Lấy toàn bộ user PRO từ Supabase
-            USERS=$(cd "Tool Thread"/tele_bot && node get_users.js)
+            USERS=$(cd "Tool Thread"/tele_bot && node get_users.js | grep -o '\[.*\]' | tail -n 1)
             echo "matrix=$USERS" >> $GITHUB_OUTPUT
           fi
 
