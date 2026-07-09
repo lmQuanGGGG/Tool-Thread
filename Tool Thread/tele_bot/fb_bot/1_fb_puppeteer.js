@@ -62,7 +62,7 @@ async function downloadImageFromTelegram(file_id) {
     let fbCookieStr = dbConfig?.fb_cookie || process.env.FB_COOKIE;
     
     if (!fbCookieStr) {
-        console.error("❌ Lỗi: Chưa có FB_COOKIE trong file .env!");
+        console.error("✗ Lỗi: Chưa có FB_COOKIE trong file .env!");
         process.exit(1);
     }
     let cookies = JSON.parse(fbCookieStr);
@@ -86,7 +86,7 @@ async function downloadImageFromTelegram(file_id) {
     let validProducts = products.filter(p => p.tele_file_id && p.suggested_comment);
 
     if (validProducts.length === 0) {
-        console.error("❌ Không có sản phẩm nào có đủ ảnh và cmt mẫu trong data_products.json!");
+        console.error("✗ Không có sản phẩm nào có đủ ảnh và cmt mẫu trong data_products.json!");
         process.exit(1);
     }
 
@@ -306,7 +306,7 @@ async function downloadImageFromTelegram(file_id) {
                             }
                         }, targetBox);
                         await delay(3000);
-                        console.log("✅ Đã bắn Comment + Ảnh thành công!");
+                        console.log("✓ Đã bắn Comment + Ảnh thành công!");
                         commentedCount++;
                         
                         if (localImg && fs.existsSync(localImg)) fs.unlinkSync(localImg);
@@ -320,7 +320,7 @@ async function downloadImageFromTelegram(file_id) {
                         console.log("⚠️ Không tìm thấy ô comment thật sự.");
                     }
                 } catch (err) {
-                    console.log(`❌ Lỗi khi comment bài ${i + 1}:`, err.message);
+                    console.log(`✗ Lỗi khi comment bài ${i + 1}:`, err.message);
                 }
             }
             
@@ -331,14 +331,14 @@ async function downloadImageFromTelegram(file_id) {
             }
             await delay(getRandomInt(20000, 30000));
         } catch (err) {
-            console.log(`❌ Lỗi trong Group ${target}:`, err.message);
+            console.log(`✗ Lỗi trong Group ${target}:`, err.message);
         }
     }
 
     console.log("🎉 Hoàn tất chiến dịch rải link FB!");
     try {
         const TELEGRAM_CHAT_ID = dbConfig?.tele_chat_id || process.env.TELE_CHAT_ID || -5396355060;
-        const msg = `✅ **Báo cáo FB Comment Bot**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **${totalGroups} nhóm/page**\n- Tổng số bài viết đã cmt: **${totalPosts} bài**`;
+        const msg = `✓ **Báo cáo FB Comment Bot**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **${totalGroups} nhóm/page**\n- Tổng số bài viết đã cmt: **${totalPosts} bài**`;
         const sendUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         await axios.post(sendUrl, { chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' });
     } catch(err) {

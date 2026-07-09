@@ -117,7 +117,7 @@ function buildComment(category, name, link) {
             || /^\d+$/.test(p.product_name);
 
         if (!bad) {
-            console.log(`[${i+1}/30] ✅ Skip: ${p.product_name}`);
+            console.log(`[${i+1}/30] ✓ Skip: ${p.product_name}`);
             continue;
         }
 
@@ -125,7 +125,7 @@ function buildComment(category, name, link) {
 
         const { shopId, itemId } = await getShopeeIds(p.link);
         if (!shopId || !itemId) {
-            console.log(`❌ Không parse được ID`);
+            console.log(`✗ Không parse được ID`);
             continue;
         }
 
@@ -135,7 +135,7 @@ function buildComment(category, name, link) {
         if (name) {
             p.product_name = name;
             p.suggested_comment = buildComment(p.category, name, p.link);
-            console.log(`✅ "${name}"`);
+            console.log(`✓ "${name}"`);
         } else {
             console.log(`⚠️  API không trả tên (shopId=${shopId} itemId=${itemId})`);
         }

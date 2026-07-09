@@ -5,7 +5,7 @@ async function processPendingImages() {
   console.log("🚀 Đang khởi động Worker: Tải ảnh từ Crawl Data lên Telegram (S3)...");
 
   if (!supabase) {
-    console.error("❌ Chưa kết nối được Supabase!");
+    console.error("✗ Chưa kết nối được Supabase!");
     return;
   }
 
@@ -19,12 +19,12 @@ async function processPendingImages() {
       .limit(100); // Mỗi mẻ xử lý max 100 bài theo ý sếp
 
     if (error) {
-      console.error("❌ Lỗi khi lấy dữ liệu:", error.message);
+      console.error("✗ Lỗi khi lấy dữ liệu:", error.message);
       return;
     }
 
     if (!posts || posts.length === 0) {
-      console.log("✅ Không có bài viết nào cần upload ảnh lúc này.");
+      console.log("✓ Không có bài viết nào cần upload ảnh lúc này.");
       return;
     }
 
@@ -66,9 +66,9 @@ async function processPendingImages() {
           .eq('id', post.id);
 
         if (updateErr) {
-          console.error(`❌ Lỗi update file_ids cho bài ${post.post_id}:`, updateErr.message);
+          console.error(`✗ Lỗi update file_ids cho bài ${post.post_id}:`, updateErr.message);
         } else {
-          console.log(`✅ Hoàn tất bài ${post.post_id} | Đã lưu ${fileIds.length} file_ids | Tiêu hao ${cost} credits`);
+          console.log(`✓ Hoàn tất bài ${post.post_id} | Đã lưu ${fileIds.length} file_ids | Tiêu hao ${cost} credits`);
         }
       } else {
         console.warn(`⚠️ Bài ${post.post_id} không tải được ảnh nào!`);

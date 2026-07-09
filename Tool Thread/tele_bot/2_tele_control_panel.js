@@ -21,10 +21,10 @@ function triggerLocalPM2(processName, chatId, displayName) {
     exec(`pm2 start ${processName}`, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
-            bot.sendMessage(chatId, `❌ Gửi lệnh thất bại: ${error.message}`);
+            bot.sendMessage(chatId, `✗ Gửi lệnh thất bại: ${error.message}`);
             return;
         }
-        bot.sendMessage(chatId, `✅ Đã đánh thức **${displayName}** thành công trên máy Mac! 🚀`, { parse_mode: 'Markdown' });
+        bot.sendMessage(chatId, `✓ Đã đánh thức **${displayName}** thành công trên máy Mac! 🚀`, { parse_mode: 'Markdown' });
     });
 }
 

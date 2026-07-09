@@ -7,6 +7,21 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
+const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+
+async function sendTelegramNotify(chatId, message) {
+    if (!TELEGRAM_BOT_TOKEN || !chatId) return;
+    try {
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+        });
+    } catch (e) {
+        console.error('Lỗi khi gửi thông báo Telegram:', e.message);
+    }
+}
+
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function downloadImageFromUrl(url) {
@@ -32,7 +47,7 @@ async function runSinglePost() {
   // Kiểm tra Quota
   const hasQuota = await checkQuota(email, 'threads_posts_count');
   if (!hasQuota) {
-      console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng Threads hôm nay. Dừng script.`);
+      console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng Threads hôm nay. Dừng script.`);
       await logToWeb(email, 'threads_post', `Đã hết giới hạn đăng Threads hôm nay. Dừng script.`, 'warn');
       process.exit(0);
   }
@@ -61,8 +76,8 @@ async function runSinglePost() {
   await logToWeb(email, 'threads_post', `🚀 Bắt đầu quá trình đăng bài (ID: ${postId}) lên Threads...`, 'info');
 
   if (!postId) {
-    console.error("❌ Thiếu POST_ID và không tìm thấy bài nào chưa đăng trong kho.");
-    await logToWeb(email, 'threads_post', `❌ Lỗi: Không tìm thấy bài viết nào chưa đăng trong kho.`, 'error');
+    console.error("✗ Thiếu POST_ID và không tìm thấy bài nào chưa đăng trong kho.");
+    await logToWeb(email, 'threads_post', `✗ Lỗi: Không tìm thấy bài viết nào chưa đăng trong kho.`, 'error');
     process.exit(1);
   }
 
@@ -75,24 +90,27 @@ async function runSinglePost() {
       .single();
 
     if (error || !postData) {
-      console.error("❌ Lỗi lấy dữ liệu:", error?.message);
-      await logToWeb(email, 'threads_post', `❌ Không tìm thấy dữ liệu bài viết trong DB.`, 'error');
+      console.error("✗ Lỗi lấy dữ liệu:", error?.message);
+      await logToWeb(email, 'threads_post', `✗ Không tìm thấy dữ liệu bài viết trong DB.`, 'error');
       process.exit(1);
     }
 
-    console.log(`✅ Đã lấy thành công nội dung bài viết: ${postData.post_id}`);
-    await logToWeb(email, 'threads_post', `✅ Đã lấy nội dung chuẩn bị đăng...`, 'info');
+    console.log(`✓ Đã lấy thành công nội dung bài viết: ${postData.post_id}`);
+    await logToWeb(email, 'threads_post', `✓ Đã lấy nội dung chuẩn bị đăng...`, 'info');
 
     // 1.5 Lấy cookie và link affiliate của user
     const { data: profileData, error: profileErr } = await supabase
       .from('profiles')
-      .select('threads_cookie, parsed_affiliate_links')
+      .select('threads_cookie, parsed_affiliate_links, tele_chat_id')
       .eq('email', email)
       .single();
 
     if (profileErr || !profileData?.threads_cookie) {
-      console.error("❌ Lỗi lấy Cookie:", profileErr?.message);
-      await logToWeb(email, 'threads_post', `❌ Không tìm thấy Threads Cookie. Vui lòng cập nhật trên Web.`, 'error');
+      console.error("✗ Lỗi lấy Cookie:", profileErr?.message);
+      await logToWeb(email, 'threads_post', `✗ Không tìm thấy Threads Cookie. Vui lòng cập nhật trên Web.`, 'error');
+      if (profileData?.tele_chat_id) {
+          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Không tìm thấy Threads Cookie (hoặc đã hết hạn).\n\n⚠️ <b>Hành động:</b> Sếp vui lòng vào trang Quản lý Web cập nhật lại Cookie Threads ngay để Bot tiếp tục chạy nhé!`);
+      }
       process.exit(1);
     }
 
@@ -147,8 +165,8 @@ async function runSinglePost() {
         throw new Error("Cookie không phải là một mảng JSON");
       }
     } catch (err) {
-      console.error("❌ Lỗi Parse Cookie:", err.message);
-      await logToWeb(email, 'threads_post', `❌ Lỗi định dạng Cookie (Yêu cầu JSON Array).`, 'error');
+      console.error("✗ Lỗi Parse Cookie:", err.message);
+      await logToWeb(email, 'threads_post', `✗ Lỗi định dạng Cookie (Yêu cầu JSON Array).`, 'error');
       process.exit(1);
     }
 
@@ -166,8 +184,12 @@ async function runSinglePost() {
     await delay(3000);
 
     // Kiểm tra đăng nhập
-    if (page.url().includes('login')) {
-      await logToWeb(email, 'threads_post', `❌ Cookie hết hạn hoặc không hợp lệ (Bị đẩy ra Login)`, 'error');
+    const isLoggedIn = !page.url().includes('login');
+    if (!isLoggedIn) {
+      await logToWeb(email, 'threads_post', `✗ Cookie hết hạn hoặc không hợp lệ (Bị đẩy ra Login)`, 'error');
+      if (profileData?.tele_chat_id) {
+          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Cookie Threads của sếp đã hết hạn hoặc bị văng ra ngoài (Bị chặn/Ban).\n\n⚠️ <b>Hành động:</b> Sếp vui lòng lấy lại Cookie mới và cập nhật trên Web để Bot chạy tiếp nhé!`);
+      }
       await browser.close();
       process.exit(1);
     }
@@ -189,7 +211,7 @@ async function runSinglePost() {
     });
 
     if (!writeClicked) {
-      await logToWeb(email, 'threads_post', `❌ Không tìm thấy nút Tạo bài!`, 'error');
+      await logToWeb(email, 'threads_post', `✗ Không tìm thấy nút Tạo bài!`, 'error');
       await page.screenshot({ path: `debug_single_err_${Date.now()}.png`});
       await browser.close();
       process.exit(1);
@@ -208,7 +230,7 @@ async function runSinglePost() {
     }
     
     if (!textInput) {
-      await logToWeb(email, 'threads_post', `❌ Không tìm thấy ô nhập nội dung!`, 'error');
+      await logToWeb(email, 'threads_post', `✗ Không tìm thấy ô nhập nội dung!`, 'error');
       await browser.close();
       process.exit(1);
     }
@@ -267,7 +289,7 @@ async function runSinglePost() {
     });
 
     if (!postClicked) {
-      await logToWeb(email, 'threads_post', `❌ Nút Post bị vô hiệu hóa hoặc không tìm thấy!`, 'error');
+      await logToWeb(email, 'threads_post', `✗ Nút Post bị vô hiệu hóa hoặc không tìm thấy!`, 'error');
       await page.screenshot({ path: `debug_single_err_post_${Date.now()}.png`});
       await browser.close();
       process.exit(1);
@@ -375,7 +397,7 @@ async function runSinglePost() {
                     await page.keyboard.up('Meta');
                 }
                 await delay(5000); // Chờ post cmt
-                await logToWeb(email, 'threads_post', `✅ Đã thả comment Affiliate thành công!`, 'success');
+                await logToWeb(email, 'threads_post', `✓ Đã thả comment Affiliate thành công!`, 'success');
             } else {
                 await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
             }
@@ -397,10 +419,10 @@ async function runSinglePost() {
       .eq('id', postId);
 
     if (updateErr) {
-      console.error("❌ Lỗi cập nhật DB:", updateErr.message);
+      console.error("✗ Lỗi cập nhật DB:", updateErr.message);
       await logToWeb(email, 'threads_post', `⚠️ Đăng thành công nhưng lỗi cập nhật trạng thái DB!`, 'warn');
     } else {
-      console.log("✅ Đã cập nhật trạng thái posted = true");
+      console.log("✓ Đã cập nhật trạng thái posted = true");
       await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads! [ID: ${postId}]`, 'success');
       await updateUsageStats(email, 'threads_posts_count', 1);
     }

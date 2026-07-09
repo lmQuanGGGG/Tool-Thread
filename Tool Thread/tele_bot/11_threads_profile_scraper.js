@@ -100,7 +100,7 @@ async function run() {
     console.log(`🤖 Bắt đầu cào profile Threads cho user: ${email}`);
 
     if (!supabase) {
-        console.error("❌ Không thể kết nối Supabase (supabase client is null)! Vui lòng kiểm tra biến môi trường SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY.");
+        console.error("✗ Không thể kết nối Supabase (supabase client is null)! Vui lòng kiểm tra biến môi trường SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY.");
         process.exit(1);
     }
 
@@ -115,11 +115,11 @@ async function run() {
         console.warn(`⚠️ Không tìm thấy user ${email} trong DB! Thử lấy một user bất kỳ làm fallback...`);
         const { data: fallbackProfiles } = await supabase.from('profiles').select('*').limit(1);
         if (!fallbackProfiles || fallbackProfiles.length === 0) {
-            console.error("❌ Không có bất kỳ user nào trong bảng profiles! Vui lòng đăng ký tài khoản trên Web SaaS trước.");
+            console.error("✗ Không có bất kỳ user nào trong bảng profiles! Vui lòng đăng ký tài khoản trên Web SaaS trước.");
             process.exit(1);
         }
         profiles = fallbackProfiles;
-        console.log(`✅ Đã fallback sang user: ${profiles[0].email}`);
+        console.log(`✓ Đã fallback sang user: ${profiles[0].email}`);
     }
 
     const dbConfig = profiles[0];
@@ -132,9 +132,9 @@ async function run() {
     const targetUrl = process.env.PROFILE_URL;
 
     if (!targetUrl || !targetUrl.includes('threads')) {
-        console.error("❌ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào Github Action input 'target_url')");
+        console.error("✗ Không có link profile Threads hợp lệ để cào! (Vui lòng điền vào Github Action input 'target_url')");
         if (dbConfig.tele_chat_id) {
-            await sendTelegramNotify(dbConfig.tele_chat_id, `❌ <b>Lỗi hệ thống</b>: Không có link profile Threads hợp lệ để cào!`);
+            await sendTelegramNotify(dbConfig.tele_chat_id, `✗ <b>Lỗi hệ thống</b>: Không có link profile Threads hợp lệ để cào!`);
         }
         process.exit(1);
     }
@@ -164,7 +164,7 @@ async function run() {
 
     if (cookies.length > 0) {
         await page.setCookie(...cookies);
-        console.log("✅ Đã nạp Cookie Threads!");
+        console.log("✓ Đã nạp Cookie Threads!");
     }
 
     await page.evaluateOnNewDocument(() => {
@@ -249,11 +249,11 @@ async function run() {
 
     const rawThreadsData = await page.evaluate(() => window.rawThreadsData || []);
     
-    console.log("✅ Đã cuộn xong, đóng browser...");
+    console.log("✓ Đã cuộn xong, đóng browser...");
     await browser.close();
 
     if (!rawThreadsData || rawThreadsData.length === 0) {
-        console.error("❌ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
+        console.error("✗ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
         if (dbConfig.tele_chat_id) {
             await sendTelegramNotify(dbConfig.tele_chat_id, `⚠️ <b>Cảnh báo</b>: Bot Cloud không tìm thấy bài đăng nào tại <code>${targetUrl}</code>. Thử kiểm tra lại link hoặc cookie nhé!`);
         }
@@ -362,9 +362,9 @@ async function run() {
                     const file_id = await uploadToTelegram(post.media[j].url);
                     if (file_id) {
                         image_file_ids.push(file_id);
-                        console.log(`   ✅ Tải thành công media [${j+1}] -> File_ID: ${file_id}`);
+                        console.log(`   ✓ Tải thành công media [${j+1}] -> File_ID: ${file_id}`);
                     } else {
-                        console.log(`   ❌ Lỗi tải media [${j+1}]!`);
+                        console.log(`   ✗ Lỗi tải media [${j+1}]!`);
                     }
                     await delay(1000); // Rate limit protection
                 }
@@ -388,20 +388,20 @@ async function run() {
                 }, { onConflict: 'user_id,post_id' });
 
             if (insertErr) {
-                console.error(`❌ Lỗi insert Supabase post ${post.post_id}:`, insertErr.message);
+                console.error(`✗ Lỗi insert Supabase post ${post.post_id}:`, insertErr.message);
             } else {
                 successCount++;
-                console.log(`✅ Lưu thành công post ${post.post_id} vào Database (crawl_data).`);
+                console.log(`✓ Lưu thành công post ${post.post_id} vào Database (crawl_data).`);
             }
         } catch (dbErr) {
-            console.error(`❌ Lỗi kết nối Supabase post ${post.post_id}:`, dbErr.message);
+            console.error(`✗ Lỗi kết nối Supabase post ${post.post_id}:`, dbErr.message);
         }
     }
 
     console.log(`\n🎯 HOÀN TẤT! Cào thành công ${successCount}/${newPosts.length} bài viết vào Database!`);
     
     if (dbConfig.tele_chat_id) {
-        await sendTelegramNotify(dbConfig.tele_chat_id, `🎯 <b>Hoàn tất cào bài!</b>\n✅ Thành công: <b>${successCount}</b> bài mới\n⏭️ Đã có trong DB (bỏ qua): <b>${uniqueData.length - newPosts.length}</b> bài\n🔗 Nguồn: <code>${targetUrl}</code>`);
+        await sendTelegramNotify(dbConfig.tele_chat_id, `🎯 <b>Hoàn tất cào bài!</b>\n✓ Thành công: <b>${successCount}</b> bài mới\n⏭️ Đã có trong DB (bỏ qua): <b>${uniqueData.length - newPosts.length}</b> bài\n🔗 Nguồn: <code>${targetUrl}</code>`);
     }
 }
 

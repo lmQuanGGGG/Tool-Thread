@@ -29,16 +29,16 @@ require('dotenv').config();
                 bodyText.includes("This content isn't available right now") ||
                 bodyText.includes("Liên kết bị hỏng") ||
                 bodyText.includes("Broken link")) {
-                console.log(`❌ [LỖI - KHÔNG TỒN TẠI]: ${target}`);
+                console.log(`✗ [LỖI - KHÔNG TỒN TẠI]: ${target}`);
             } else if (title.includes("Đăng nhập") || title.includes("Log in")) {
                 console.log(`⚠️ [LỖI COOKIE/ĐĂNG NHẬP]: ${target}`);
             } else if (bodyText.includes("Tham gia nhóm") || bodyText.includes("Join Group")) {
                 console.log(`⚠️ [CHƯA THAM GIA NHÓM]: ${target}`);
             } else {
-                console.log(`✅ [OK]: ${target} (Title: ${title})`);
+                console.log(`✓ [OK]: ${target} (Title: ${title})`);
             }
         } catch (e) {
-            console.log(`❌ [LỖI TRUY CẬP]: ${target} - ${e.message}`);
+            console.log(`✗ [LỖI TRUY CẬP]: ${target} - ${e.message}`);
         }
     }
     

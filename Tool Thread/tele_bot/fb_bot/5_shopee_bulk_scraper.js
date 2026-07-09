@@ -109,7 +109,7 @@ async function generateComment(title) {
 
         const shopeeData = await getShopeeOGData(link);
         if (shopeeData) {
-            console.log(`✅ Lấy thành công: ${shopeeData.title}`);
+            console.log(`✓ Lấy thành công: ${shopeeData.title}`);
             const storageChat = process.env.TELE_STORAGE_CHAT || '-5396355060';
             const file_id = await uploadToTelegram(shopeeData.imageUrl, storageChat);
             if (file_id) {
@@ -137,16 +137,16 @@ async function generateComment(title) {
         const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
         const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: newParsed }).eq('email', USER_EMAIL);
         if (error) {
-            const errLog = `❌ Lỗi lưu DB: ${error.message}`;
+            const errLog = `✗ Lỗi lưu DB: ${error.message}`;
             console.error(errLog);
             await logToWeb(USER_EMAIL, 'parse_links', errLog, 'error');
         } else {
-            const succLog = "✅ Đã lưu dữ liệu Parse thành công vào Supabase!";
+            const succLog = "✓ Đã lưu dữ liệu Parse thành công vào Supabase!";
             console.log(succLog);
             await logToWeb(USER_EMAIL, 'parse_links', succLog, 'success');
         }
     } else {
-        const noNewLog = "✅ Không có link mới nào cần cào.";
+        const noNewLog = "✓ Không có link mới nào cần cào.";
         console.log(noNewLog);
         await logToWeb(USER_EMAIL, 'parse_links', noNewLog, 'info');
     }

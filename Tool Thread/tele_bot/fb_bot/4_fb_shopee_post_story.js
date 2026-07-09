@@ -31,7 +31,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     // Kiểm tra Quota trước khi chạy
     const hasQuota = await checkQuota(email, 'fb_posts_count');
     if (!hasQuota) {
-        console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);
+        console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);
         await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');
         process.exit(0);
     }
@@ -56,7 +56,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     let fbCookieStr = dbConfig?.fb_cookie || process.env.FB_COOKIE;
     
     if (!fbCookieStr) {
-        console.error("❌ Lỗi: Chưa có FB_COOKIE trong file .env!");
+        console.error("✗ Lỗi: Chưa có FB_COOKIE trong file .env!");
         process.exit(1);
     }
     let cookies = JSON.parse(fbCookieStr);
@@ -81,8 +81,8 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     }
     
     if (scrapedData.length === 0) {
-        console.error("❌ Không tìm thấy dữ liệu sản phẩm (Chưa nhập link hoặc chưa đồng bộ).");
-        await logToWeb(email, 'fb-story', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm Đồng Bộ trên Web!', 'error');
+        console.error("✗ Không tìm thấy dữ liệu sản phẩm (Chưa nhập link hoặc chưa đồng bộ).");
+        await logToWeb(email, 'fb-story', '✗ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm Đồng Bộ trên Web!', 'error');
         process.exit(1);
     }
 
@@ -362,8 +362,8 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             if(shareBtn) shareBtn.click();
         });
         
-        console.log("✅ Đã Share lên Story thành công!");
-        await logToWeb(email, 'fb-story', '✅ Đã Share lên Story thành công!', 'success');
+        console.log("✓ Đã Share lên Story thành công!");
+        await logToWeb(email, 'fb-story', '✓ Đã Share lên Story thành công!', 'success');
         await updateUsageStats(email, 'fb_posts_count', 1);
         
         // Cập nhật lại mảng dữ liệu (đã đánh dấu fb_posted) lên DB và file local
@@ -381,7 +381,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         await delay(5000);
 
     } catch (e) {
-        console.error("❌ Lỗi trong quá trình đăng bài:", e.message);
+        console.error("✗ Lỗi trong quá trình đăng bài:", e.message);
     }
     
     // Dọn dẹp

@@ -26,9 +26,9 @@ async function dispatchWorkflow(workflowId, email) {
                 }
             }
         );
-        console.log(`✅ Dispatched ${workflowId} for ${email}`);
+        console.log(`✓ Dispatched ${workflowId} for ${email}`);
     } catch (e) {
-        console.error(`❌ Failed ${workflowId} for ${email}:`, e.response?.data?.message || e.message);
+        console.error(`✗ Failed ${workflowId} for ${email}:`, e.response?.data?.message || e.message);
     }
 }
 

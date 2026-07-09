@@ -13,12 +13,12 @@ const { fetchBotConfig } = require('./supabase_helper');
         try {
             cookies = JSON.parse(process.env.FB_COOKIE);
         } catch (e) {
-            console.error("❌ Lỗi parse FB_COOKIE từ .env:", e.message);
+            console.error("✗ Lỗi parse FB_COOKIE từ .env:", e.message);
         }
     }
 
     if (!cookies || cookies.length === 0) {
-        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
+        console.error("✗ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
         process.exit(1);
     }
 

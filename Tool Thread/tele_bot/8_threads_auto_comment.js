@@ -55,7 +55,7 @@ async function downloadImageFromTelegram(file_id) {
     // Kiểm tra Quota trước khi chạy
     const hasQuota = await checkQuota(email, 'threads_commented');
     if (!hasQuota) {
-        console.log(`❌ Tài khoản ${email} đã hết giới hạn comment Threads hôm nay. Dừng script.`);
+        console.log(`✗ Tài khoản ${email} đã hết giới hạn comment Threads hôm nay. Dừng script.`);
         await logToWeb(email, 'threads', `Đã hết giới hạn comment Threads hôm nay. Dừng script.`, 'warn');
         process.exit(0);
     }
@@ -89,8 +89,8 @@ async function downloadImageFromTelegram(file_id) {
     let validProducts = products.filter(p => p.aff_link && (p.suggested_comment || p.title));
 
     if (validProducts.length === 0) {
-        console.error("❌ Không có sản phẩm nào hợp lệ (Chưa nhập Link Affiliate hoặc Chưa Đồng bộ).");
-        await logToWeb(email, 'threads', '❌ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm nút Đồng Bộ trên Web!', 'error');
+        console.error("✗ Không có sản phẩm nào hợp lệ (Chưa nhập Link Affiliate hoặc Chưa Đồng bộ).");
+        await logToWeb(email, 'threads', '✗ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm nút Đồng Bộ trên Web!', 'error');
         process.exit(1);
     }
 
@@ -266,8 +266,8 @@ async function downloadImageFromTelegram(file_id) {
                 }
 
                 await delay(5000);
-                console.log("✅ Đã bắn Comment + Ảnh thành công!");
-                await logToWeb(email, 'threads', `✅ Đã bắn Comment + Ảnh thành công bài thứ ${commentedCount + 1}!`, 'success');
+                console.log("✓ Đã bắn Comment + Ảnh thành công!");
+                await logToWeb(email, 'threads', `✓ Đã bắn Comment + Ảnh thành công bài thứ ${commentedCount + 1}!`, 'success');
                 await updateUsageStats(email, 'threads_commented', 1);
                 commentedCount++;
                 consecutiveErrors = 0;
@@ -303,7 +303,7 @@ async function downloadImageFromTelegram(file_id) {
                 await delay(3000);
 
             } catch (err) {
-                console.log(`❌ Lỗi khi comment bài ${commentedCount + 1}:`, err.message);
+                console.log(`✗ Lỗi khi comment bài ${commentedCount + 1}:`, err.message);
                 consecutiveErrors++;
 
                 // Chụp màn hình để debug xem bị kẹt ở đâu
@@ -326,7 +326,7 @@ async function downloadImageFromTelegram(file_id) {
         await logToWeb(email, 'threads', `🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`, 'success');
         try {
             const TELEGRAM_CHAT_ID = dbConfig?.tele_chat_id || process.env.TELE_CHAT_ID || -5396355060;
-            const msg = `✅ **Báo cáo Threads Comment Bot (Nick ${NICK_INDEX})**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **Trang chủ (For You)**\n- Tổng số bài viết đã cmt: **${commentedCount} bài**`;
+            const msg = `✓ **Báo cáo Threads Comment Bot (Nick ${NICK_INDEX})**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **Trang chủ (For You)**\n- Tổng số bài viết đã cmt: **${commentedCount} bài**`;
             await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' });
         } catch (err) { }
     } catch (err) {

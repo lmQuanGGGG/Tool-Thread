@@ -103,11 +103,11 @@ async function runTestUpload() {
                     else if (msg.video) fileId = msg.video.file_id;
                     else if (msg.photo) fileId = msg.photo[msg.photo.length - 1].file_id;
 
-                    console.log(`   ✅ Up thành công! file_id: ${fileId}`);
+                    console.log(`   ✓ Up thành công! file_id: ${fileId}`);
                     newMediaList.push({ type: m.type, file_id: fileId });
                     await sleep(3000);
                 } catch (err) {
-                    console.error(`   ❌ Lỗi khi up media ${j + 1}:`, err.message);
+                    console.error(`   ✗ Lỗi khi up media ${j + 1}:`, err.message);
                 }
             }
         } else {

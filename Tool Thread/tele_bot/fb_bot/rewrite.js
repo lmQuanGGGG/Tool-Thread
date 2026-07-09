@@ -50,7 +50,7 @@ async function downloadImageFromTelegram(file_id) {
     
     let fbCookieStr = process.env.FB_COOKIE;
     if (!fbCookieStr) {
-        console.error("❌ Lỗi: Chưa có FB_COOKIE trong file .env!");
+        console.error("✗ Lỗi: Chưa có FB_COOKIE trong file .env!");
         process.exit(1);
     }
     let cookies = JSON.parse(fbCookieStr);
@@ -74,7 +74,7 @@ async function downloadImageFromTelegram(file_id) {
     let validProducts = products.filter(p => p.tele_file_id && p.suggested_comment);
 
     if (validProducts.length === 0) {
-        console.error("❌ Không có sản phẩm nào có đủ ảnh và cmt mẫu trong data_products.json!");
+        console.error("✗ Không có sản phẩm nào có đủ ảnh và cmt mẫu trong data_products.json!");
         process.exit(1);
     }
 
@@ -233,7 +233,7 @@ async function downloadImageFromTelegram(file_id) {
 
                     await delay(2000);
                     await page.keyboard.press('Enter');
-                    console.log("✅ Đã bắn Comment + Ảnh thành công!");
+                    console.log("✓ Đã bắn Comment + Ảnh thành công!");
                     commentedCount++;
                     
                     if (localImg && fs.existsSync(localImg)) fs.unlinkSync(localImg);
@@ -244,7 +244,7 @@ async function downloadImageFromTelegram(file_id) {
                         await delay(restTime * 1000);
                     }
                 } catch (err) {
-                    console.log(\`❌ Lỗi khi comment bài \${i + 1}:\`, err.message);
+                    console.log(\`✗ Lỗi khi comment bài \${i + 1}:\`, err.message);
                     await page.screenshot({ path: \`debug_cmt_err_\${i}.png\` });
                 }
             }
@@ -252,7 +252,7 @@ async function downloadImageFromTelegram(file_id) {
             console.log(\`🚀 Đã hoàn thành \${commentedCount} bài ở Group/Page này. Chuyển mục tiêu...\`);
             await delay(getRandomInt(20000, 30000));
         } catch (err) {
-            console.log(\`❌ Lỗi trong Group \${target}:\`, err.message);
+            console.log(\`✗ Lỗi trong Group \${target}:\`, err.message);
         }
     }
 

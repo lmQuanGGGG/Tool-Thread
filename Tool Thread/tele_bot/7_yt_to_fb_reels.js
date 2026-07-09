@@ -76,7 +76,7 @@ async function fetchLatestVideos(channels) {
                 }
             }
         } catch (err) {
-            console.error("❌ Lỗi quét kênh:", err.message);
+            console.error("✗ Lỗi quét kênh:", err.message);
         }
     }
     return allVideos;
@@ -122,7 +122,7 @@ async function fetchLatestVideos(channels) {
     // Kiểm tra Quota trước khi chạy
     const hasQuota = await checkQuota(email, 'reels_posted');
     if (!hasQuota) {
-        console.log(`❌ Tài khoản ${email} đã hết giới hạn đăng Reels hôm nay. Dừng script.`);
+        console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng Reels hôm nay. Dừng script.`);
         await logToWeb(email, 'yt-reels', `Đã hết giới hạn đăng Reels hôm nay. Dừng script.`, 'warn');
         process.exit(0);
     }
@@ -239,17 +239,17 @@ async function fetchLatestVideos(channels) {
                 writer.on('finish', resolve);
                 writer.on('error', reject);
             });
-            console.log(`✅ Tải video ${bestFormat.label} hoàn tất!`);
+            console.log(`✓ Tải video ${bestFormat.label} hoàn tất!`);
     } catch (err) {
-        console.error("❌ Lỗi tải video:", err.message);
+        console.error("✗ Lỗi tải video:", err.message);
         process.exit(1);
     }
 
     if (!fs.existsSync(outputPath)) {
-        console.error("❌ File không tồn tại sau khi tải.");
+        console.error("✗ File không tồn tại sau khi tải.");
         process.exit(1);
     }
-    console.log("✅ Tải video thành công!");
+    console.log("✓ Tải video thành công!");
     await logToWeb(email, 'yt-reels', `Tải video 1080p hoàn tất! Đang kết nối Facebook để đăng...`, 'info');
 
     // Bỏ qua FFMPEG theo yêu cầu của sếp, giữ nguyên video gốc để chất lượng cao nhất và up nhanh hơn.
@@ -263,12 +263,12 @@ async function fetchLatestVideos(channels) {
             cookies = JSON.parse(process.env.FB_COOKIE);
             console.log("⚠️ Lấy FB_COOKIE từ biến môi trường (.env) do Supabase không có.");
         } catch (e) {
-            console.error("❌ Lỗi parse FB_COOKIE từ .env:", e.message);
+            console.error("✗ Lỗi parse FB_COOKIE từ .env:", e.message);
         }
     }
 
     if (!cookies || cookies.length === 0) {
-        console.error("❌ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
+        console.error("✗ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
         process.exit(1);
     }
     console.log(`🍪 Đã load ${cookies.length} cookies cho Facebook.`);
@@ -317,7 +317,7 @@ async function fetchLatestVideos(channels) {
         let fileInput = await page.$('input[type="file"]');
         if (!fileInput) {
             const currentUrl = page.url();
-            console.error("❌ Không tìm thấy input up video. URL hiện tại:", currentUrl);
+            console.error("✗ Không tìm thấy input up video. URL hiện tại:", currentUrl);
             
             await page.screenshot({ path: 'error_fb_reels.png' });
             console.log("📸 Đang upload ảnh chụp màn hình lỗi lên mạng...");
@@ -447,7 +447,7 @@ async function fetchLatestVideos(channels) {
                         const saveBtn = buttons.find(b => (b.innerText || '').trim() === 'Lưu' || (b.innerText || '').trim() === 'Save');
                         if (saveBtn) saveBtn.click();
                     });
-                    console.log("✅ Đã gắn thẻ sản phẩm!");
+                    console.log("✓ Đã gắn thẻ sản phẩm!");
                 }
                 await delay(3000);
             } else {
@@ -467,7 +467,7 @@ async function fetchLatestVideos(channels) {
         console.log("⏳ Chờ hoàn tất đăng bài (90s) để video 1080p không bị ngắt quãng...");
         await delay(90000);
 
-        console.log("✅ Đăng FB Reels thành công!");
+        console.log("✓ Đăng FB Reels thành công!");
         await logToWeb(email, 'yt-reels', `Đăng FB Reels thành công: ${videoToProcess.title}`, 'success');
         await updateUsageStats(email, 'reels_posted', 1);
 
@@ -476,7 +476,7 @@ async function fetchLatestVideos(channels) {
         fs.writeFileSync(HISTORY_FILE, JSON.stringify(postedIds, null, 2));
 
     } catch (err) {
-        console.error("❌ Lỗi khi đăng Reels:", err.message);
+        console.error("✗ Lỗi khi đăng Reels:", err.message);
         await logToWeb(email, 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track

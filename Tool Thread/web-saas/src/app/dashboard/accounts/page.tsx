@@ -239,6 +239,7 @@ export default function AccountsPage() {
     pushLog("SUCCESS", `Đã xoá bài viết vĩnh viễn.`, "threads");
   };
   const handlePostToThreads = async (post: any) => {
+    showToast("⚠️ Vui lòng không ghim bài viết nào ở trang cá nhân để bot chạy chính xác nhất nhé sếp!");
     const saved = await handleSavePost(post);
     if (saved) handleTrigger("threads_post_" + post.id);
   };
@@ -276,6 +277,11 @@ export default function AccountsPage() {
       const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
         setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
+        
+        // Show toast if cookie error
+        if (newLog.level === 'error' && (newLog.message.includes('Cookie') || newLog.message.includes('hết hạn') || newLog.message.includes('chết'))) {
+          showToast(`🚨 ${newLog.message}`);
+        }
         if (newLog.level === 'success' && newLog.bot_type === 'threads_post' && newLog.message.includes('ID:')) {
           const match = newLog.message.match(/\[ID:\s*([a-zA-Z0-9-]+)\]/);
           if (match && match[1]) {

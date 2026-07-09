@@ -93,9 +93,9 @@ async function run() {
                     }
                 }
             );
-            console.log(`✅ Success for ${p.email}`);
+            console.log(`✓ Success for ${p.email}`);
         } catch (e) {
-            console.error(`❌ Failed for ${p.email}:`, e.response?.data?.message || e.message);
+            console.error(`✗ Failed for ${p.email}:`, e.response?.data?.message || e.message);
         }
         
         // Add a small delay between API calls

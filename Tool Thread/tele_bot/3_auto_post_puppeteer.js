@@ -651,12 +651,12 @@ async function runFarm() {
             if (hasLoginBtn || hasSignupText) return false;
             return !!document.querySelector('[aria-label="Create"], [aria-label="Tạo"], svg[aria-label="Write"], svg[aria-label="Settings"]');
         });
-        console.log(`[INFO] Đăng nhập: ${loggedIn ? '✅ OK' : '❌ Thất bại — cookie có thể hết hạn hoặc sai domain!'}`);
+        console.log(`[INFO] Đăng nhập: ${loggedIn ? '✓ OK' : '✗ Thất bại — cookie có thể hết hạn hoặc sai domain!'}`);
         if (!loggedIn) {
             await page.screenshot({ path: 'debug_login_failed.png' });
             try {
                 const chatId = process.env.TELE_CHAT_ID || -5396355060;
-                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `❌ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi: Đăng nhập thất bại (Cookie hết hạn hoặc sai domain)!`, parse_mode: 'Markdown' });
+                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✗ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi: Đăng nhập thất bại (Cookie hết hạn hoặc sai domain)!`, parse_mode: 'Markdown' });
             } catch(err) {}
             return;
         }
@@ -669,19 +669,19 @@ async function runFarm() {
             console.log(`[SUCCESS] Đã lưu State!`);
             try {
                 const chatId = process.env.TELE_CHAT_ID || -5396355060;
-                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✅ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nĐã đăng bài thành công lên Threads!`, parse_mode: 'Markdown' });
+                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✓ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nĐã đăng bài thành công lên Threads!`, parse_mode: 'Markdown' });
             } catch(err) {}
         } else {
             try {
                 const chatId = process.env.TELE_CHAT_ID || -5396355060;
-                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `❌ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi: Đăng bài thất bại!`, parse_mode: 'Markdown' });
+                await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✗ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi: Đăng bài thất bại!`, parse_mode: 'Markdown' });
             } catch(err) {}
         }
     } catch (e) {
         console.error('[ERROR] Lỗi Puppeteer:', e.message);
         try {
             const chatId = process.env.TELE_CHAT_ID || -5396355060;
-            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `❌ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi Puppeteer sập: ${e.message}`, parse_mode: 'Markdown' });
+            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✗ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi Puppeteer sập: ${e.message}`, parse_mode: 'Markdown' });
         } catch(err) {}
     } finally {
         for (const p of localImagePaths) {

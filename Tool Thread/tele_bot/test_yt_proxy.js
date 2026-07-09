@@ -13,10 +13,10 @@ try {
     const output = execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
     const data = JSON.parse(output);
     
-    console.log("✅ THÀNH CÔNG! Đã vượt tường lửa tải được thông tin video:");
+    console.log("✓ THÀNH CÔNG! Đã vượt tường lửa tải được thông tin video:");
     console.log("📺 Tên video:", data.title);
     console.log("👁️ Lượt xem:", data.view_count);
 } catch (e) {
-    console.log("❌ THẤT BẠI. Proxy này có thể đã chết hoặc quá chậm.");
+    console.log("✗ THẤT BẠI. Proxy này có thể đã chết hoặc quá chậm.");
     console.log("Chi tiết lỗi:", e.stderr || e.message);
 }

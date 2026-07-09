@@ -79,33 +79,33 @@ async function handleWebhook(body, env) {
       
       try {
         await triggerGithubAction(env, nickIndex);
-        await sendMessage(env, chatId, `✅ Đã đánh thức Github thành công!\nSếp có thể vào tab **Actions** trên repo Github để xem nó đang chạy trực tiếp nhé!`, { parse_mode: 'Markdown' });
+        await sendMessage(env, chatId, `✓ Đã đánh thức Github thành công!\nSếp có thể vào tab **Actions** trên repo Github để xem nó đang chạy trực tiếp nhé!`, { parse_mode: 'Markdown' });
       } catch (err) {
-        await sendMessage(env, chatId, `❌ Gửi lệnh thất bại: ${err.message}`);
+        await sendMessage(env, chatId, `✗ Gửi lệnh thất bại: ${err.message}`);
       }
     } else if (data === 'cmd_post_fb') {
       await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Bot Rải Link Facebook...`);
       try {
         await triggerGithubAction(env, 'fb', 'fb_worker.yml');
-        await sendMessage(env, chatId, `✅ Đã đánh thức Bot FB thành công trên mây!`, { parse_mode: 'Markdown' });
+        await sendMessage(env, chatId, `✓ Đã đánh thức Bot FB thành công trên mây!`, { parse_mode: 'Markdown' });
       } catch (err) {
-        await sendMessage(env, chatId, `❌ Gửi lệnh FB thất bại: ${err.message}`);
+        await sendMessage(env, chatId, `✗ Gửi lệnh FB thất bại: ${err.message}`);
       }
     } else if (data === 'cmd_post_reels') {
       await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Tool: Lách YT -> FB Reels...`);
       try {
         await triggerGithubAction(env, 'reels', 'reels_worker.yml');
-        await sendMessage(env, chatId, `✅ Đã đánh thức Github chạy Reels Bot thành công!\nSếp mở Github Actions ra hóng nhé!`, { parse_mode: 'Markdown' });
+        await sendMessage(env, chatId, `✓ Đã đánh thức Github chạy Reels Bot thành công!\nSếp mở Github Actions ra hóng nhé!`, { parse_mode: 'Markdown' });
       } catch (err) {
-        await sendMessage(env, chatId, `❌ Gửi lệnh Reels thất bại: ${err.message}`);
+        await sendMessage(env, chatId, `✗ Gửi lệnh Reels thất bại: ${err.message}`);
       }
     } else if (data === 'cmd_post_shopee') {
       await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Tool: Đăng Shopee FB...`);
       try {
         await triggerGithubAction(env, 'shopee', 'shopee_worker.yml');
-        await sendMessage(env, chatId, `✅ Đã đánh thức Github chạy Shopee Bot thành công!\nSếp mở Github Actions ra hóng nhé!`, { parse_mode: 'Markdown' });
+        await sendMessage(env, chatId, `✓ Đã đánh thức Github chạy Shopee Bot thành công!\nSếp mở Github Actions ra hóng nhé!`, { parse_mode: 'Markdown' });
       } catch (err) {
-        await sendMessage(env, chatId, `❌ Gửi lệnh Shopee thất bại: ${err.message}`);
+        await sendMessage(env, chatId, `✗ Gửi lệnh Shopee thất bại: ${err.message}`);
       }
     } else if (data === 'cmd_status') {
       await sendMessage(env, chatId, `📊 **BÁO CÁO KHO BÀI VIẾT**\n\nKho bài viết hiện đang được quản lý trên Github Repository.\n\n*(Lịch đăng tự động được quản lý trực tiếp trên Github, chạy 18:03 mỗi ngày)*`, { parse_mode: 'Markdown' });
@@ -154,25 +154,25 @@ async function handleWebhook(body, env) {
         await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Máy cày Nick ${nickIndex} [${nickName}]...`);
         try {
           await triggerGithubAction(env, nickIndex);
-          await sendMessage(env, chatId, `✅ Đã đánh thức Github thành công!`, { parse_mode: 'Markdown' });
+          await sendMessage(env, chatId, `✓ Đã đánh thức Github thành công!`, { parse_mode: 'Markdown' });
         } catch (err) {
-          await sendMessage(env, chatId, `❌ Gửi lệnh thất bại: ${err.message}`);
+          await sendMessage(env, chatId, `✗ Gửi lệnh thất bại: ${err.message}`);
         }
       } else if (nickIndex === 'reels') {
         await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Tool: Lách YT -> FB Reels...`);
         try {
           await triggerGithubAction(env, 'reels', 'reels_worker.yml');
-          await sendMessage(env, chatId, `✅ Đã đánh thức Github chạy Reels Bot thành công!`, { parse_mode: 'Markdown' });
+          await sendMessage(env, chatId, `✓ Đã đánh thức Github chạy Reels Bot thành công!`, { parse_mode: 'Markdown' });
         } catch (err) {
-          await sendMessage(env, chatId, `❌ Gửi lệnh Reels thất bại: ${err.message}`);
+          await sendMessage(env, chatId, `✗ Gửi lệnh Reels thất bại: ${err.message}`);
         }
       } else if (nickIndex === 'shopee') {
         await sendMessage(env, chatId, `⏳ Đang ra lệnh cho Github khởi động Tool: Đăng Shopee FB...`);
         try {
           await triggerGithubAction(env, 'shopee', 'shopee_worker.yml');
-          await sendMessage(env, chatId, `✅ Đã đánh thức Github chạy Shopee Bot thành công!`, { parse_mode: 'Markdown' });
+          await sendMessage(env, chatId, `✓ Đã đánh thức Github chạy Shopee Bot thành công!`, { parse_mode: 'Markdown' });
         } catch (err) {
-          await sendMessage(env, chatId, `❌ Gửi lệnh Shopee thất bại: ${err.message}`);
+          await sendMessage(env, chatId, `✗ Gửi lệnh Shopee thất bại: ${err.message}`);
         }
       } else {
         await sendMessage(env, chatId, "⚠️ Vui lòng gõ `/post 1`, `/post 2`, `/post 3`, `/post reels` hoặc `/post shopee`", { parse_mode: 'Markdown' });

@@ -100,7 +100,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
       .maybeSingle();
 
     if (error) {
-      console.error("❌ Lỗi Supabase:", error.message);
+      console.error("✗ Lỗi Supabase:", error.message);
       throw error;
     }
     if (!data) {
@@ -117,12 +117,12 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
           threads_cookies_arr: parseCookieString(process.env.THREADS_COOKIE, '.threads.net'),
         };
       } else {
-        console.error(`❌ Lỗi: User ${email} không tồn tại trong DB, từ chối chạy!`);
+        console.error(`✗ Lỗi: User ${email} không tồn tại trong DB, từ chối chạy!`);
         return null;
       }
     }
 
-    console.log(`✅ Đã kéo config từ Supabase cho: ${email} | Tier: ${data.tier}`);
+    console.log(`✓ Đã kéo config từ Supabase cho: ${email} | Tier: ${data.tier}`);
 
     // Parse affiliate links thành array (mỗi dòng 1 link)
     const affiliateArr = (data.affiliate_links || '')
@@ -139,7 +139,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
       threads_cookies_arr: parseCookieString(data.threads_cookie, '.threads.net'),
     };
   } catch (err) {
-    console.error("❌ fetchBotConfig thất bại:", err.message);
+    console.error("✗ fetchBotConfig thất bại:", err.message);
     return null;
   }
 }
@@ -230,7 +230,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
 
     console.log(`📊 Updated stats: ${type} +${count} cho user ${userId}`);
   } catch (err) {
-    console.error("❌ updateUsageStats lỗi:", err.message);
+    console.error("✗ updateUsageStats lỗi:", err.message);
   }
 }
 
@@ -284,10 +284,10 @@ async function uploadMediaToTelegram(url, mediaType = 'image', caption = '') {
       || msg.photo?.at(-1)?.file_id
       || null;
 
-    if (fileId) console.log(`✅ Uploaded media → file_id: ${fileId}`);
+    if (fileId) console.log(`✓ Uploaded media → file_id: ${fileId}`);
     return fileId;
   } catch (err) {
-    console.error('❌ uploadMediaToTelegram lỗi:', err.message);
+    console.error('✗ uploadMediaToTelegram lỗi:', err.message);
     return null;
   }
 }
