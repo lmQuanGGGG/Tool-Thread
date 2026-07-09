@@ -1,36 +1,74 @@
 name: Threads Post Single Worker
 
 on:
+  schedule:
+    - cron: '30 * * * *' # Chạy mỗi giờ vào phút thứ 30
   workflow_dispatch:
     inputs:
       email:
-        description: "Email của user"
+        description: "Email của user (Chạy thủ công)"
         required: true
         type: string
+        default: 'admin@autofarm.com'
       post_id:
-        description: "ID của bài viết trong bảng crawl_data"
-        required: true
+        description: "ID của bài viết (tùy chọn)"
+        required: false
         type: string
 
+permissions:
+  contents: write
+
 jobs:
-  threads-post:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install DB deps
+        run: npm install @supabase/supabase-js dotenv
+      - name: Lấy danh sách Khách hàng từ Supabase
+        id: set-matrix
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
+          else
+            USERS=$(cd "Tool Thread"/tele_bot && node get_users.js | grep -o '\[.*\]' | tail -n 1)
+            echo "matrix=$USERS" >> $GITHUB_OUTPUT
+          fi
+
+  threads-post:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        email: ${{ fromJson(needs.setup.outputs.matrix) }}
+      max-parallel: 10
+      fail-fast: false
     steps:
       - name: 🚀 Checkout code
         uses: actions/checkout@v3
 
       - name: ⚙️ Cài đặt Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 📦 Cài dependencies
         run: cd "Tool Thread"/tele_bot && npm install
 
       - name: 🤖 Chạy Bot Đăng Bài Threads (Single)
         env:
-          USER_EMAIL: ${{ inputs.email }}
-          POST_ID: ${{ inputs.post_id }}
+          USER_EMAIL: ${{ matrix.email }}
+          POST_ID: ${{ github.event.inputs.post_id }}
           TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
