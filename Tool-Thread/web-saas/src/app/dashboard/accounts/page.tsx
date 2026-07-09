@@ -596,8 +596,9 @@ export default function AccountsPage() {
                           const sourceIndex = i % parsedLinks.length;
                           return (
                             <div key={`shopee-${i}`} className="w-[75vw] md:w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
-                              <div className="relative w-full aspect-[4/5] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
-                                <img src={p.image_url} alt={p.title || "Shopee product"} className="h-full w-full object-cover mix-blend-multiply" />
+                              <div className="relative w-full aspect-[4/5] rounded-[32px] overflow-hidden mb-5 bg-gray-900 border border-black/[0.03]">
+                                <img src={p.image_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" />
+                                <img src={p.image_url} alt={p.title || "Shopee product"} className="relative h-full w-full object-contain" />
                                 <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -697,8 +698,9 @@ export default function AccountsPage() {
                           const sourceIndex = i % parsedLinks.length;
                           return (
                             <div key={`fb-story-${i}`} className="w-[75vw] md:w-[320px] shrink-0 min-h-full flex flex-col snap-center group/post">
-                              <div className="relative w-full aspect-[9/16] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03]">
-                                <img src={p.image_url} alt={p.title || "FB Story"} className="h-full w-full object-cover" />
+                              <div className="relative w-full aspect-[9/16] rounded-[32px] overflow-hidden mb-5 bg-gray-900 border border-black/[0.03]">
+                                <img src={p.image_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" />
+                                <img src={p.image_url} alt={p.title || "FB Story"} className="relative h-full w-full object-contain" />
                                 <button onClick={() => handleDeleteParsedLink(sourceIndex)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -794,7 +796,7 @@ export default function AccountsPage() {
                         return (
                           <div key={`threads-${post.id}-${i}`} className="w-[75vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
                             {hasImages ? (
-                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
+                              <div className="relative w-full aspect-video rounded-[32px] overflow-hidden mb-5 bg-gray-900 border border-black/[0.03] group/img-carousel">
                                 {post.image_urls.length > 1 && (
                                   <>
                                     <button onClick={(e) => {
@@ -814,7 +816,8 @@ export default function AccountsPage() {
                                 <div className="scroll-container flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
                                   {post.image_urls.map((url: string, idx: number) => (
                                     <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
-                                      <img src={url} alt="Threads media" className="h-full w-full object-cover" />
+                                      <img src={url} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" />
+                                      <img src={url} alt="Threads media" className="relative h-full w-full object-contain" />
                                       <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all shadow-md">
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -826,7 +829,7 @@ export default function AccountsPage() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
+                              <div className="relative w-full aspect-video rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
                                 <MessageCircle className="w-12 h-12 text-violet-300 mb-3" />
                                 <p className="text-violet-400 font-medium text-sm">Text Only Post</p>
                                 <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
