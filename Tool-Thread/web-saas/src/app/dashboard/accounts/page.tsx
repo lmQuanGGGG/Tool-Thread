@@ -452,8 +452,8 @@ export default function AccountsPage() {
   }
 
   /* ─── Shared Styles ─── */
-  const cardClass = "bg-white rounded-[32px] shadow-sm transition-all duration-500 border-none";
-  const inputClass = "w-full bg-zinc-50/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:ring-[4px] focus:ring-blue-500/10 transition-all shadow-sm border-none";
+  const cardClass = "bg-white rounded-[32px] transition-all duration-500 border-none shadow-none";
+  const inputClass = "w-full bg-zinc-50/80 rounded-2xl p-4 text-[13.5px] font-mono text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:ring-[4px] focus:ring-blue-500/10 transition-all border-none shadow-none appearance-none";
   const editorCardClass = "bg-white/60 backdrop-blur-3xl border border-white/80 rounded-[32px] p-5 relative group/post shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:bg-white/80 hover:border-white transition-all duration-500 ring-1 ring-black/[0.02]";
   const btnPrimary = "btn-shimmer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm shadow-blue-600/25 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
   const btnSecondary = "btn-shimmer flex items-center justify-center gap-2 bg-white/80 backdrop-blur-md border border-white/60 text-gray-700 font-semibold text-[13px] rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-white active:translate-y-0 active:scale-[0.98] shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:!translate-y-0";
@@ -562,7 +562,7 @@ export default function AccountsPage() {
                     }
                     setFormData({ ...formData, tele_chat_id: e.target.value })
                   }} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
-                  <div className="mt-5 rounded-2xl bg-emerald-50/50 px-5 py-4 text-[13px] text-emerald-700 leading-relaxed shadow-sm border-none">
+                  <div className="mt-5 rounded-2xl bg-emerald-50/50 px-5 py-4 text-[13px] text-emerald-700 leading-relaxed border-none shadow-none">
                     Bot sẽ gửi thông báo realtime khi đăng bài thành công, lỗi cookie hoặc hoàn tất crawl định kỳ.
                   </div>
                 </div>
@@ -645,7 +645,7 @@ export default function AccountsPage() {
                       />
                     </div>
                     <textarea rows={3} value={formData.target_channels} onChange={(e) => setFormData({ ...formData, target_channels: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link kênh 1 dòng\nVí dụ: https://www.tiktok.com/@channel"} className={`${inputClass} resize-none mb-2`} />
-                    <div className="mb-8 mt-3 flex items-start gap-3 rounded-2xl bg-blue-50/50 px-4 py-3 text-[13px] text-blue-700 leading-relaxed shadow-sm border-none">
+                    <div className="mb-8 mt-3 flex items-start gap-3 rounded-2xl bg-blue-50/50 px-4 py-3 text-[13px] text-blue-700 leading-relaxed border-none shadow-none">
                       <Info className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
                     </div>

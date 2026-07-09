@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
 
-const cardClass = "bg-white rounded-[32px] shadow-sm border-none";
+const cardClass = "bg-white rounded-[32px] border-none shadow-none";
 
 const TIER_CONFIG: Record<string, {
   label: string;
