@@ -152,12 +152,12 @@ const ServerlessIllustration = () => {
           {/* Ring 2 (Inner) */}
           <div className="ring-2 absolute w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-full border border-indigo-200/80 border-dotted flex items-center justify-center">
             {/* Supabase (PostgreSQL) */}
-            <div className="absolute -left-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
-              <Database className="w-5 h-5 text-[#3ECF8E]" />
+            <div className="absolute -left-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2 p-2">
+              <img src="/supabase-logo.svg" alt="Supabase" className="w-full h-full object-contain" />
             </div>
             {/* Cloudflare (Workers) */}
-            <div className="absolute -right-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2">
-              <Cloud className="w-5 h-5 text-[#F38020]" />
+            <div className="absolute -right-5 w-10 h-10 bg-white rounded-xl shadow-lg border border-zinc-100 flex items-center justify-center node-icon-2 p-2">
+              <img src="/image.png" alt="Node" className="w-full h-full object-contain" />
             </div>
           </div>
 
