@@ -29,4 +29,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
           TELE_STORAGE_CHAT: ${{ secrets.TELE_STORAGE_CHAT }}
-        run: node 9_upload_crawl_images.js
+        run: cd "Tool Thread"/tele_bot && node 9_upload_crawl_images.js

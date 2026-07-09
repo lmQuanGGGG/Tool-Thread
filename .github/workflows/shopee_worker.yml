@@ -35,4 +35,4 @@ jobs:
         FB_COOKIE: ${{ secrets.FB_COOKIE }}
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
+        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js

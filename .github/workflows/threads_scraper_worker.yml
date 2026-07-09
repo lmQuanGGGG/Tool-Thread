@@ -47,4 +47,4 @@ jobs:
         MAX_SCROLLS: "15"
       run: |
         echo "🔥 Đang chạy Bot Cào Profile Threads: ${{ github.event.inputs.target_url }}"
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js
+        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js

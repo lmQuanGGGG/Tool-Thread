@@ -42,4 +42,4 @@ jobs:
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/1_fb_puppeteer.js
+        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/1_fb_puppeteer.js
