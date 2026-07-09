@@ -444,15 +444,15 @@ export default function AccountsPage() {
     <div className="min-h-screen flex flex-col font-sans">
       {/* ── HEADER ── */}
       <header className="sticky top-[52px] md:top-0 z-40 px-4 md:px-6 h-14 flex items-center justify-center bg-white/95 backdrop-blur-xl">
-        <nav className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-full max-w-[400px]">
+        <nav className="flex items-center gap-8 justify-center">
           {(["global", "fb", "threads"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
-              className={`flex-1 px-3 py-1.5 text-[13px] font-medium rounded-md transition-all ${
+              className={`text-[14px] font-medium transition-colors ${
                 activeTab === t
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+                  ? "text-zinc-900 font-semibold"
+                  : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
               {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
