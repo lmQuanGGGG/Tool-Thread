@@ -275,13 +275,6 @@ export default function AccountsPage() {
       if (newLog.level === 'warn') level = "WARN";
       const timeStr = new Date(newLog.created_at).toLocaleTimeString("vi-VN", { hour12: false });
       const prefix = newLog.bot_type ? `[${newLog.bot_type.toUpperCase()}] ` : '';
-      
-      if (newLog.level === 'success') {
-         showToast(`${newLog.message}`, 'success');
-      }
-      if (newLog.level === 'error') {
-         showToast(`${newLog.message}`, 'error');
-      }
 
       if (newLog.bot_type && newLog.bot_type.includes('threads')) {
         setThreadsLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);

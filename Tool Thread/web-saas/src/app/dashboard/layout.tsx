@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PricingModal from "../../components/PricingModal";
+import { showToast } from "../../components/Toast";
 
 // Dark theme meta (mobile drawer)
 const TIER_META_DARK: Record<string, { label: string; icon: React.ElementType; color: string }> = {
@@ -102,6 +103,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             setTier(nt);
             supabase.from("tier_limits").select("*").eq("tier", nt).maybeSingle()
               .then(({ data }) => setLimits(normalizeLimits(data)));
+          }
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "bot_logs", filter: `email=eq.${user.email}` }, (payload) => {
+          const newLog = payload.new as any;
+          if (newLog.level === 'success') {
+             showToast(`${newLog.message}`, 'success');
+          } else if (newLog.level === 'error') {
+             showToast(`${newLog.message}`, 'error');
+          } else if (newLog.message.toLowerCase().includes('hết hạn') || newLog.message.toLowerCase().includes('chết')) {
+             // Cố tình vớt thêm các log bị đánh warn/info nhưng có nội dung cookie chết
+             showToast(`${newLog.message}`, 'error');
           }
         })
         .subscribe();
