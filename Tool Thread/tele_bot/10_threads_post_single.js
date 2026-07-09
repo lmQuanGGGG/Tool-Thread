@@ -110,7 +110,7 @@ async function runSinglePost() {
         }
     }
 
-    let validProducts = products.filter(p => p.tele_file_id && (p.suggested_comment || p.title));
+    let validProducts = products.filter(p => p.aff_link && (p.suggested_comment || p.title));
     
     if (validProducts.length > 0) {
         let pickedProduct = validProducts[Math.floor(Math.random() * validProducts.length)];

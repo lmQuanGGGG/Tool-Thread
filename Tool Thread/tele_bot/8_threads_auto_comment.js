@@ -86,7 +86,7 @@ async function downloadImageFromTelegram(file_id) {
         }
     }
 
-    let validProducts = products.filter(p => p.tele_file_id && (p.suggested_comment || p.title));
+    let validProducts = products.filter(p => p.aff_link && (p.suggested_comment || p.title));
 
     if (validProducts.length === 0) {
         console.error("❌ Không có sản phẩm nào hợp lệ (Chưa nhập Link Affiliate hoặc Chưa Đồng bộ).");
