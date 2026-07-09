@@ -480,7 +480,6 @@ export default function Home() {
                   loop
                   muted
                   playsInline
-                  controls
                   preload="auto"
                   className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity duration-300"
                   poster="/0709-poster.jpg"

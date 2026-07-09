@@ -32,17 +32,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
 
     const videoRes = await fetch(downloadUrl, { headers: requestHeaders });
     
-    // 3. Forward the response (headers and body)
-    const responseHeaders = new Headers(videoRes.headers);
-    // Important: we don't want to expose upstream caching headers sometimes, 
-    // but for Telegram files it's usually fine. We explicitly set CORS if needed.
+    const responseHeaders = new Headers();
+    const cl = videoRes.headers.get('content-length');
+    if (cl) responseHeaders.set('Content-Length', cl);
+    const cr = videoRes.headers.get('content-range');
+    if (cr) responseHeaders.set('Content-Range', cr);
     
-    // Thêm Cache-Control mạnh tay vì file Telegram theo file_id là bất biến
     responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
     responseHeaders.set('Accept-Ranges', 'bytes');
     responseHeaders.set('Content-Type', 'video/mp4');
     
-    return new NextResponse(videoRes.body, {
+    return new Response(videoRes.body, {
       status: videoRes.status,
       headers: responseHeaders
     });
