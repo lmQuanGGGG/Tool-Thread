@@ -100,7 +100,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, (p) => {
           if (p.new && (p.new as any).tier) {
             const nt = (p.new as any).tier;
-            setTier(nt);
+            setTier(prev => {
+               if (prev && prev !== nt) {
+                  showToast(`🎉 Chúc mừng sếp! Đã nâng cấp thành công lên gói ${nt.toUpperCase()}!`);
+               }
+               return nt;
+            });
             supabase.from("tier_limits").select("*").eq("tier", nt).maybeSingle()
               .then(({ data }) => setLimits(normalizeLimits(data)));
           }
