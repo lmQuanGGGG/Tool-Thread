@@ -112,10 +112,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const metaLight = TIER_META_LIGHT[tier] || TIER_META_LIGHT.free;
   const isPro = tier === "pro" || tier === "promax";
 
+  const getThreadsPostLimit = (t: string) => {
+    if (t === 'promax') return -1;
+    if (t === 'pro') return 15;
+    if (t === 'plus') return 6;
+    if (t === 'lite') return 3;
+    if (t === 'free') return 1;
+    return 3;
+  };
+
   const usageRows = [
-    { label: "Reels",   used: used?.reels_posted || 0,      limit: limits?.reels_per_day,    color: "bg-blue-500"   },
-    { label: "Comment", used: used?.threads_commented || 0,  limit: limits?.threads_per_day,  color: "bg-violet-500" },
-    { label: "FB Post", used: used?.fb_story_posted || 0,   limit: limits?.fb_story_per_day, color: "bg-amber-500"  },
+    { label: "Reels",    used: used?.reels_posted || 0,       limit: limits?.reels_per_day,    color: "bg-blue-500"   },
+    { label: "Comment",  used: used?.threads_commented || 0,  limit: limits?.threads_per_day,  color: "bg-violet-500" },
+    { label: "FB Post",  used: used?.fb_story_posted || 0,    limit: limits?.fb_story_per_day, color: "bg-amber-500"  },
+    { label: "Th. Post", used: used?.threads_posts_count || 0, limit: getThreadsPostLimit(tier), color: "bg-pink-500" },
   ];
 
   const avatarUrl = user?.user_metadata?.avatar_url
