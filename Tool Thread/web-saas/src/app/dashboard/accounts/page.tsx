@@ -368,10 +368,44 @@ export default function AccountsPage() {
     const target = isGlobal ? 'global' : (isThreads ? 'threads' : 'fb');
     if (!userId) { pushLog("WARN", "Chưa đăng nhập!", target); return; }
 
-    if (userCredits <= 0) {
-      showToast("Bạn đã hết lượt chạy (Credits). Vui lòng nâng cấp gói hoặc nạp thêm!", 'error');
-      pushLog("ERROR", "Hết lượt chạy (Credits). Yêu cầu đã bị huỷ.", target);
-      return;
+    try {
+      if (userTier !== 'promax') {
+        const today = new Date().toLocaleDateString("en-CA");
+        const [{data: stat}, {data: limitData}] = await Promise.all([
+          supabase.from("usage_stats").select("*").eq("user_id", userId).eq("date", today).maybeSingle(),
+          supabase.from("tier_limits").select("*").eq("tier", userTier).maybeSingle()
+        ]);
+        
+        let isOverLimit = false;
+        let limitMsg = "";
+        const safeCount = (v: any) => typeof v === 'number' ? v : 0;
+        
+        if (botType.includes('threads_post')) {
+          const used = safeCount(stat?.threads_posts_count);
+          let limit = limitData?.threads_post_per_day ?? limitData?.reels_per_day ?? 2;
+          if (limit !== -1 && used >= limit) { isOverLimit = true; limitMsg = `Hết lượt Đăng Threads (${used}/${limit}).`; }
+        } else if (botType.includes('threads_comment')) {
+          const used = safeCount(stat?.threads_commented);
+          const limit = safeCount(limitData?.threads_per_day);
+          if (limit !== -1 && used >= limit) { isOverLimit = true; limitMsg = `Hết lượt Comment Threads (${used}/${limit}).`; }
+        } else if (botType.includes('fb_story') || botType.includes('fb_post') || botType === 'fb_bot') {
+          const used = Math.max(safeCount(stat?.fb_story_posted), safeCount(stat?.fb_posts_count));
+          const limit = limitData?.fb_story_per_day ?? limitData?.fb_post_per_day ?? 3;
+          if (limit !== -1 && used >= limit) { isOverLimit = true; limitMsg = `Hết lượt đăng FB (${used}/${limit}).`; }
+        } else if (botType.includes('reels')) {
+          const used = safeCount(stat?.reels_posted);
+          const limit = safeCount(limitData?.reels_per_day);
+          if (limit !== -1 && used >= limit) { isOverLimit = true; limitMsg = `Hết lượt Up Reels (${used}/${limit}).`; }
+        }
+
+        if (isOverLimit) {
+          showToast(limitMsg + " Vui lòng nâng cấp gói!", 'error');
+          pushLog("ERROR", limitMsg + " Yêu cầu đã bị huỷ.", target);
+          return;
+        }
+      }
+    } catch(e) {
+      console.error('Limit check error:', e);
     }
 
     if (isThreads && !formData.threads_cookie) { pushLog("WARN", "Thiếu Threads Cookie!", target); return; }
