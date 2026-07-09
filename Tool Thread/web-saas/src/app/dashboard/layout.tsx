@@ -108,12 +108,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bot_logs", filter: `email=eq.${user.email}` }, (payload) => {
           const newLog = payload.new as any;
           if (newLog.level === 'success') {
-             showToast(`${newLog.message}`, 'success');
+             showToast(`${newLog.message}`);
           } else if (newLog.level === 'error') {
-             showToast(`${newLog.message}`, 'error');
+             showToast(`${newLog.message}`);
           } else if (newLog.message.toLowerCase().includes('hết hạn') || newLog.message.toLowerCase().includes('chết')) {
              // Cố tình vớt thêm các log bị đánh warn/info nhưng có nội dung cookie chết
-             showToast(`${newLog.message}`, 'error');
+             showToast(`${newLog.message}`);
           }
         })
         .subscribe();
