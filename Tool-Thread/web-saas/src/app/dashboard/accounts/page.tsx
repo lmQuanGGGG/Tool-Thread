@@ -606,8 +606,8 @@ export default function AccountsPage() {
                               <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
                               <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
 
-                              <div className="mt-auto flex justify-between items-center pt-2">
-                                <span className="text-[12px] text-gray-400 font-mono truncate max-w-[140px]">{p.aff_link}</span>
+                              <div className="mt-auto flex justify-end gap-4 items-center pt-2">
+                                <span className="text-[12px] text-gray-400 font-mono truncate max-w-[140px] mr-auto">{p.aff_link}</span>
                                 <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors group">
                                   Lưu thay đổi <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
@@ -707,8 +707,8 @@ export default function AccountsPage() {
                               <h3 className="text-[16px] font-semibold text-gray-900 leading-tight mb-2 line-clamp-2 pr-4">{p.title}</h3>
                               <textarea className="w-full bg-transparent border-none p-0 text-[14px] text-gray-500 resize-none outline-none leading-relaxed min-h-[60px] placeholder:text-gray-300 focus:ring-0 mb-4" value={p.suggested_comment} onChange={(e) => handleUpdateParsedLinkText(sourceIndex, e.target.value)} placeholder="Nội dung thả thính..." />
 
-                              <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
-                                <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                              <div className="mt-auto flex justify-end gap-4 items-center pt-2 border-t border-gray-100/50">
+                                <button onClick={handleSaveParsedLink} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors px-2">Lưu</button>
                                 <button onClick={() => handleTrigger("fb_story_card" + sourceIndex)} disabled={triggeringType !== null || !formData.fb_cookie} className="text-[14px] font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 transition-colors group">
                                   {triggeringType === ("fb_story_card" + sourceIndex) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng FB"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
@@ -837,8 +837,8 @@ export default function AccountsPage() {
 
                             <textarea className="w-full bg-transparent border-none p-0 text-[15px] font-medium text-gray-900 resize-none outline-none leading-relaxed min-h-[80px] placeholder:text-gray-300 focus:ring-0 mb-4" value={post.text_content} onChange={(e) => handleUpdatePostText(post.id, e.target.value)} placeholder="Nội dung bài viết..." />
 
-                            <div className="mt-auto flex justify-between items-center pt-2 border-t border-gray-100/50">
-                              <button onClick={() => handleSavePost(post)} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors">Lưu</button>
+                            <div className="mt-auto flex justify-end gap-4 items-center pt-2 border-t border-gray-100/50">
+                              <button onClick={() => handleSavePost(post)} className="text-[14px] font-medium text-gray-500 hover:text-gray-900 transition-colors px-2">Lưu</button>
                               <button onClick={() => handlePostToThreads(post)} disabled={triggeringType !== null} className="text-[14px] font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors group">
                                 {triggeringType === ("threads_post_" + post.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng Threads"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                               </button>
