@@ -3,6 +3,7 @@
 import { useEffect, useState, type ElementType } from "react";
 import { Activity, Check, Crown, Loader2, Rocket, ShieldCheck, Zap } from "lucide-react";
 import { supabase } from "../../utils/supabase";
+import { showToast } from "@/components/Toast";
 
 type TierKey = "free" | "lite" | "plus" | "pro" | "promax";
 
@@ -212,10 +213,7 @@ export default function PricingPage() {
                         if (tier.price === 0) return; // Không nâng cấp gói free
                         try {
                           const { data: { session } } = await supabase.auth.getSession();
-                          if (!session) {
-                            alert("Bạn cần đăng nhập để nâng cấp!");
-                            return;
-                          }
+                          if (!session) { showToast("Bạn cần đăng nhập để nâng cấp!"); return; }
                           const res = await fetch("/api/payos/create-payment", {
                             method: "POST",
                             headers: { 
@@ -228,10 +226,10 @@ export default function PricingPage() {
                           if (data.checkoutUrl) {
                             window.location.href = data.checkoutUrl;
                           } else {
-                            alert(data.error || "Lỗi tạo thanh toán");
+                            showToast(data.error || "Lỗi tạo thanh toán");
                           }
-                        } catch (e) {
-                          alert("Lỗi kết nối");
+                        } catch (err) {
+                          showToast("Lỗi kết nối");
                         }
                       }}
                       className={`btn-shimmer h-10 w-full rounded-xl text-[12px] font-bold transition-colors ${tone.button}`}

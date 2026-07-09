@@ -330,7 +330,7 @@ export default function AccountsPage() {
     const maxLinks = getMaxLinks(userTier);
     const linkCount = uniqueLinks.length;
     if (linkCount > maxLinks) { 
-        alert(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
+        showToast(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
         pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global"); 
         return; 
     }

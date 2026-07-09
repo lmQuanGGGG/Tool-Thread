@@ -22,20 +22,23 @@ export function Toast() {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 transition-all duration-300 transform ${
-        toast.visible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0 pointer-events-none"
+      className={`fixed top-1/2 left-1/2 z-50 transition-all duration-400 ease-out transform ${
+        toast.visible 
+          ? "-translate-x-1/2 -translate-y-1/2 scale-100 opacity-100" 
+          : "-translate-x-1/2 translate-y-4 scale-95 opacity-0 pointer-events-none"
       }`}
     >
-      <div className="bg-gray-900/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-gray-700 max-w-sm">
-        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-          <Bell className="w-4 h-4 text-blue-400" />
+      <div className="bg-white/95 backdrop-blur-2xl text-gray-800 px-5 py-4 rounded-[24px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] flex flex-col items-center gap-3 border border-gray-100/80 min-w-[320px] max-w-sm text-center relative overflow-hidden">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden bg-blue-50">
+          <img src="/rocket_logo.png" alt="Logo" className="w-full h-full object-cover" />
         </div>
-        <p className="text-sm font-medium leading-relaxed">{toast.message}</p>
+        <p className="text-[15px] font-semibold leading-snug">{toast.message}</p>
+        
         <button
           onClick={() => setToast((prev) => (prev ? { ...prev, visible: false } : null))}
-          className="w-6 h-6 rounded-full hover:bg-white/10 flex items-center justify-center shrink-0 transition-colors ml-2"
+          className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center shrink-0 transition-colors"
         >
-          <X className="w-3.5 h-3.5 text-gray-400 hover:text-white" />
+          <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
         </button>
       </div>
     </div>

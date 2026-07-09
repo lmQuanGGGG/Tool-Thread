@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { supabase } from "../utils/supabase";
+import { showToast } from "@/components/Toast";
 
 type TierKey = "free" | "lite" | "plus" | "pro";
 
@@ -138,7 +139,7 @@ export default function PricingModal({ open, onClose }: PricingModalProps) {
                           if (tier.price === 0) return;
                           try {
                             const { data: { session } } = await supabase.auth.getSession();
-                            if (!session) { alert("Bạn cần đăng nhập để nâng cấp!"); return; }
+                            if (!session) { showToast("Bạn cần đăng nhập để nâng cấp!"); return; }
                             const res = await fetch("/api/payos/create-payment", {
                               method: "POST",
                               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
@@ -148,10 +149,10 @@ export default function PricingModal({ open, onClose }: PricingModalProps) {
                             if (data.checkoutUrl) {
                               window.location.href = data.checkoutUrl;
                             } else {
-                              alert(data.error || "Lỗi tạo thanh toán");
+                              showToast(data.error || "Lỗi tạo thanh toán");
                             }
-                          } catch {
-                            alert("Lỗi kết nối");
+                          } catch (err) {
+                            showToast("Lỗi kết nối");
                           }
                         }}
                         className={`block w-full py-3.5 rounded-full text-[14px] font-medium text-center transition-colors ${tier.btn1Class}`}

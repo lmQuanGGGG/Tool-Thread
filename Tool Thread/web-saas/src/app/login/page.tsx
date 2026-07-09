@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, KeyRound, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { showToast } from "@/components/Toast";
 import Link from "next/link";
 import { getDeviceFingerprint } from "../../utils/fingerprint";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
@@ -43,7 +44,7 @@ export default function LoginPage() {
             throw new Error("Tài khoản đã được tạo nhưng Supabase đang yêu cầu xác minh Email. Vui lòng vào Cài đặt Supabase tắt 'Confirm Email' hoặc kiểm tra hộp thư của sếp!");
           }
           
-          alert("Đã tự động tạo tài khoản mới cho sếp!");
+          showToast("Đã tự động tạo tài khoản mới cho sếp!");
         } else {
           throw signInError;
         }
