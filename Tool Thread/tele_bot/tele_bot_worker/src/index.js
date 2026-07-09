@@ -55,6 +55,31 @@ async function answerCallbackQuery(env, callbackQueryId) {
   });
 }
 
+async function checkUserAccess(env, chatId) {
+  const adminChatId = env.ADMIN_CHAT_ID || "-5396355060";
+  if (chatId.toString() === adminChatId) return true; // Admin luôn có quyền
+  
+  if (!env.SUPABASE_URL || !env.SUPABASE_KEY) return false;
+  
+  const url = `${env.SUPABASE_URL}/rest/v1/profiles?tele_chat_id=eq.${chatId}&select=tier`;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'apikey': env.SUPABASE_KEY,
+        'Authorization': `Bearer ${env.SUPABASE_KEY}`
+      }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+       const tier = data[0].tier;
+       if (['plus', 'pro', 'promax'].includes(tier)) return true;
+    }
+  } catch(e) {
+    console.error('Lỗi check Supabase tier:', e);
+  }
+  return false;
+}
+
 async function handleWebhook(body, env) {
   const adminChatId = env.ADMIN_CHAT_ID || "-5396355060";
 
@@ -67,7 +92,8 @@ async function handleWebhook(body, env) {
     // Trả lời event loading trên điện thoại
     await answerCallbackQuery(env, cb.id);
 
-    if (chatId.toString() !== adminChatId) {
+    const hasAccess = await checkUserAccess(env, chatId);
+    if (!hasAccess) {
       return new Response('OK');
     }
 
@@ -120,7 +146,11 @@ async function handleWebhook(body, env) {
     const chatId = msg.chat.id;
     const text = msg.text;
 
-    if (chatId.toString() !== adminChatId) {
+    const hasAccess = await checkUserAccess(env, chatId);
+    if (!hasAccess) {
+      if (text === '/start' || text === '/menu' || text.startsWith('/post')) {
+         await sendMessage(env, chatId, '!!! Quyền truy cập bị từ chối. Tính năng điều khiển Bot qua Telegram chỉ dành cho khách hàng sử dụng gói Plus, Pro hoặc ProMax.');
+      }
       return new Response('OK');
     }
 
