@@ -54,7 +54,7 @@ async function processPendingImages() {
         });
 
         if (rpcError) {
-          console.warn(`⚠️ Không thể trừ credit cho user ${post.user_id}:`, rpcError.message);
+          console.warn(`!!! Không thể trừ credit cho user ${post.user_id}:`, rpcError.message);
           // Có thể tài khoản hết tiền, tuỳ logic sếp có muốn chặn hay không.
           // Tạm thời vẫn lưu file_id vào DB.
         }
@@ -71,7 +71,7 @@ async function processPendingImages() {
           console.log(`✓ Hoàn tất bài ${post.post_id} | Đã lưu ${fileIds.length} file_ids | Tiêu hao ${cost} credits`);
         }
       } else {
-        console.warn(`⚠️ Bài ${post.post_id} không tải được ảnh nào!`);
+        console.warn(`!!! Bài ${post.post_id} không tải được ảnh nào!`);
       }
     }
   } catch (e) {

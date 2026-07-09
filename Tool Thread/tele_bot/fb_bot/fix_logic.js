@@ -144,7 +144,7 @@ const newLogic = `            // Kích hoạt tất cả các nút "Bình luận
 code = code.replace(oldLogic, newLogic);
 // Delete extra bracket and else branch from old logic
 code = code.replace(`                    } else {
-                        console.log("⚠️ Không tìm thấy ô comment thật sự.");
+                        console.log("!!! Không tìm thấy ô comment thật sự.");
                     }`, '');
 
 fs.writeFileSync('1_fb_puppeteer.js', code);

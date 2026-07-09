@@ -7,7 +7,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn("⚠️ Chưa cấu hình SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY. Fallback về .env local.");
+  console.warn("!!! Chưa cấu hình SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY. Fallback về .env local.");
 }
 
 const supabase = supabaseUrl && supabaseServiceKey
@@ -79,7 +79,7 @@ async function getTierLimits(tier = 'free') {
 async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.com') {
   // Fallback: không có Supabase → đọc từ .env (cho local dev)
   if (!supabase) {
-    console.log("⚠️ Không có Supabase. Chạy bằng .env local...");
+    console.log("!!! Không có Supabase. Chạy bằng .env local...");
     return {
       fb_cookie:         process.env.FB_COOKIE || '',
       threads_cookie:    process.env.THREADS_COOKIE || '',
@@ -105,7 +105,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
     }
     if (!data) {
       if (email === 'admin@autofarm.com' || email === process.env.USER_EMAIL) {
-        console.log(`⚠️ Không tìm thấy admin ${email} trên Supabase. Tự động Fallback về .env local...`);
+        console.log(`!!! Không tìm thấy admin ${email} trên Supabase. Tự động Fallback về .env local...`);
         return {
           fb_cookie:         process.env.FB_COOKIE || '',
           threads_cookie:    process.env.THREADS_COOKIE || '',
@@ -258,7 +258,7 @@ function getBot() {
  */
 async function uploadMediaToTelegram(url, mediaType = 'image', caption = '') {
   const bot = getBot();
-  if (!bot) { console.warn('⚠️ node-telegram-bot-api chưa cài'); return null; }
+  if (!bot) { console.warn('!!! node-telegram-bot-api chưa cài'); return null; }
 
   const axios = require('axios');
   try {

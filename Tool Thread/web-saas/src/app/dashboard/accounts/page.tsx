@@ -239,7 +239,7 @@ export default function AccountsPage() {
     pushLog("SUCCESS", `Đã xoá bài viết vĩnh viễn.`, "threads");
   };
   const handlePostToThreads = async (post: any) => {
-    showToast("⚠️ Vui lòng không ghim bài viết nào ở trang cá nhân để bot chạy chính xác nhất nhé sếp!");
+    showToast("!!! Vui lòng không ghim bài viết nào ở trang cá nhân để bot chạy chính xác nhất nhé sếp!");
     const saved = await handleSavePost(post);
     if (saved) handleTrigger("threads_post_" + post.id);
   };

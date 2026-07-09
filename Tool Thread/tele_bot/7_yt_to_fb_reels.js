@@ -261,7 +261,7 @@ async function fetchLatestVideos(channels) {
     if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
         try {
             cookies = JSON.parse(process.env.FB_COOKIE);
-            console.log("⚠️ Lấy FB_COOKIE từ biến môi trường (.env) do Supabase không có.");
+            console.log("!!! Lấy FB_COOKIE từ biến môi trường (.env) do Supabase không có.");
         } catch (e) {
             console.error("✗ Lỗi parse FB_COOKIE từ .env:", e.message);
         }
@@ -342,7 +342,7 @@ async function fetchLatestVideos(channels) {
         console.log("➡️ Bấm nút Tiếp (Lần 1)...");
         const next1 = await clickButtonWithText(page, ['tiếp', 'next']);
         if (!next1) {
-            console.log("⚠️ Không bấm được nút Tiếp 1. Dừng tiến trình!");
+            console.log("!!! Không bấm được nút Tiếp 1. Dừng tiến trình!");
             throw new Error("Không thể click nút Tiếp Lần 1");
         }
         await delay(5000);
@@ -367,7 +367,7 @@ async function fetchLatestVideos(channels) {
             }
         } catch (e) {
             affLink = process.env.SHOPEE_AFF_LINK || null;
-            if (affLink) console.log("⚠️ Fallback về env SHOPEE_AFF_LINK");
+            if (affLink) console.log("!!! Fallback về env SHOPEE_AFF_LINK");
         }
 
         // BƯỚC 2: Điền mô tả trên màn hình Chỉnh sửa thước phim
@@ -389,14 +389,14 @@ async function fetchLatestVideos(channels) {
                 await page.keyboard.up('Shift');
             }
         } else {
-            console.log("⚠️ Không tìm thấy ô nhập Caption!");
+            console.log("!!! Không tìm thấy ô nhập Caption!");
         }
         await delay(3000);
 
         // BƯỚC 3: Bấm Tiếp Lần 2 (Chỉnh sửa thước phim -> Tuỳ chọn đăng)
         console.log("➡️ Bấm nút Tiếp (Lần 2)...");
         const next2 = await clickButtonWithText(page, ['tiếp', 'next']);
-        if (!next2) console.log("⚠️ Không bấm được nút Tiếp 2.");
+        if (!next2) console.log("!!! Không bấm được nút Tiếp 2.");
         await delay(5000);
 
         // BƯỚC 4: Gắn thẻ Affiliate (Màn hình cuối)
@@ -451,7 +451,7 @@ async function fetchLatestVideos(channels) {
                 }
                 await delay(3000);
             } else {
-                console.log("⚠️ Không tìm thấy nút 'Thêm sản phẩm' trên màn hình Đăng.");
+                console.log("!!! Không tìm thấy nút 'Thêm sản phẩm' trên màn hình Đăng.");
             }
         }
 
@@ -460,7 +460,7 @@ async function fetchLatestVideos(channels) {
         await logToWeb(email, 'yt-reels', 'Bấm Đăng Reels! Đang chờ thuật toán FB duyệt bản quyền (90s)...', 'info');
         const published = await clickButtonWithText(page, ['đăng', 'publish'], 30); // Chờ lên đến 90s (30x3s)
         if (!published) {
-            console.log("⚠️ Không bấm được nút Đăng (có thể do video quá nặng hoặc lỗi). Dừng tiến trình!");
+            console.log("!!! Không bấm được nút Đăng (có thể do video quá nặng hoặc lỗi). Dừng tiến trình!");
             throw new Error("Không thể click nút Đăng");
         }
 

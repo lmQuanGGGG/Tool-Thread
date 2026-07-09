@@ -137,7 +137,7 @@ function buildComment(category, name, link) {
             p.suggested_comment = buildComment(p.category, name, p.link);
             console.log(`✓ "${name}"`);
         } else {
-            console.log(`⚠️  API không trả tên (shopId=${shopId} itemId=${itemId})`);
+            console.log(`!!!  API không trả tên (shopId=${shopId} itemId=${itemId})`);
         }
 
         fs.writeFileSync(DATA_PATH, JSON.stringify(products, null, 2));

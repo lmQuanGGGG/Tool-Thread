@@ -175,7 +175,7 @@ async function handleWebhook(body, env) {
           await sendMessage(env, chatId, `✗ Gửi lệnh Shopee thất bại: ${err.message}`);
         }
       } else {
-        await sendMessage(env, chatId, "⚠️ Vui lòng gõ `/post 1`, `/post 2`, `/post 3`, `/post reels` hoặc `/post shopee`", { parse_mode: 'Markdown' });
+        await sendMessage(env, chatId, "!!! Vui lòng gõ `/post 1`, `/post 2`, `/post 3`, `/post reels` hoặc `/post shopee`", { parse_mode: 'Markdown' });
       }
     }
   }

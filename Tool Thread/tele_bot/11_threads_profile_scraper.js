@@ -112,7 +112,7 @@ async function run() {
         .limit(1);
 
     if (error || !profiles || profiles.length === 0) {
-        console.warn(`⚠️ Không tìm thấy user ${email} trong DB! Thử lấy một user bất kỳ làm fallback...`);
+        console.warn(`!!! Không tìm thấy user ${email} trong DB! Thử lấy một user bất kỳ làm fallback...`);
         const { data: fallbackProfiles } = await supabase.from('profiles').select('*').limit(1);
         if (!fallbackProfiles || fallbackProfiles.length === 0) {
             console.error("✗ Không có bất kỳ user nào trong bảng profiles! Vui lòng đăng ký tài khoản trên Web SaaS trước.");
@@ -146,7 +146,7 @@ async function run() {
 
     const cookies = getCookies(dbConfig);
     if (!cookies || cookies.length === 0) {
-        console.warn("⚠️ Không có cookie Threads, cào ở chế độ ẩn danh (có thể bị giới hạn)...");
+        console.warn("!!! Không có cookie Threads, cào ở chế độ ẩn danh (có thể bị giới hạn)...");
     }
 
     const browser = await puppeteer.launch({
@@ -255,7 +255,7 @@ async function run() {
     if (!rawThreadsData || rawThreadsData.length === 0) {
         console.error("✗ Không bắt được dữ liệu nào. Có thể do chưa đăng nhập hoặc profile trống.");
         if (dbConfig.tele_chat_id) {
-            await sendTelegramNotify(dbConfig.tele_chat_id, `⚠️ <b>Cảnh báo</b>: Bot Cloud không tìm thấy bài đăng nào tại <code>${targetUrl}</code>. Thử kiểm tra lại link hoặc cookie nhé!`);
+            await sendTelegramNotify(dbConfig.tele_chat_id, `!!! <b>Cảnh báo</b>: Bot Cloud không tìm thấy bài đăng nào tại <code>${targetUrl}</code>. Thử kiểm tra lại link hoặc cookie nhé!`);
         }
         process.exit(1);
     }

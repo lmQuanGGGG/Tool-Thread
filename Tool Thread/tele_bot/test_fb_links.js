@@ -31,9 +31,9 @@ require('dotenv').config();
                 bodyText.includes("Broken link")) {
                 console.log(`✗ [LỖI - KHÔNG TỒN TẠI]: ${target}`);
             } else if (title.includes("Đăng nhập") || title.includes("Log in")) {
-                console.log(`⚠️ [LỖI COOKIE/ĐĂNG NHẬP]: ${target}`);
+                console.log(`!!! [LỖI COOKIE/ĐĂNG NHẬP]: ${target}`);
             } else if (bodyText.includes("Tham gia nhóm") || bodyText.includes("Join Group")) {
-                console.log(`⚠️ [CHƯA THAM GIA NHÓM]: ${target}`);
+                console.log(`!!! [CHƯA THAM GIA NHÓM]: ${target}`);
             } else {
                 console.log(`✓ [OK]: ${target} (Title: ${title})`);
             }

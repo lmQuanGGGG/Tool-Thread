@@ -42,7 +42,7 @@ const newUpload = `                            // Tải ảnh trực tiếp vào
                                 console.log(\`⏳ Chờ FB xử lý ảnh đính kèm...\`);
                                 await delay(6000);
                             } else {
-                                console.log("⚠️ Không tìm thấy thẻ input type=file, bỏ qua up ảnh!");
+                                console.log("!!! Không tìm thấy thẻ input type=file, bỏ qua up ảnh!");
                             }`;
 
 code = code.replace(oldUpload, newUpload);

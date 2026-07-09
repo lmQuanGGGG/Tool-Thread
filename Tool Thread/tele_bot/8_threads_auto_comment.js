@@ -262,7 +262,7 @@ async function downloadImageFromTelegram(file_id) {
                 if (postBox) {
                     await page.mouse.click(postBox.x + postBox.width / 2, postBox.y + postBox.height / 2);
                 } else {
-                    console.log("⚠️ Không tìm thấy nút Post!");
+                    console.log("!!! Không tìm thấy nút Post!");
                 }
 
                 await delay(5000);

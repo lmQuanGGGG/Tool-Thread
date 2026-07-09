@@ -272,10 +272,10 @@ async function downloadImageFromTelegram(file_id) {
                                     console.log(`⏳ Chờ load ảnh...`);
                                     await delay(6000); // Đợi FB tải ảnh xong hẳn
                                 } catch (e) {
-                                    console.log(`⚠️ Lỗi khi chờ FileChooser đính kèm ảnh:`, e.message);
+                                    console.log(`!!! Lỗi khi chờ FileChooser đính kèm ảnh:`, e.message);
                                 }
                             } else {
-                                console.log(`⚠️ Không tìm thấy nút đính kèm ảnh!`);
+                                console.log(`!!! Không tìm thấy nút đính kèm ảnh!`);
                             }
                         }
 
@@ -317,7 +317,7 @@ async function downloadImageFromTelegram(file_id) {
                             await delay(restTime * 1000);
                         }
                     } else {
-                        console.log("⚠️ Không tìm thấy ô comment thật sự.");
+                        console.log("!!! Không tìm thấy ô comment thật sự.");
                     }
                 } catch (err) {
                     console.log(`✗ Lỗi khi comment bài ${i + 1}:`, err.message);

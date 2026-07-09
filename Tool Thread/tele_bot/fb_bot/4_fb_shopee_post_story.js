@@ -207,7 +207,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         }
         
         if (!clicked) {
-            console.log("⚠️ Không click được ô post bằng JS, chụp ảnh debug...");
+            console.log("!!! Không click được ô post bằng JS, chụp ảnh debug...");
             await page.screenshot({ path: 'debug_fb_post_box.png' });
             throw new Error("Không tìm thấy ô đăng bài. Có thể FB chưa đăng nhập thành công hoặc Cookie đã chết!");
         }

@@ -109,7 +109,7 @@ async function runSinglePost() {
       console.error("✗ Lỗi lấy Cookie:", profileErr?.message);
       await logToWeb(email, 'threads_post', `✗ Không tìm thấy Threads Cookie. Vui lòng cập nhật trên Web.`, 'error');
       if (profileData?.tele_chat_id) {
-          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Không tìm thấy Threads Cookie (hoặc đã hết hạn).\n\n⚠️ <b>Hành động:</b> Sếp vui lòng vào trang Quản lý Web cập nhật lại Cookie Threads ngay để Bot tiếp tục chạy nhé!`);
+          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Không tìm thấy Threads Cookie (hoặc đã hết hạn).\n\n!!! <b>Hành động:</b> Sếp vui lòng vào trang Quản lý Web cập nhật lại Cookie Threads ngay để Bot tiếp tục chạy nhé!`);
       }
       process.exit(1);
     }
@@ -188,7 +188,7 @@ async function runSinglePost() {
     if (!isLoggedIn) {
       await logToWeb(email, 'threads_post', `✗ Cookie hết hạn hoặc không hợp lệ (Bị đẩy ra Login)`, 'error');
       if (profileData?.tele_chat_id) {
-          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Cookie Threads của sếp đã hết hạn hoặc bị văng ra ngoài (Bị chặn/Ban).\n\n⚠️ <b>Hành động:</b> Sếp vui lòng lấy lại Cookie mới và cập nhật trên Web để Bot chạy tiếp nhé!`);
+          await sendTelegramNotify(profileData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n✗ <b>Lỗi:</b> Cookie Threads của sếp đã hết hạn hoặc bị văng ra ngoài (Bị chặn/Ban).\n\n!!! <b>Hành động:</b> Sếp vui lòng lấy lại Cookie mới và cập nhật trên Web để Bot chạy tiếp nhé!`);
       }
       await browser.close();
       process.exit(1);
@@ -340,7 +340,7 @@ async function runSinglePost() {
                 try {
                     await page.waitForSelector('div[contenteditable="true"]', { timeout: 5000 });
                 } catch (e) {
-                    await logToWeb(email, 'threads_post', `⚠️ Click Reply rồi nhưng không thấy ô nhập chữ. Đang thử click bằng DOM...`, 'warn');
+                    await logToWeb(email, 'threads_post', `!!! Click Reply rồi nhưng không thấy ô nhập chữ. Đang thử click bằng DOM...`, 'warn');
                     await page.evaluate(() => {
                         const svgs = [...document.querySelectorAll('svg')];
                         const replyIcons = svgs.filter(s => {
@@ -399,10 +399,10 @@ async function runSinglePost() {
                 await delay(5000); // Chờ post cmt
                 await logToWeb(email, 'threads_post', `✓ Đã thả comment Affiliate thành công!`, 'success');
             } else {
-                await logToWeb(email, 'threads_post', `⚠️ Không tìm thấy nút Reply để thả comment.`, 'warn');
+                await logToWeb(email, 'threads_post', `!!! Không tìm thấy nút Reply để thả comment.`, 'warn');
             }
         } else {
-            await logToWeb(email, 'threads_post', `⚠️ Không trích xuất được link trang cá nhân từ DOM.`, 'warn');
+            await logToWeb(email, 'threads_post', `!!! Không trích xuất được link trang cá nhân từ DOM.`, 'warn');
         }
     }
 
@@ -420,7 +420,7 @@ async function runSinglePost() {
 
     if (updateErr) {
       console.error("✗ Lỗi cập nhật DB:", updateErr.message);
-      await logToWeb(email, 'threads_post', `⚠️ Đăng thành công nhưng lỗi cập nhật trạng thái DB!`, 'warn');
+      await logToWeb(email, 'threads_post', `!!! Đăng thành công nhưng lỗi cập nhật trạng thái DB!`, 'warn');
     } else {
       console.log("✓ Đã cập nhật trạng thái posted = true");
       await logToWeb(email, 'threads_post', `🎉 Đăng bài thành công lên Threads! [ID: ${postId}]`, 'success');
@@ -431,6 +431,12 @@ async function runSinglePost() {
   } catch (err) {
     console.error("💥 Lỗi ngoài ý muốn:", err);
     await logToWeb(email, 'threads_post', `💥 Lỗi cục bộ: ${err.message}`, 'error');
+    try {
+        const { data: pData } = await supabase.from('profiles').select('tele_chat_id').eq('email', email).single();
+        if (pData?.tele_chat_id) {
+            await sendTelegramNotify(pData.tele_chat_id, `🚨 <b>CẢNH BÁO BỘ MÁY ĐĂNG BÀI</b>\n\n💥 <b>Lỗi sấp mặt:</b> Máy cày (Puppeteer) gặp lỗi kĩ thuật giữa chừng và đã dừng lại.\n\n🛠 <b>Chi tiết lỗi:</b> <code>${err.message}</code>\n\n!!! <b>Hành động:</b> Sếp vui lòng kiểm tra lại Web hoặc báo Dev fix lỗi nhé!`);
+        }
+    } catch(e) {}
     process.exit(1);
   }
 }
