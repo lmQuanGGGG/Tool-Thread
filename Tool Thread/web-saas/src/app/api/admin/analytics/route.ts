@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Service Role bypasses RLS — chỉ gọi từ server, không bao giờ lộ ra client
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
 );
 
 const ADMIN_EMAIL = 'lmquang.devops@gmail.com';
