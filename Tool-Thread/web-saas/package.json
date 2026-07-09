@@ -15,6 +15,7 @@
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.109.0",
     "@types/three": "^0.185.0",
+    "dotenv": "^17.4.2",
     "gsap": "^3.15.0",
     "lucide-react": "^1.23.0",
     "motion": "^12.42.2",
