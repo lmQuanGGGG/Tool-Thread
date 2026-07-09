@@ -443,7 +443,7 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       {/* ── HEADER ── */}
-      <header className="sticky top-[52px] md:top-0 z-40 px-4 md:px-6 h-14 flex items-center justify-center bg-white/80 backdrop-blur-xl border-b border-gray-200/80 shadow-sm">
+      <header className="sticky top-[52px] md:top-0 z-40 px-4 md:px-6 h-14 flex items-center justify-center bg-white/95 backdrop-blur-xl">
         <nav className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-full max-w-[400px]">
           {(["global", "fb", "threads"] as const).map((t) => (
             <button
