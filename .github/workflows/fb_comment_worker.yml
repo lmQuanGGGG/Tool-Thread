@@ -26,7 +26,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd "Tool Thread/tele_bot" && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+        cd "Tool-Thread/tele_bot" && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
 
     - name: Run FB Comment Bot with Xvfb
       env:
@@ -36,5 +36,5 @@ jobs:
         FB_COOKIE: ${{ secrets.FB_COOKIE }}
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless
-        cd "Tool Thread/tele_bot"
+        cd "Tool-Thread/tele_bot"
         xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node test_fb_cmt.js

@@ -1,4 +1,4 @@
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # Make the terminals light mode
@@ -15,7 +15,7 @@ content = content.replace('<span className="text-xs font-mono font-medium text-z
 content = content.replace('<button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-800 transition-colors">', '<button onClick={() => setFbLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors">')
 content = content.replace('<button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-800 transition-colors">', '<button onClick={() => setThreadsLogs([{ time: now(), level: "INFO", msg: "Console cleared." }])} className="text-zinc-500 hover:text-zinc-300 transition-colors">')
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Fixed terminal text")

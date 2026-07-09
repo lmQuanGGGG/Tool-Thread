@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/crawl/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/crawl/page.tsx', 'utf8');
 
 // The dashboard background
 content = content.replace(/className="h-full overflow-y-auto bg-zinc-950 p-5"/g, 'className="pb-10 p-5"');
@@ -44,5 +44,5 @@ content = content.replace(/text-gray-900 font-mono/g, 'text-gray-900 font-mono')
 content = content.replace(/text-gray-900 rounded-xl/g, 'text-white rounded-xl');
 content = content.replace(/bg-emerald-500 hover:bg-emerald-600 text-gray-900/g, 'bg-emerald-500 hover:bg-emerald-600 text-white');
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/crawl/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/crawl/page.tsx', content);
 console.log("Done replacing dark classes");

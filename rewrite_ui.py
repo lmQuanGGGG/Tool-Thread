@@ -1,6 +1,6 @@
 import re
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # 1. Inject activeTab state
@@ -337,7 +337,7 @@ new_return = """  return (
 
 content = content[:start_idx] + new_return
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Rewrite complete")

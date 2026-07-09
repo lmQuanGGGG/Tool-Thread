@@ -1,6 +1,6 @@
 import re
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # 1. Update ModuleCard
@@ -60,7 +60,7 @@ content = re.sub(
     content
 )
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("UI updated")

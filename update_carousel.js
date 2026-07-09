@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // 1. Add useRef
 if (!content.includes('useRef<HTMLDivElement>')) {
@@ -98,5 +98,5 @@ const newPosterStr = `<div className="relative flex-1 min-h-0">
 
 content = content.replace(oldPosterStr, newPosterStr);
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
 console.log("Successfully updated layout to horizontal carousel!");

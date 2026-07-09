@@ -1,7 +1,7 @@
 const fs = require('fs');
 const axios = require('axios');
 const path = require('path');
-require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool Thread/tele_bot/.env' });
+require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool-Thread/tele_bot/.env' });
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '1480036662'; // QuangLM chat id
@@ -9,7 +9,17 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '1480036662'; // QuangL
 async function uploadToTelegram(fileUrl) {
     try {
         console.log(`Đang tải ảnh lên Telegram từ: ${fileUrl.substring(0, 50)}...`);
-        const response = await axios({ url: fileUrl, method: 'GET', responseType: 'stream' });
+        // Lách hotlink protection của Instagram bằng cách thêm Headers giống hệt trình duyệt
+        const response = await axios({ 
+            url: fileUrl, 
+            method: 'GET', 
+            responseType: 'stream',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://www.instagram.com/',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+            }
+        });
         
         const form = new require('form-data')();
         form.append('chat_id', TELEGRAM_CHAT_ID);
@@ -21,18 +31,21 @@ async function uploadToTelegram(fileUrl) {
         
         return uploadRes.data.result.photo[uploadRes.data.result.photo.length - 1].file_id;
     } catch (e) {
-        console.error('Lỗi upload ảnh:', e.message);
+        console.error('Lỗi upload ảnh:', e.response ? e.response.status : e.message);
         return null;
     }
 }
 
 async function processData() {
     const inputPath = '/Users/wang04/Downloads/instagram_farm_lnhuanhh_1783237701451.json';
-    const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool Thread/tele_bot/drama_ready_to_post.json';
+    const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool-Thread/tele_bot/drama_ready_to_post.json';
     
     console.log('Đọc file Instagram:', inputPath);
     const igData = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
-    const existingDramaData = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+    let existingDramaData = [];
+    if (fs.existsSync(outputPath)) {
+        existingDramaData = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+    }
     
     let processedCount = 0;
     
@@ -47,8 +60,8 @@ async function processData() {
                         post.content.media[i].file_id = file_id;
                         hasImage = true;
                     }
-                    // Rate limit protection
-                    await new Promise(r => setTimeout(r, 1000));
+                    // Delay để tránh bị Telegram và Instagram khoá
+                    await new Promise(r => setTimeout(r, 1500));
                 }
             }
         }

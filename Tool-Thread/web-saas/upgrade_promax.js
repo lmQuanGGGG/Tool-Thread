@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool Thread/web-saas/.env.local' });
+require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool-Thread/web-saas/.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(

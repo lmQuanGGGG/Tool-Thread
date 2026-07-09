@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // Replace the current Global Terminal Toggle and Panel with the VSCode-style one
 const regex = /\{\/\* Global Terminal Toggle \*\/\}(.|\n)*?(?=<\/div>\s*<\/div>\s*\);\s*\})/g;
@@ -70,5 +70,5 @@ const newTerminalHtml = `
 `;
 
 content = content.replace(regex, newTerminalHtml.trim());
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
 console.log("Done updating terminal style");

@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // 1. Add states for terminal height and dragging
 if (!content.includes('const [terminalHeight')) {
@@ -53,5 +53,5 @@ const replacement = `{/* Drag Handle */}
         <div className="flex items-center justify-between px-4 bg-[#161620] shrink-0 border-b border-white/[0.05]">`;
 content = content.replace(headerRegex, replacement);
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
 console.log("Done updating terminal to be resizable");

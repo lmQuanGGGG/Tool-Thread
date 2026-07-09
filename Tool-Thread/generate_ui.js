@@ -210,5 +210,5 @@ const htmlTemplate = `
 `;
 
 // Lưu vào thư mục của chồng
-fs.writeFileSync('/Users/wang04/Documents/Crawl Thread/Tool Thread/index.html', htmlTemplate);
+fs.writeFileSync('/Users/wang04/Documents/Crawl Thread/Tool-Thread/index.html', htmlTemplate);
 console.log("Xong! Đã tạo file index.html thành công.");

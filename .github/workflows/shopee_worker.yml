@@ -28,11 +28,11 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd "Tool Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
+        cd "Tool-Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
 
     - name: Run FB Shopee Post Story Bot with Xvfb
       env:
         FB_COOKIE: ${{ secrets.FB_COOKIE }}
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
-        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
+        cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js

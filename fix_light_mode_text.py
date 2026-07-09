@@ -1,6 +1,6 @@
 import re
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # Remove the forced dark background from the main container
@@ -28,7 +28,7 @@ content = content.replace('text-zinc-700 font-mono', 'text-zinc-300 font-mono')
 content = content.replace('text-zinc-800 text-xs', 'text-zinc-400 text-xs')
 content = content.replace('text-zinc-600 font-mono text-[10px]', 'text-zinc-400 font-mono text-[10px]')
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Switched to Light Mode text")

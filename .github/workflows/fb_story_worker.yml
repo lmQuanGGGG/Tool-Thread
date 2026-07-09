@@ -25,7 +25,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd "Tool Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
+        cd "Tool-Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
 
     - name: Run FB Story Bot
       env:
@@ -36,4 +36,4 @@ jobs:
         TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
       run: |
         sudo apt-get install -y xvfb
-        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum node fb_bot/4_fb_shopee_post_story.js
+        cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum node fb_bot/4_fb_shopee_post_story.js

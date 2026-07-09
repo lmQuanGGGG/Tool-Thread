@@ -14,7 +14,7 @@ const bot = new TelegramBot(token, { polling: false });
 const MODE = process.argv[2] === 'drama' ? 'drama' : 'uyen';
 
 const inputJsonPath = MODE === 'drama'
-    ? path.join(__dirname, '..', 'drama_raw_data.json')  // drama_raw_data.json trong Tool Thread/
+    ? path.join(__dirname, '..', 'drama_raw_data.json')  // drama_raw_data.json trong Tool-Thread/
     : '/Users/wang04/Downloads/threads_full_option_1783158545788.json';
 
 const outputJsonPath = MODE === 'drama'

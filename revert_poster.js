@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 const startBlock = content.indexOf('<div className="relative flex-1 min-h-0">');
 // Find the end of the Threads Crawl Poster block, which ends with "</div>" right before "</div>\n\n              <div className=\"flex flex-col gap-6 h-full min-h-0\">"
@@ -84,4 +84,4 @@ const newBlock = `<div className="flex-1 overflow-y-auto pr-1 space-y-4 dim-sibl
                 </div>`;
 
 content = content.replace(oldBlock, newBlock);
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);

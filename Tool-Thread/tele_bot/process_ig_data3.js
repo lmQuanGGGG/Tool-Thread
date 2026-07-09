@@ -2,7 +2,7 @@ const fs = require('fs');
 const axios = require('axios');
 const path = require('path');
 const { execSync } = require('child_process');
-require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool Thread/tele_bot/.env' });
+require('dotenv').config({ path: '/Users/wang04/Documents/Crawl Thread/Tool-Thread/tele_bot/.env' });
 
 const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-5396355060';
@@ -47,7 +47,7 @@ async function uploadToTelegram(fileUrl) {
 
 async function processData() {
     const inputPath = '/Users/wang04/Downloads/instagram_farm_lnhuanhh_1783237701451.json';
-    const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool Thread/tele_bot/ig_ready_to_post.json';
+    const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool-Thread/tele_bot/ig_ready_to_post.json';
     
     console.log('Đọc file Instagram:', inputPath);
     const igData = JSON.parse(fs.readFileSync(inputPath, 'utf8'));

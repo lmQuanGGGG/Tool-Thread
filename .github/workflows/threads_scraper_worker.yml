@@ -32,11 +32,11 @@ jobs:
         sudo apt-get install -y google-chrome-stable xvfb libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libxss1 libnss3 libatk1.0-0 libgtk-3-0
         
     - name: Cài đặt thư viện Node
-      working-directory: "Tool Thread/tele_bot"
+      working-directory: "Tool-Thread/tele_bot"
       run: npm install
 
     - name: Chạy Script Cào Data với Xvfb
-      working-directory: "Tool Thread/tele_bot"
+      working-directory: "Tool-Thread/tele_bot"
       env:
         USER_EMAIL: ${{ github.event.inputs.email }}
         PROFILE_URL: ${{ github.event.inputs.target_url }}
@@ -47,4 +47,4 @@ jobs:
         MAX_SCROLLS: "15"
       run: |
         echo "🔥 Đang chạy Bot Cào Profile Threads: ${{ github.event.inputs.target_url }}"
-        cd "Tool Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js
+        cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js

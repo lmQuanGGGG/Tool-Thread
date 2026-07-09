@@ -1,4 +1,4 @@
-require('dotenv').config({ path: 'Tool Thread/tele_bot/.env' });
+require('dotenv').config({ path: 'Tool-Thread/tele_bot/.env' });
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 async function test() {

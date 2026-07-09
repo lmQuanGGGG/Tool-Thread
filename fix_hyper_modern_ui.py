@@ -1,6 +1,6 @@
 import re
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # Replace the main background with the hyper modern background
@@ -38,7 +38,7 @@ content = content.replace('bg-zinc-800 text-zinc-200 hover:bg-zinc-700', 'btn-pr
 content = content.replace('bg-blue-600 text-white hover:bg-blue-500', 'btn-premium bg-blue-600 text-white hover:bg-blue-500')
 content = content.replace('bg-zinc-800 text-zinc-300 hover:bg-zinc-700', 'btn-premium bg-zinc-800 text-zinc-300 hover:bg-zinc-700')
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Updated page.tsx with hyper modern CSS classes")

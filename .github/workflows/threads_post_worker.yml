@@ -41,7 +41,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
           else
-            USERS=$(cd "Tool Thread"/tele_bot && node get_users.js | grep -o '\[.*\]' | tail -n 1)
+            USERS=$(cd "Tool-Thread"/tele_bot && node get_users.js | grep -o '\[.*\]' | tail -n 1)
             echo "matrix=$USERS" >> $GITHUB_OUTPUT
           fi
 
@@ -63,7 +63,7 @@ jobs:
           node-version: '22'
 
       - name: 📦 Cài dependencies
-        run: cd "Tool Thread"/tele_bot && npm install
+        run: cd "Tool-Thread"/tele_bot && npm install
 
       - name: 🤖 Chạy Bot Đăng Bài Threads (Single)
         env:
@@ -73,5 +73,5 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          cd "Tool Thread"/tele_bot
+          cd "Tool-Thread"/tele_bot
           xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 10_threads_post_single.js

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const p = path.join(__dirname, 'Tool Thread', 'web-saas', 'src', 'app', 'dashboard', 'accounts', 'page.tsx');
+const p = path.join(__dirname, 'Tool-Thread', 'web-saas', 'src', 'app', 'dashboard', 'accounts', 'page.tsx');
 let code = fs.readFileSync(p, 'utf8');
 
 // 1. Tách Logs state

@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 if (!content.includes('shopeeCarouselRef')) {
   content = content.replace(
@@ -76,7 +76,7 @@ if (match) {
   `;
   
   content = content.replace(match[0], rightColumnWrapper);
-  fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+  fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
   console.log("Successfully transformed Shopee data into a carousel and stacked it in the right column!");
 } else {
   console.log("Could not find Posts Editor");

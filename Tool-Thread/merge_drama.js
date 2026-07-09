@@ -60,7 +60,7 @@ mergedData.forEach((post, index) => {
     }
 });
 
-const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool Thread/drama_raw_data.json';
+const outputPath = '/Users/wang04/Documents/Crawl Thread/Tool-Thread/drama_raw_data.json';
 fs.writeFileSync(outputPath, JSON.stringify(mergedData, null, 2));
 
 console.log(`\n🎉 THÀNH CÔNG! Đã gộp ${mergedData.length} bài viết duy nhất (đã xóa trùng và lọc sạch Link Shopee rác).`);

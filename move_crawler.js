@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // 1. Extract ThreadsCrawler block
 const startCrawler = content.indexOf('                <ThreadsCrawler');
@@ -25,4 +25,4 @@ const newHeader = `                <div>
 
 content = content.replace(oldHeader, newHeader);
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);

@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // 1. Make images h-40
 content = content.replace(/h-20 w-auto/g, 'h-40 w-auto');
@@ -28,4 +28,4 @@ const replacement = '              </div>\n\n              <div className="flex 
 
 content = content.replace('              </div>\n\n              \n            </div>\n          </div>\n        )}', replacement);
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);

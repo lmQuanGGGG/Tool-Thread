@@ -1,6 +1,6 @@
 import re
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "r", encoding="utf-8") as f:
     content = f.read()
 
 # Make the text colors premium slate and darker!
@@ -22,7 +22,7 @@ content = content.replace("selection:bg-zinc-800 selection:text-zinc-900", "sele
 content = content.replace("placeholder:text-zinc-500", "placeholder:text-slate-400")
 content = content.replace("placeholder:text-zinc-400", "placeholder:text-slate-400")
 
-with open("Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
+with open("Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx", "w", encoding="utf-8") as f:
     f.write(content)
 
 print("Updated to premium slate palette")

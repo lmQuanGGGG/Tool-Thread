@@ -1,5 +1,5 @@
 const fs = require('fs');
-let content = fs.readFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
+let content = fs.readFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', 'utf8');
 
 // 1. Extract the Posts Editor block
 const startMarker = '{/* Posts Editor */}';
@@ -70,5 +70,5 @@ if (!content.includes(globalInsertTarget)) throw new Error('Global insert target
 
 content = content.replace(globalInsertTarget, globalInsertTarget + '\n\n              ' + postsEditorBlock);
 
-fs.writeFileSync('Tool Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
+fs.writeFileSync('Tool-Thread/web-saas/src/app/dashboard/accounts/page.tsx', content);
 console.log("Successfully moved Posts Editor to global tab!");
