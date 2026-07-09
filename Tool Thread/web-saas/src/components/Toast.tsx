@@ -30,7 +30,7 @@ export function Toast() {
     >
       <div className="relative rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] overflow-hidden p-[1.5px] min-w-[300px] max-w-sm">
         {/* Animated Spinning Border */}
-        <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_70%,#3b82f6_100%)]"></div>
+        <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_70%,#10b981_100%)]"></div>
         
         {/* Inner Content */}
         <div className="relative bg-white/95 backdrop-blur-2xl text-gray-800 px-4 py-3 rounded-[14.5px] flex items-center gap-3 w-full h-full">
