@@ -765,8 +765,8 @@ export default function AccountsPage() {
 
               </div>
 
-              <div className="flex h-[760px] lg:h-full lg:min-h-[740px] flex-col gap-5">
-                <div className={`${cardClass} p-2 md:p-6 flex flex-col h-[560px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
+              <div className="flex h-[660px] lg:h-full lg:min-h-[740px] flex-col gap-5">
+                <div className={`${cardClass} p-2 md:p-6 flex flex-col h-[480px] lg:h-[560px] shrink-0 lg:min-h-0 overflow-hidden anim-fade-up anim-d3`}>
                   <div className="flex items-center justify-between gap-4 mb-5">
                     <CardTitle
                       icon={MessageCircle}
@@ -794,7 +794,7 @@ export default function AccountsPage() {
                         return (
                           <div key={`threads-${post.id}-${i}`} className="w-[75vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
                             {hasImages ? (
-                              <div className="relative w-full aspect-video rounded-[32px] overflow-hidden mb-5 bg-gray-900 border border-black/[0.03] group/img-carousel">
+                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
                                 {post.image_urls.length > 1 && (
                                   <>
                                     <button onClick={(e) => {
@@ -826,7 +826,7 @@ export default function AccountsPage() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="relative w-full aspect-video rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
+                              <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gradient-to-br from-violet-100 to-indigo-50 flex flex-col items-center justify-center p-6">
                                 <MessageCircle className="w-12 h-12 text-violet-300 mb-3" />
                                 <p className="text-violet-400 font-medium text-sm">Text Only Post</p>
                                 <button onClick={() => handleDeletePost(post.id)} className="absolute top-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-10 h-10 flex items-center justify-center opacity-0 group-hover/post:opacity-100 transition-all z-10 shadow-sm" title="Xoá">
