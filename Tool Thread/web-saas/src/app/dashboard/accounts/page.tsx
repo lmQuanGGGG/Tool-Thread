@@ -225,8 +225,13 @@ export default function AccountsPage() {
   const handleSavePost = async (post: any) => {
     pushLog("INFO", `Đang lưu bài viết...`, "threads");
     const { error } = await supabase.from('crawl_data').update({ text_content: post.text_content, image_urls: post.image_urls }).eq('id', post.id);
-    if (error) { pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads"); return false; }
-    pushLog("SUCCESS", `Đã lưu bài viết thành công.`, "threads");
+    if (error) { 
+      pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads"); 
+      showToast(`Lỗi lưu bài viết: ${error.message}`);
+      return false; 
+    }
+    pushLog("SUCCESS", `Đã lưu thay đổi bài viết.`, "threads");
+    showToast("Đã lưu thay đổi bài viết thành công.");
     return true;
   };
   const handleDeletePost = async (id: string) => {
@@ -251,8 +256,13 @@ export default function AccountsPage() {
   const handleSaveParsedLink = async () => {
     pushLog("INFO", `Đang lưu thay đổi Shopee Data...`, "global");
     const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: parsedLinks }).eq('id', userId);
-    if (error) { pushLog("ERROR", `Lỗi lưu Shopee Data: ${error.message}`, "global"); return false; }
+    if (error) {
+      pushLog("ERROR", `Lỗi lưu Shopee Data: ${error.message}`, "global");
+      showToast(`Lỗi lưu Shopee Data: ${error.message}`);
+      return false;
+    }
     pushLog("SUCCESS", `Đã lưu Shopee Data thành công.`, "global");
+    showToast("Đã lưu Shopee Data thành công.");
     return true;
   };
   const handleDeleteParsedLink = async (index: number) => {
@@ -347,10 +357,12 @@ export default function AccountsPage() {
         pushLog("ERROR", `Lưu thất bại: ${error.message}`, "global");
         pushLog("ERROR", `Lưu thất bại: ${error.message}`, "fb");
         pushLog("ERROR", `Lưu thất bại: ${error.message}`, "threads");
+        showToast(`Lưu thất bại: ${error.message}`);
     } else { 
         pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "global"); 
         pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "fb"); 
         pushLog("SUCCESS", "Cấu hình đã được lưu thành công.", "threads"); 
+        showToast("Cấu hình đã được lưu thành công.");
     }
     setSaving(false);
   };
