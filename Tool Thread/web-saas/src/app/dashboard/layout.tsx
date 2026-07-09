@@ -426,7 +426,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Dot grid bg */}
         <div className="absolute inset-0 pointer-events-none z-0 opacity-40" style={{ backgroundImage: "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        <div className="flex-1 z-10 overflow-hidden">{children}</div>
+        <div className="flex-1 z-10">{children}</div>
       </main>
     </div>
 

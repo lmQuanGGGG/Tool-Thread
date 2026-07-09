@@ -437,45 +437,22 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 px-4 md:px-6 h-14 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-200/80">
-        <div className="flex items-center gap-3 md:gap-5 w-full md:w-auto">
-          {/* Logo — ẩn trên mobile */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
-              <Bot className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-semibold text-[13px] text-gray-900">AutoFarm</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-[9px] font-mono text-gray-400 border border-gray-200/80 uppercase tracking-wider">v3.5</span>
-          </div>
-
-          {/* Tab bar — full width trên mobile */}
-          <nav className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-1 w-full md:w-auto justify-around md:justify-start">
-            {(["global", "fb", "threads"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`flex-1 md:flex-none px-3 md:px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all ${
-                  activeTab === t
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* User info — ẩn trên mobile */}
-        <div className="hidden md:flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <span className="text-[11px] font-medium text-gray-600">{userEmail}</span>
-            <span className="text-[10px] font-mono text-emerald-600 uppercase tracking-widest font-semibold">{userTier} tier</span>
-          </div>
-          <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200/80 flex items-center justify-center">
-            <span className="text-xs font-bold text-gray-700">{userEmail?.charAt(0).toUpperCase()}</span>
-          </div>
-        </div>
+      <header className="sticky top-[52px] md:top-0 z-40 px-4 md:px-6 h-14 flex items-center justify-center bg-white/80 backdrop-blur-xl border-b border-gray-200/80 shadow-sm">
+        <nav className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-full max-w-[400px]">
+          {(["global", "fb", "threads"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className={`flex-1 px-3 py-1.5 text-[13px] font-medium rounded-md transition-all ${
+                activeTab === t
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+              }`}
+            >
+              {t === "global" ? "Cấu Hình" : t === "fb" ? "Facebook" : "Threads"}
+            </button>
+          ))}
+        </nav>
       </header>
 
       {/* ── WORKSPACE ── */}
@@ -553,8 +530,7 @@ export default function AccountsPage() {
                         <ChevronRight className="w-5 h-5 pl-0.5" />
                       </button>
                       
-                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-5 [&::-webkit-scrollbar]:hidden">
-                        <div className="w-4 md:w-5 shrink-0" />
+                      <div ref={shopeeCarouselRef} {...carouselPauseHandlers("global")} className="flex overflow-x-auto overflow-y-hidden gap-4 h-full snap-x snap-mandatory pb-2 -mx-4 md:-mx-5 px-4 md:px-5 [&::-webkit-scrollbar]:hidden">
                         {[...parsedLinks, ...parsedLinks].map((p, i) => {
                           const sourceIndex = i % parsedLinks.length;
                           return (
@@ -577,7 +553,6 @@ export default function AccountsPage() {
                               </div>
                             </div>
                         )})}
-                        <div className="w-4 md:w-5 shrink-0" />
                       </div>
                     </div>
                   </div>
@@ -750,8 +725,7 @@ export default function AccountsPage() {
 	                      </>
 	                    )}
 
-		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 [&::-webkit-scrollbar]:hidden">
-		                      <div className="w-4 md:w-6 shrink-0" />
+		                    <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-4 md:-mx-6 px-4 md:px-6 [&::-webkit-scrollbar]:hidden">
 		                      {[...threadsPosts, ...threadsPosts].map((post, i) => {
                           const hasImages = post.image_urls && post.image_urls.length > 0;
                           return (
@@ -818,7 +792,6 @@ export default function AccountsPage() {
 	                          <p className="mt-1 max-w-[260px] text-[12px] leading-relaxed text-gray-400">Chạy crawler bên trái để đưa bài mới vào hàng chờ đăng Threads.</p>
 	                        </div>
 	                      )}
-	                      <div className="w-4 md:w-6 shrink-0" />
 	                    </div>
 	                  </div>
 	                </div>
