@@ -157,9 +157,9 @@ export default function AccountsPage() {
     onTouchEnd: () => setPausedCarousel(prev => prev === tab ? null : prev),
   });
 
-  const globalLogEndRef = useRef<HTMLDivElement>(null);
-  const fbLogEndRef = useRef<HTMLDivElement>(null);
-  const threadsLogEndRef = useRef<HTMLDivElement>(null);
+  const globalLogContainerRef = useRef<HTMLDivElement>(null);
+  const fbLogContainerRef = useRef<HTMLDivElement>(null);
+  const threadsLogContainerRef = useRef<HTMLDivElement>(null);
 
   const pushGlobalLog = (level: LogEntry["level"], msg: string) => setGlobalLogs(prev => [...prev, { time: now(), level, msg }]);
   const pushFbLog = (level: LogEntry["level"], msg: string) => setFbLogs(prev => [...prev, { time: now(), level, msg }]);
@@ -170,12 +170,18 @@ export default function AccountsPage() {
     if (target === "threads" || target === "both") pushThreadsLog(level, msg);
   };
 
-  useEffect(() => { globalLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [globalLogs]);
+  useEffect(() => {
+    globalLogContainerRef.current?.scrollTo({ top: globalLogContainerRef.current.scrollHeight, behavior: "smooth" });
+  }, [globalLogs]);
 
   const [threadsTotalCount, setThreadsTotalCount] = useState<number>(0);
 
-  useEffect(() => { fbLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [fbLogs]);
-  useEffect(() => { threadsLogEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [threadsLogs]);
+  useEffect(() => {
+    fbLogContainerRef.current?.scrollTo({ top: fbLogContainerRef.current.scrollHeight, behavior: "smooth" });
+  }, [fbLogs]);
+  useEffect(() => {
+    threadsLogContainerRef.current?.scrollTo({ top: threadsLogContainerRef.current.scrollHeight, behavior: "smooth" });
+  }, [threadsLogs]);
 
   const fetchThreadsPosts = async (uid: string) => {
     const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('posted', false);
@@ -400,7 +406,7 @@ export default function AccountsPage() {
 
   const renderInlineTerminal = (tab: "global" | "fb" | "threads") => {
     const logs = tab === "global" ? globalLogs : tab === "fb" ? fbLogs : threadsLogs;
-    const endRef = tab === "global" ? globalLogEndRef : tab === "fb" ? fbLogEndRef : threadsLogEndRef;
+    const containerRef = tab === "global" ? globalLogContainerRef : tab === "fb" ? fbLogContainerRef : threadsLogContainerRef;
     const clearLogs = () => {
       if (tab === "global") setGlobalLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
       if (tab === "fb") setFbLogs([{ time: now(), level: "INFO", msg: "Cleared." }]);
@@ -420,7 +426,7 @@ export default function AccountsPage() {
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[12px] bg-transparent">
+        <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-1.5 font-mono text-[12px] bg-transparent">
           {logs.map((log, i) => (
             <div key={i} className="flex items-start gap-3 hover:bg-white/[0.03] px-2.5 py-1 rounded-lg transition-colors -mx-2.5">
               <span className="text-zinc-600 shrink-0 tabular-nums">[{log.time}]</span>
@@ -428,7 +434,7 @@ export default function AccountsPage() {
               <span className={`${LEVEL_COLOR[log.level]} break-words leading-relaxed`}>{log.msg}</span>
             </div>
           ))}
-          <div ref={endRef} />
+
         </div>
       </div>
     );
