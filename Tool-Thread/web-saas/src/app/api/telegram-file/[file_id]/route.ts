@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
 export async function GET(request: Request, { params }: { params: Promise<{ file_id: string }> }) {
   const { file_id } = await params;
   if (!file_id) return NextResponse.json({ error: 'Missing file_id' }, { status: 400 });
@@ -38,6 +39,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     
     // Thêm Cache-Control mạnh tay vì file Telegram theo file_id là bất biến
     responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    responseHeaders.set('Accept-Ranges', 'bytes');
+    responseHeaders.set('Content-Type', 'video/mp4');
     
     return new NextResponse(videoRes.body, {
       status: videoRes.status,
