@@ -164,8 +164,8 @@ const ServerlessIllustration = () => {
           {/* Central Hub (AutoFarm Core) */}
           <div className="center-hub relative z-10 w-24 h-24 bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-zinc-100 flex items-center justify-center">
             <div className="absolute inset-0 bg-blue-500/10 rounded-3xl animate-pulse" />
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-inner relative z-10">
-              <Bot className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner relative z-10 overflow-hidden">
+              <img src="/rocket_logo.png" alt="AutoFarm Logo" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -363,8 +363,8 @@ export default function Home() {
 
               {/* Fake Header */}
               <div className="bg-[#17212b]/95 backdrop-blur-md px-5 py-3 border-b border-[#232e3c] flex items-center gap-3 z-10 sticky top-0 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)] border border-blue-400/20">
-                  <Bot className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(59,130,246,0.3)] border border-blue-400/20 overflow-hidden">
+                  <img src="/rocket_logo.png" alt="AutoFarm Bot" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <div className="font-semibold text-[14.5px] text-zinc-100 leading-tight">AutoFarm Bot</div>
