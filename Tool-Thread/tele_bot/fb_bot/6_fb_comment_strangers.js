@@ -51,7 +51,26 @@ const SEED_COMMENTS = [
     "Nội dung video chất lượng quá 👏",
     "Xem đi xem lại mấy lần luôn á",
     "Góc quay đỉnh quá bạn",
-    "Video quá ý nghĩa luôn nha"
+    "Video quá ý nghĩa luôn nha",
+    "Cuốn dã man luôn",
+    "Haha video giải trí quá",
+    "Trend này hợp với bạn nè",
+    "Mình thích cách bạn edit video này",
+    "Nhạc nền cuốn quá",
+    "Sáng tạo thật sự",
+    "10 điểm không có nhưng 🔥",
+    "Đầu tư xịn quá nè",
+    "Chăm ra video nữa nha bạn",
+    "Màu video ưng mắt quá",
+    "Làm video mượt ghê",
+    "Nói trúng tim đen luôn",
+    "Tim tim tim 💕",
+    "Nội dung rất hay nha",
+    "Video có tâm quá",
+    "Đúng là cao thủ edit",
+    "Xem mà dính luôn á",
+    "Ủng hộ bạn 1 tim nhé",
+    "Thích content kiểu này ghê"
 ];
 
 (async () => {
