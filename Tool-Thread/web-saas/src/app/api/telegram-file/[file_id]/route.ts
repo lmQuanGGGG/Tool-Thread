@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
+
 export async function GET(request: Request, { params }: { params: Promise<{ file_id: string }> }) {
   const { file_id } = await params;
   if (!file_id) return NextResponse.json({ error: 'Missing file_id' }, { status: 400 });
@@ -23,27 +24,43 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     // 2. Fetch the actual file stream
     const downloadUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
     
-    // Parse Range header from client if present
-    const requestHeaders = new Headers();
-    const rangeHeader = request.headers.get('range');
-    if (rangeHeader) {
-      requestHeaders.set('Range', rangeHeader);
+    // Cloudflare Edge workers can fetch up to 50MB into an ArrayBuffer
+    // This video is a short loop, so buffering it is safe and ensures iOS playback
+    const videoRes = await fetch(downloadUrl);
+    
+    if (!videoRes.ok) {
+      return NextResponse.json({ error: 'Failed to download from Telegram' }, { status: 500 });
     }
 
-    const videoRes = await fetch(downloadUrl, { headers: requestHeaders });
+    const buffer = await videoRes.arrayBuffer();
+    const fileSize = buffer.byteLength;
+    
+    const rangeHeader = request.headers.get('range');
     
     const responseHeaders = new Headers();
-    const cl = videoRes.headers.get('content-length');
-    if (cl) responseHeaders.set('Content-Length', cl);
-    const cr = videoRes.headers.get('content-range');
-    if (cr) responseHeaders.set('Content-Range', cr);
-    
-    responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
     responseHeaders.set('Accept-Ranges', 'bytes');
     responseHeaders.set('Content-Type', 'video/mp4');
+    responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
     
-    return new Response(videoRes.body, {
-      status: videoRes.status,
+    if (rangeHeader) {
+      const parts = rangeHeader.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] && parts[1] !== "" ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      
+      responseHeaders.set('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      responseHeaders.set('Content-Length', chunksize.toString());
+      
+      return new Response(buffer.slice(start, end + 1), {
+        status: 206,
+        headers: responseHeaders,
+      });
+    }
+
+    responseHeaders.set('Content-Length', fileSize.toString());
+    
+    return new Response(buffer, {
+      status: 200,
       headers: responseHeaders
     });
   } catch (error) {

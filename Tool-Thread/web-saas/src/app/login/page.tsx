@@ -3,23 +3,25 @@
 import { useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, KeyRound, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import Link from "next/link";
 import { getDeviceFingerprint } from "../../utils/fingerprint";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
       // 1. Thử đăng nhập trước
@@ -112,8 +114,7 @@ export default function LoginPage() {
             <label className="block text-[13px] font-bold text-zinc-900 mb-2">Địa chỉ Email</label>
             <input 
               type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
               required
               className="w-full bg-[#f4f4f5] border-transparent rounded-[16px] px-5 py-4 text-[14px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-300 focus:ring-4 focus:ring-zinc-100 transition-all placeholder:text-zinc-400 outline-none"
               placeholder="admin@autofarm.com"
@@ -124,8 +125,7 @@ export default function LoginPage() {
             <label className="block text-[13px] font-bold text-zinc-900 mb-2">Mật khẩu</label>
             <input 
               type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
               required
               className="w-full bg-[#f4f4f5] border-transparent rounded-[16px] px-5 py-4 text-[14px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-300 focus:ring-4 focus:ring-zinc-100 transition-all placeholder:text-zinc-400 outline-none"
               placeholder="••••••••"
