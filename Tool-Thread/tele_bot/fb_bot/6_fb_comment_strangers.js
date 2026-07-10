@@ -44,14 +44,14 @@ async function downloadImageFromTelegram(file_id) {
 }
 
 const SEED_COMMENTS = [
-    "Tuyệt vời quá!",
-    "Xuất sắc bạn ơi 💯",
-    "Video hay quá nè",
-    "Đỉnh quá bạn ơi",
-    "Tương tác mạnh nha bạn",
-    "Đẹp xuất sắc luôn",
+    "Video bánh cuốn quá bạn ơi 💯",
+    "Reel này hay quá nè",
+    "Edit video xịn xò quá bạn",
     "Thả tim cho video này ❤️",
-    "Quá xịn xò 👏"
+    "Nội dung video chất lượng quá 👏",
+    "Xem đi xem lại mấy lần luôn á",
+    "Góc quay đỉnh quá bạn",
+    "Video quá ý nghĩa luôn nha"
 ];
 
 (async () => {
