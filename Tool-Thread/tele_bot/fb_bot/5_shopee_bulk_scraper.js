@@ -66,19 +66,38 @@ async function uploadToTelegram(imageUrl, chatId) {
     }
 }
 
-async function generateComment(title) {
+async function generateBatchComments(titles) {
     if (!GEMINI_API_KEY) {
         const catchphrases = ["Mấy bà ơi gom lẹ deal này nha:", "Ai chưa thử cái này thì thử liền đi:", "Eo ôi ưng cái bụng ghê:"];
-        return `${catchphrases[Math.floor(Math.random() * catchphrases.length)]}`;
+        return titles.map(() => `${catchphrases[Math.floor(Math.random() * catchphrases.length)]}`);
     }
     try {
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `Bạn là một KOL review sản phẩm Shopee trên Mạng xã hội Threads. Hãy viết ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua sản phẩm này. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích. Tên sản phẩm: ${title}`;
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+        const titlesList = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
+        
+        const prompt = `Bạn là một KOL review sản phẩm Shopee trên Mạng xã hội Threads. Dưới đây là danh sách ${titles.length} sản phẩm:
+${titlesList}
+
+Yêu cầu: Viết cho MỖI sản phẩm ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích.
+BẮT BUỘC TRẢ VỀ DƯỚI DẠNG JSON ARRAY chứa các chuỗi kết quả (đúng ${titles.length} phần tử).
+Ví dụ: ["Mấy bà ơi gom lẹ deal này nha", "Ai chưa thử cái này thì chốt đơn đi"]
+TUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi mảng JSON thuần tuý.`;
+
         const result = await model.generateContent(prompt);
-        return result.response.text().trim();
+        let rawText = result.response.text().trim();
+        // Dọn dẹp markdown nếu AI lỡ sinh ra
+        if (rawText.startsWith('```json')) rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        if (rawText.startsWith('```')) rawText = rawText.replace(/```/g, '').trim();
+        
+        const commentsArray = JSON.parse(rawText);
+        if (Array.isArray(commentsArray) && commentsArray.length === titles.length) {
+            return commentsArray;
+        }
+        throw new Error("Số lượng comment trả về không khớp với số lượng sản phẩm!");
     } catch(e) {
-        return "Góc rắc thính: Món này dạo này tui mê cực kì:";
+        console.error("Lỗi khi gọi batch Gemini:", e);
+        return titles.map(() => "Góc rắc thính: Món này dạo này tui mê cực kì:");
     }
 }
 
@@ -95,41 +114,68 @@ async function generateComment(title) {
 
     let isModified = false;
     let newParsed = [];
+    let itemsToProcess = [];
 
-    for (let link of rawLinks) {
-        link = link.trim();
-        if (!link) continue;
-        
-        // Kiểm tra xem đã parse chưa
-        const existing = parsedLinks.find(p => p.aff_link === link);
-        if (existing && existing.title && existing.tele_file_id) {
-            newParsed.push(existing);
-            continue;
-        }
+    // Helper: Chia mảng thành các chunk
+    const chunkArray = (arr, size) => arr.length ? [arr.slice(0, size), ...chunkArray(arr.slice(size), size)] : [];
+    
+    // Bước 1: Thu thập thông tin sản phẩm (Lấy title, image). Xử lý song song 5 link để tải ảnh lẹ.
+    const linkChunks = chunkArray(rawLinks.filter(l => l.trim()), 5);
 
-        const shopeeData = await getShopeeOGData(link);
-        if (shopeeData) {
-            console.log(`✓ Lấy thành công: ${shopeeData.title}`);
-            const storageChat = process.env.TELE_STORAGE_CHAT || '-5396355060';
-            const file_id = await uploadToTelegram(shopeeData.imageUrl, storageChat);
-            if (file_id) {
-                console.log(`☁️ Đã lưu S3 Telegram File ID: ${file_id}`);
-                const comment = await generateComment(shopeeData.title);
-                const msgAI = `🤖 AI Comment: ${comment}`;
-                console.log(msgAI);
-                await logToWeb(USER_EMAIL, 'parse_links', msgAI, 'success');
-                
-                newParsed.push({
-                    aff_link: link,
-                    title: shopeeData.title,
-                    image_url: shopeeData.imageUrl,
-                    tele_file_id: file_id,
-                    suggested_comment: comment
-                });
-                isModified = true;
+    for (let chunk of linkChunks) {
+        await Promise.all(chunk.map(async (link) => {
+            link = link.trim();
+            const existing = parsedLinks.find(p => p.aff_link === link);
+            
+            if (existing && existing.title && existing.tele_file_id) {
+                itemsToProcess.push({ ...existing });
+                return;
             }
+
+            const shopeeData = await getShopeeOGData(link);
+            if (shopeeData) {
+                console.log(`✓ Lấy thành công: ${shopeeData.title}`);
+                const storageChat = process.env.TELE_STORAGE_CHAT || '-5396355060';
+                const file_id = await uploadToTelegram(shopeeData.imageUrl, storageChat);
+                if (file_id) {
+                    console.log(`☁️ Đã lưu S3 Telegram File ID: ${file_id}`);
+                    itemsToProcess.push({
+                        aff_link: link,
+                        title: shopeeData.title,
+                        image_url: shopeeData.imageUrl,
+                        tele_file_id: file_id,
+                        suggested_comment: "" // Sẽ sinh ở Bước 2
+                    });
+                    isModified = true;
+                }
+            }
+        }));
+        await delay(1000); // Tránh rate limit tải ảnh
+    }
+
+    // Bước 2: Gom batch gọi Gemini sinh AI comments
+    if (itemsToProcess.length > 0) {
+        // Gom tối đa 20 sản phẩm 1 lần gọi Gemini
+        const batchChunks = chunkArray(itemsToProcess, 20);
+        
+        for (let batch of batchChunks) {
+            console.log(`🤖 Đang nhờ AI nặn caption cho ${batch.length} sản phẩm cùng lúc...`);
+            const titles = batch.map(item => item.title);
+            const comments = await generateBatchComments(titles);
+            
+            batch.forEach((item, idx) => {
+                item.suggested_comment = comments[idx];
+                const msgAI = `🤖 AI Comment: ${comments[idx]}`;
+                console.log(msgAI);
+                
+                // Fire and forget logToWeb (Không block luồng)
+                logToWeb(USER_EMAIL, 'parse_links', msgAI, 'success').catch(console.error);
+                
+                newParsed.push(item);
+            });
+            isModified = true;
+            await delay(1000); // Tránh Rate Limit của Gemini
         }
-        await delay(1000); // Tránh rate limit
     }
 
     if (isModified) {
