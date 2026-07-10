@@ -128,8 +128,13 @@ TUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi
             const existing = parsedLinks.find(p => p.aff_link === link);
             
             if (existing && existing.title && existing.tele_file_id) {
-                itemsToProcess.push({ ...existing });
-                return;
+                if (existing.suggested_comment && existing.suggested_comment.trim() !== '') {
+                    newParsed.push(existing);
+                    return; // Khóa rào: Đã có comment thì bỏ qua siêu lẹ, không tốn quota Gemini
+                } else {
+                    itemsToProcess.push({ ...existing }); // Bị xoá comment -> đưa vào hàng chờ sinh lại
+                    return;
+                }
             }
 
             const shopeeData = await getShopeeOGData(link);
