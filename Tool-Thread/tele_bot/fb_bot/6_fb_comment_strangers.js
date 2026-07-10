@@ -99,8 +99,8 @@ const SEED_COMMENTS = [
     }
 
     const validProducts = scrapedData.filter(p => !p.fb_posted);
-    if (validProducts.length < 2) {
-        console.log("❌ Không đủ 2 sản phẩm Shopee chưa đăng! Vui lòng cào thêm.");
+    if (validProducts.length < 3) {
+        console.log("❌ Không đủ 3 sản phẩm Shopee chưa đăng! Vui lòng cào thêm.");
         return;
     }
 
@@ -123,8 +123,8 @@ const SEED_COMMENTS = [
     
     let affCommented = 0;
     let normalCommented = 0;
-    const maxAff = 2; // Cmt 2 cái link aff
-    const maxNormal = 1; // Cmt 1 cái khen bình thường
+    const maxAff = 3; // Cmt 3 cái link aff
+    const maxNormal = 2; // Cmt 2 cái khen bình thường
     
     for (let i = 0; i < maxAff + maxNormal + 3; i++) {
         if (affCommented >= maxAff && normalCommented >= maxNormal) break;
