@@ -182,8 +182,9 @@ const SEED_COMMENTS = [
                 let cmtText = "";
                 
                 if (isAffiliate) {
-                    pickedProduct = validProducts.find(p => !p.fb_posted_temp); // fb_posted_temp để theo dõi trong cùng 1 phiên
-                    if (pickedProduct) {
+                    const availableProducts = validProducts.filter(p => !p.fb_posted_temp);
+                    if (availableProducts.length > 0) {
+                        pickedProduct = availableProducts[getRandomInt(0, availableProducts.length - 1)];
                         pickedProduct.fb_posted_temp = true;
                         cmtText = `${pickedProduct.suggested_comment || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`;
                         if (pickedProduct.tele_file_id) {
