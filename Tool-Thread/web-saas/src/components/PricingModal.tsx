@@ -14,7 +14,7 @@ const TIERS = [
     name: "Free", priceStr: "0đ / tháng", price: 0,
     desc: "Trải nghiệm sức mạnh của AutoFarm mà không cần thanh toán.",
     btn1Class: "bg-[#161618] text-white hover:bg-black",
-    perks: ["2 Reels, 1 FB Post, 2 Threads", "10 Cmt Threads", "1 Crawl Data", "Chia 2 khung giờ chạy"],
+    perks: ["Auto Cmt FB rải link: 1 phiên (19h tối)", "Auto Up Reels FB: 2 video", "Auto Cmt Threads (10/10)", "Auto Đăng: 1 FB, 2 Threads", "Caption cơ bản (Mẫu ngẫu nhiên)"],
   },
   {
     key: "lite" as TierKey,
@@ -22,7 +22,7 @@ const TIERS = [
     name: "Lite", priceStr: "59.000đ / tháng", price: 59000,
     desc: "Gói cơ bản phù hợp cho cá nhân kinh doanh online nhỏ lẻ.",
     btn1Class: "bg-[#161618] text-white hover:bg-black",
-    perks: ["3 Reels, 3 FB, 3 Threads", "30 Cmt Threads", "2 Crawl Data", "Chia 3 khung giờ chạy"],
+    perks: ["Auto Cmt FB rải link: 2 phiên (11h, 19h)", "Auto Up Reels FB: 3 video", "Auto Cmt Threads (20/30)", "Auto Đăng: 3 FB, 3 Threads", "Caption AI (Gemini tự động)"],
   },
   {
     key: "plus" as TierKey,
@@ -30,7 +30,7 @@ const TIERS = [
     name: "Plus", priceStr: "129.000đ / tháng", price: 129000,
     desc: "Dành cho các shop cần duy trì nội dung tương tác đều đặn hàng ngày.",
     btn1Class: "bg-[#161618] text-white hover:bg-black",
-    perks: ["6 Reels, 5 FB, 6 Threads", "80 Cmt Threads", "3 Crawl Data", "Auto max 50% comment"],
+    perks: ["Auto Cmt FB rải link: 4 phiên (trải đều)", "Auto Up Reels FB: 6 video", "Auto Cmt Threads (max 50% tổng 80 bài)", "Auto Đăng: 5 FB, 6 Threads", "Caption AI (Gemini tự động)"],
   },
   {
     key: "pro" as TierKey,
@@ -38,7 +38,7 @@ const TIERS = [
     name: "Pro", priceStr: "199.000đ / tháng", price: 199000,
     desc: "Tối ưu hóa khả năng tiếp cận với giới hạn cao nhất của nền tảng.",
     btn1Class: "bg-[#161618] text-white hover:bg-black",
-    perks: ["12 Reels, 10 FB, 12 Threads", "160 Cmt Threads", "4 Crawl Data", "Chạy auto 24/7 liên tục", "Tối đa 10 luồng auto chạy song song"],
+    perks: ["Auto Cmt FB rải link: 6 phiên (trải đều)", "Auto Up Reels FB: 12 video", "Auto Cmt Threads (max 50% tổng 160 bài)", "Auto Đăng: 10 FB, 12 Threads", "Caption AI (Gemini tự động)"],
   },
 ];
 
