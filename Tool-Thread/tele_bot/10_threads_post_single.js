@@ -494,6 +494,7 @@ async function runSinglePost() {
             .eq('email', email);
 
         if (!cookieUpdateErr) {
+            console.log("✅ Đã lấy Cookie Threads mới thành công và cập nhật lên DB!");
             await logToWeb(email, 'threads_post', `✅ Đã lưu Cookie mới vào DB (Gia hạn thành công)!`, 'success');
         }
     } catch (cookieErr) {
