@@ -167,7 +167,9 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     console.log("🌐 Đang truy cập Facebook (sau khi nạp Cookie)...");
     await logToWeb(email, 'fb-story', '🌐 Đang truy cập Facebook (sau khi nạp Cookie)...', 'info');
     await page.setCookie(...cleanCookies);
-    await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
+    
+    // Tới trang chủ để lướt Feed giống người thật
+    await page.goto('https://www.facebook.com/', { waitUntil: 'networkidle2' });
     
     // === THÊM HÀNH VI NGƯỜI THẬT ===
     console.log("🎭 Đang giả lập hành vi người dùng (scroll, lướt feed)...");
@@ -184,6 +186,9 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     await page.mouse.wheel({ deltaY: -2000 });
     await delay(2000);
     // === END HÀNH VI ===
+
+    // Chuyển sang trang cá nhân để đăng bài
+    await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
 
     // Xử lý các màn hình "Tiếp tục", "OK", "Bỏ qua" sau khi nạp cookie
     try {
