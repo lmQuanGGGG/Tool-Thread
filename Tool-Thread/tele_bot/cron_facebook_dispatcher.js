@@ -6,6 +6,9 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO;
+const SPECIAL_REELS_EMAIL = 'lmquang.devops@gmail.com';
+const STANDARD_SLOTS = [8, 11, 13, 16, 19];
+const SPECIAL_REELS_EXTRA_SLOTS = [10, 15, 21];
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO) {
     console.error("Missing env vars!");
@@ -36,8 +39,8 @@ async function run() {
     const vnHour = (new Date().getUTCHours() + 7) % 24;
     console.log(`Current VN Hour: ${vnHour}h`);
 
-    // We only run on specific golden hours: 8, 11, 13, 16, 19
-    if (![8, 11, 13, 16, 19].includes(vnHour)) {
+    // Các gói thường chạy ở 5 khung giờ. Tài khoản đặc biệt có thêm 3 khung Reel.
+    if (![...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS].includes(vnHour)) {
         console.log("Not a scheduled hour. Exiting.");
         return;
     }
@@ -60,16 +63,17 @@ async function run() {
         const isFree = p.tier === 'free';
         const isLite = p.tier === 'lite';
         const isPlus = p.tier === 'plus';
-        const isProOrMax = p.tier === 'pro' || p.tier === 'promax';
+        const isPro = p.tier === 'pro';
+        const isProMax = p.tier === 'promax';
 
-        if (!isFree && !isLite && !isPlus && !isProOrMax) continue;
+        if (!isFree && !isLite && !isPlus && !isPro && !isProMax) continue;
 
-        // Free Logic
+        // Bỏ logic SPECIAL_REELS_EMAIL vì giờ đã có ProMax
+        
+        // Free Logic: 1 phiên/ngày (19h)
         if (isFree) {
-            if (hasFb && [8, 19].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
             if (hasFb && [19].includes(vnHour)) {
+                await dispatchWorkflow('reels_worker.yml', p.email);
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
             if (hasThreads && [8, 19].includes(vnHour)) {
@@ -77,9 +81,9 @@ async function run() {
             }
         }
 
-        // Lite Logic
+        // Lite Logic: 2 phiên/ngày (11h, 19h)
         if (isLite) {
-            if (hasFb && [8, 13, 19].includes(vnHour)) {
+            if (hasFb && [11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
@@ -88,9 +92,9 @@ async function run() {
             }
         }
 
-        // Plus Logic
+        // Plus Logic: 4 phiên/ngày (8h, 13h, 16h, 19h)
         if (isPlus) {
-            if (hasFb && [8, 13, 19].includes(vnHour)) {
+            if (hasFb && [8, 13, 16, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
             if (hasFb && [13, 19].includes(vnHour)) {
@@ -101,15 +105,28 @@ async function run() {
             }
         }
 
-        // Pro/ProMax Logic
-        if (isProOrMax) {
-            if (hasFb && [8, 11, 13, 16, 19].includes(vnHour)) {
+        // Pro Logic: 6 phiên/ngày (8h, 11h, 13h, 16h, 19h, 21h)
+        if (isPro) {
+            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
             if (hasFb && [8, 11, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
             if (hasThreads && [8, 11, 13, 19].includes(vnHour)) {
+                await dispatchWorkflow('threads_post_worker.yml', p.email);
+            }
+        }
+        
+        // ProMax Logic: 8 phiên/ngày (8h, 10h, 11h, 13h, 15h, 16h, 19h, 21h)
+        if (isProMax) {
+            if (hasFb && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
+                await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
+                await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasThreads && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
