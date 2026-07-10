@@ -292,7 +292,22 @@ async function fetchLatestVideos(channels) {
 
     console.log("🌐 Đang truy cập Trang Chủ Facebook (để nhận diện Cookie)...");
     await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
-    await delay(3000);
+    
+    // === THÊM HÀNH VI NGƯỜI THẬT ===
+    console.log("🎭 Đang giả lập hành vi người dùng (scroll, lướt feed)...");
+    for (let i = 0; i < 3; i++) {
+        await page.mouse.wheel({ deltaY: 300 + Math.random() * 500 });
+        await delay(2000 + Math.random() * 3000);
+        
+        // Rê chuột ngẫu nhiên
+        const rx = 100 + Math.random() * 600;
+        const ry = 100 + Math.random() * 600;
+        await page.mouse.move(rx, ry, { steps: 10 });
+    }
+    // Cuộn lên lại đầu trang
+    await page.mouse.wheel({ deltaY: -2000 });
+    await delay(2000);
+    // === END HÀNH VI ===
 
     console.log("🔄 Kiểm tra màn hình xác nhận đăng nhập (Continue as)...");
     for (let i = 0; i < 5; i++) {
@@ -496,6 +511,42 @@ async function fetchLatestVideos(channels) {
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track
     } finally {
+        // === AUTO REFRESH COOKIE ===
+        try {
+            console.log("🍪 Đang trích xuất Cookie FB mới để gia hạn...");
+            const currentCookies = await page.cookies();
+            
+            const updatedCookies = currentCookies.map(c => ({
+                domain: c.domain,
+                expirationDate: c.expires,
+                hostOnly: !c.domain.startsWith('.'),
+                httpOnly: c.httpOnly,
+                name: c.name,
+                path: c.path,
+                sameSite: c.sameSite === 'None' ? 'no_restriction' : 'unspecified',
+                secure: c.secure,
+                session: c.session,
+                storeId: '0',
+                value: c.value
+            }));
+
+            const { supabase } = require('./supabase_helper');
+            if (dbConfig && dbConfig.id && supabase) {
+                const { error: cookieUpdateErr } = await supabase
+                    .from('profiles')
+                    .update({ fb_cookie: JSON.stringify(updatedCookies) })
+                    .eq('id', dbConfig.id);
+
+                if (!cookieUpdateErr) {
+                    console.log("✅ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
+                    await logToWeb(email, 'yt-reels', `✅ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
+                }
+            }
+        } catch (cookieErr) {
+            console.error("Lỗi trích xuất Cookie FB:", cookieErr);
+        }
+        // === END AUTO REFRESH ===
+
         if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
         await browser.close();
     }
