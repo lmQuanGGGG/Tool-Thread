@@ -8,8 +8,14 @@ const { fetchBotConfig, logToWeb } = require('../supabase_helper');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const TELE_BOT_TOKEN = process.env.TELE_BOT_TOKEN;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// Nếu dùng chung config thì TELE_CHAT_ID lấy từ .env hoặc lấy từ profile của user
+
+// Pool API key xoay vòng: thêm key mới vào đây hoặc qua biến môi trường GEMINI_API_KEY_2, _3...
+const GEMINI_KEY_POOL = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+].filter(Boolean); // Lọc bỏ các key chưa được cấu hình
+
 const USER_EMAIL = process.env.USER_EMAIL || 'admin@autofarm.com';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -67,38 +73,47 @@ async function uploadToTelegram(imageUrl, chatId) {
 }
 
 async function generateBatchComments(titles) {
-    if (!GEMINI_API_KEY) {
+    if (GEMINI_KEY_POOL.length === 0) {
+        // Không có key nào → dùng caption mẫu cứng
         const catchphrases = ["Mấy bà ơi gom lẹ deal này nha:", "Ai chưa thử cái này thì thử liền đi:", "Eo ôi ưng cái bụng ghê:"];
         return titles.map(() => `${catchphrases[Math.floor(Math.random() * catchphrases.length)]}`);
     }
-    try {
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
-        const titlesList = titles.map((t, i) => `${i + 1}. ${t}`).join('\n');
-        
-        const prompt = `Bạn là một KOL review sản phẩm Shopee trên Mạng xã hội Threads. Dưới đây là danh sách ${titles.length} sản phẩm:
-${titlesList}
 
-Yêu cầu: Viết cho MỖI sản phẩm ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích.
-BẮT BUỘC TRẢ VỀ DƯỚI DẠNG JSON ARRAY chứa các chuỗi kết quả (đúng ${titles.length} phần tử).
-Ví dụ: ["Mấy bà ơi gom lẹ deal này nha", "Ai chưa thử cái này thì chốt đơn đi"]
-TUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi mảng JSON thuần tuý.`;
+    const prompt = `Bạn là một KOL review sản phẩm Shopee trên Mạng xã hội Threads. Dưới đây là danh sách ${titles.length} sản phẩm:\n${titles.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n\nYêu cầu: Viết cho MỖI sản phẩm ĐÚNG 1 CÂU thả thính cực kỳ tự nhiên, ngắn gọn (dưới 15 chữ) để mời mọi người mua. KHÔNG dùng icon, KHÔNG in đậm, KHÔNG ngoặc kép, KHÔNG giải thích.\nBẮT BUỘC TRẢ VỀ DƯỚI DẠNG JSON ARRAY chứa các chuỗi kết quả (đúng ${titles.length} phần tử).\nVí dụ: ["Mấy bà ơi gom lẹ deal này nha", "Ai chưa thử cái này thì chốt đơn đi"]\nTUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi mảng JSON thuần tuý.`;
 
-        const result = await model.generateContent(prompt);
-        let rawText = result.response.text().trim();
-        // Dọn dẹp markdown nếu AI lỡ sinh ra
-        if (rawText.startsWith('```json')) rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        if (rawText.startsWith('```')) rawText = rawText.replace(/```/g, '').trim();
-        
-        const commentsArray = JSON.parse(rawText);
-        if (Array.isArray(commentsArray) && commentsArray.length === titles.length) {
-            return commentsArray;
+    // Xoay vòng qua từng key trong pool — dừng ngay khi thành công
+    for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
+        const apiKey = GEMINI_KEY_POOL[i];
+        try {
+            console.log(`🔑 Thử Gemini key #${i + 1}/${GEMINI_KEY_POOL.length}...`);
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+            
+            const result = await model.generateContent(prompt);
+            let rawText = result.response.text().trim();
+            // Dọn dẹp markdown nếu AI lỡ sinh ra
+            if (rawText.startsWith('```json')) rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+            if (rawText.startsWith('```')) rawText = rawText.replace(/```/g, '').trim();
+            
+            const commentsArray = JSON.parse(rawText);
+            if (Array.isArray(commentsArray) && commentsArray.length === titles.length) {
+                console.log(`✅ Key #${i + 1} thành công!`);
+                return commentsArray;
+            }
+            throw new Error("Số lượng comment trả về không khớp!");
+        } catch (e) {
+            const isQuotaError = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('RESOURCE_EXHAUSTED');
+            if (isQuotaError && i < GEMINI_KEY_POOL.length - 1) {
+                console.warn(`⚠️ Key #${i + 1} hết quota (429), chuyển sang key #${i + 2}...`);
+                continue; // Thử key tiếp theo
+            }
+            console.error(`❌ Key #${i + 1} lỗi: ${e.message}`);
         }
-        throw new Error("Số lượng comment trả về không khớp với số lượng sản phẩm!");
-    } catch(e) {
-        console.error("Lỗi khi gọi batch Gemini:", e);
-        return titles.map(() => "Góc rắc thính: Món này dạo này tui mê cực kì:");
     }
+
+    // Tất cả key đều thất bại → fallback caption mẫu
+    console.error("❌ Tất cả Gemini API key đã hết quota hoặc lỗi. Dùng caption mẫu dự phòng.");
+    return titles.map(() => "Góc rắc thính: Món này dạo này tui mê cực kì:");
 }
 
 (async () => {
