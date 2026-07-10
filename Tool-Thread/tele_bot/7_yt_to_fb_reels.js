@@ -360,6 +360,12 @@ async function fetchLatestVideos(channels) {
         }
         await delay(5000);
 
+        // BƯỚC 2: Bấm Tiếp Lần 2 (Chỉnh sửa thước phim -> Tuỳ chọn đăng)
+        console.log("➡️ Bấm nút Tiếp (Lần 2)...");
+        const next2 = await clickButtonWithText(page, ['tiếp', 'next']);
+        if (!next2) console.log("!!! Không bấm được nút Tiếp 2.");
+        await delay(5000);
+
         // Gắn Link Affiliate (nếu có)
         const fs = require('fs');
         // Lấy affiliate link từ Supabase trước, fallback data_products.json, rồi env
@@ -383,17 +389,19 @@ async function fetchLatestVideos(channels) {
             if (affLink) console.log("!!! Fallback về env SHOPEE_AFF_LINK");
         }
 
-        // BƯỚC 2: Điền mô tả trên màn hình Chỉnh sửa thước phim
+        // BƯỚC 3: Điền mô tả trên màn hình Tuỳ chọn đăng
         console.log("✍️ Đang điền Caption...");
         const textBox = await page.$('div[role="textbox"][contenteditable="true"]');
         if (textBox) {
             await textBox.click();
             await delay(1000);
 
-            let caption = `${videoToProcess.title}\n#phimhay #reviewphim #giaitri #reels`;
+            let caption = "";
             if (affLink) {
-                caption += `\n👉 Link mua hàng ở đây nha: ${affLink}`;
+                caption += `👉 Link mua hàng ở đây nha: ${affLink}\n`;
             }
+            caption += `${videoToProcess.title}\n#phimhay #reviewphim #giaitri #reels`;
+
             const lines = caption.split('\n');
             for (let line of lines) {
                 await page.keyboard.type(line, { delay: 50 });
@@ -405,12 +413,6 @@ async function fetchLatestVideos(channels) {
             console.log("!!! Không tìm thấy ô nhập Caption!");
         }
         await delay(3000);
-
-        // BƯỚC 3: Bấm Tiếp Lần 2 (Chỉnh sửa thước phim -> Tuỳ chọn đăng)
-        console.log("➡️ Bấm nút Tiếp (Lần 2)...");
-        const next2 = await clickButtonWithText(page, ['tiếp', 'next']);
-        if (!next2) console.log("!!! Không bấm được nút Tiếp 2.");
-        await delay(5000);
 
         // BƯỚC 4: Gắn thẻ Affiliate (Màn hình cuối)
         if (affLink && affLink !== 'https://shope.ee/YOUR_LINK_HERE') {
