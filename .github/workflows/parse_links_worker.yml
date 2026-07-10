@@ -32,5 +32,6 @@ jobs:
         TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
       run: |
         cd "Tool-Thread"/tele_bot && node fb_bot/5_shopee_bulk_scraper.js
