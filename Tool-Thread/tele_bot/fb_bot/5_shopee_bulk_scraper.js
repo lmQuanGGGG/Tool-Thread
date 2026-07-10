@@ -162,15 +162,34 @@ TUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi
     if (itemsToProcess.length > 0) {
         // Gom tối đa 20 sản phẩm 1 lần gọi Gemini
         const batchChunks = chunkArray(itemsToProcess, 20);
+        const userTier = dbConfig.tier || 'free';
         
+        const DEFAULT_CAPTIONS = [
+            "Món này dạo này tui mê cực kì, recommend mng nha:",
+            "Góc rắc thính: Chân ái của tui là đây chứ đâu:",
+            "Trời ơi tin được không, món này dùng siêu ưng luôn á:",
+            "Vừa chốt đơn xong phải lên share ngay cho nóng:",
+            "Bí quyết sống ảo của tui là đây nè, rẻ mà chất:",
+            "Gom lúa múc liền tay đi mấy bà ơi, đang sale rẻ:",
+            "Không mua là tiếc đứt ruột luôn đó nha:",
+            "Deal ngon thơm bơ vầy không chốt là phí lắm nha:"
+        ];
+
         for (let batch of batchChunks) {
-            console.log(`🤖 Đang nhờ AI nặn caption cho ${batch.length} sản phẩm cùng lúc...`);
-            const titles = batch.map(item => item.title);
-            const comments = await generateBatchComments(titles);
+            let comments = [];
+            
+            if (userTier === 'free') {
+                console.log(`🎁 [Tier FREE] Dùng caption mẫu có sẵn cho ${batch.length} sản phẩm...`);
+                comments = batch.map(() => DEFAULT_CAPTIONS[Math.floor(Math.random() * DEFAULT_CAPTIONS.length)]);
+            } else {
+                console.log(`🤖 [Tier ${userTier.toUpperCase()}] Đang nhờ AI nặn caption cho ${batch.length} sản phẩm...`);
+                const titles = batch.map(item => item.title);
+                comments = await generateBatchComments(titles);
+            }
             
             batch.forEach((item, idx) => {
                 item.suggested_comment = comments[idx];
-                const msgAI = `🤖 AI Comment: ${comments[idx]}`;
+                const msgAI = userTier === 'free' ? `📝 Caption tự động: ${comments[idx]}` : `🤖 AI Caption: ${comments[idx]}`;
                 console.log(msgAI);
                 
                 // Fire and forget logToWeb (Không block luồng)
@@ -179,7 +198,9 @@ TUYỆT ĐỐI KHÔNG trả về markdown \`\`\`json. CHỈ in ra đúng chuỗi
                 newParsed.push(item);
             });
             isModified = true;
-            await delay(1000); // Tránh Rate Limit của Gemini
+            if (userTier !== 'free') {
+                await delay(1000); // Tránh Rate Limit của Gemini
+            }
         }
     }
 
