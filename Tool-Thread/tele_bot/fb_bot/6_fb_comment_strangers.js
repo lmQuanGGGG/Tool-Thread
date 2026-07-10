@@ -98,9 +98,10 @@ const SEED_COMMENTS = [
         }
     }
 
-    const validProducts = scrapedData.filter(p => !p.fb_posted);
+    // Dùng toàn bộ danh sách sản phẩm, bốc random mãi mãi
+    const validProducts = scrapedData;
     if (validProducts.length < 3) {
-        console.log("❌ Không đủ 3 sản phẩm Shopee chưa đăng! Vui lòng cào thêm.");
+        console.log("❌ Cần ít nhất 3 sản phẩm Shopee trong danh sách để chạy tool!");
         return;
     }
 
