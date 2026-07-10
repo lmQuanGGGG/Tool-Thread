@@ -40,6 +40,34 @@ async function downloadImageFromUrl(url) {
     }
 }
 
+async function downloadMediaFromTelegram(fileId) {
+  if (!TELEGRAM_BOT_TOKEN || !fileId) return null;
+  try {
+    const fileInfo = await axios.get(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile`, {
+      params: { file_id: fileId },
+    });
+    const filePath = fileInfo.data?.result?.file_path;
+    if (!filePath) return null;
+
+    const extension = path.extname(filePath) || '.jpg';
+    const localPath = path.resolve(__dirname, `temp_th_telegram_${Date.now()}_${Math.floor(Math.random() * 1000)}${extension}`);
+    const response = await axios({
+      url: `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`,
+      method: 'GET',
+      responseType: 'stream',
+    });
+    const writer = fs.createWriteStream(localPath);
+    response.data.pipe(writer);
+    return new Promise((resolve, reject) => {
+      writer.on('finish', () => resolve(localPath));
+      writer.on('error', reject);
+    });
+  } catch (error) {
+    console.error('[ERROR] Lỗi tải media từ Telegram:', error.message);
+    return null;
+  }
+}
+
 async function runSinglePost() {
   const email = process.env.USER_EMAIL || 'admin@autofarm.com';
   let postId = process.env.POST_ID;
@@ -173,15 +201,27 @@ async function runSinglePost() {
     // 2. Thực thi đăng bài bằng Puppeteer
     const browser = await puppeteer.launch({
         headless: false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--window-size=1280,960',
+        ]
     });
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000);
+    page.on('pageerror', error => console.error('[THREADS PAGE ERROR]', error.message));
+    page.on('console', message => {
+      if (message.type() === 'error') console.error('[THREADS CONSOLE ERROR]', message.text());
+    });
     await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setCookie(...cookies);
 
     console.log('[INFO] Đang mở Threads...');
-    await page.goto('https://www.threads.net/', { waitUntil: 'networkidle2', timeout: 30000 });
-    await delay(3000);
+    // Threads giữ nhiều request nền nên networkidle2 thường timeout trên GitHub Actions.
+    await page.goto('https://www.threads.net/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await delay(5000);
 
     // Kiểm tra đăng nhập
     const isLoggedIn = !page.url().includes('login');
@@ -193,6 +233,22 @@ async function runSinglePost() {
       await browser.close();
       process.exit(1);
     }
+
+    // === THÊM HÀNH VI NGƯỜI THẬT ===
+    await logToWeb(email, 'threads_post', `🎭 Đang giả lập hành vi lướt feed...`, 'info');
+    for (let i = 0; i < 3; i++) {
+        await page.mouse.wheel({ deltaY: 300 + Math.random() * 500 });
+        await delay(2000 + Math.random() * 3000);
+        
+        // Rê chuột ngẫu nhiên
+        const rx = 100 + Math.random() * 600;
+        const ry = 100 + Math.random() * 600;
+        await page.mouse.move(rx, ry, { steps: 10 });
+    }
+    // Cuộn lên lại đầu trang
+    await page.mouse.wheel({ deltaY: -2000 });
+    await delay(2000);
+    // === END HÀNH VI ===
 
     // Click nút Viết bài
     await logToWeb(email, 'threads_post', `✏️ Đang click nút Viết bài...`, 'info');
@@ -237,10 +293,15 @@ async function runSinglePost() {
 
     // Tải ảnh trước khi gõ text (để tiết kiệm thời gian chờ trên giao diện)
     let downloadedImages = [];
-    if (postData.image_urls && postData.image_urls.length > 0) {
-      await logToWeb(email, 'threads_post', `🖼️ Đang tải ${postData.image_urls.length} ảnh xuống máy chủ...`, 'info');
-      // Tải song song tất cả các ảnh cùng lúc
-      const downloadPromises = postData.image_urls.map(url => downloadImageFromUrl(url));
+    const imageUrls = postData.image_urls || [];
+    const imageFileIds = postData.image_file_ids || [];
+    if (imageUrls.length > 0 || imageFileIds.length > 0) {
+      const mediaCount = Math.max(imageUrls.length, imageFileIds.length);
+      await logToWeb(email, 'threads_post', `🖼️ Đang tải ${mediaCount} ảnh xuống máy chủ...`, 'info');
+      const downloadPromises = Array.from({ length: mediaCount }, async (_, index) => {
+        const fromUrl = imageUrls[index] ? await downloadImageFromUrl(imageUrls[index]) : null;
+        return fromUrl || downloadMediaFromTelegram(imageFileIds[index]);
+      });
       const results = await Promise.all(downloadPromises);
       downloadedImages = results.filter(p => p !== null);
     }
@@ -406,6 +467,40 @@ async function runSinglePost() {
         }
     }
 
+
+    // === AUTO REFRESH COOKIE ===
+    try {
+        await logToWeb(email, 'threads_post', `🍪 Đang lấy Cookie mới để gia hạn...`, 'info');
+        const currentCookies = await page.cookies();
+        
+        // Chuyển format để lưu vào DB giống Cookie v3
+        const updatedCookies = currentCookies.map(c => ({
+            domain: c.domain,
+            expirationDate: c.expires,
+            hostOnly: !c.domain.startsWith('.'),
+            httpOnly: c.httpOnly,
+            name: c.name,
+            path: c.path,
+            sameSite: c.sameSite === 'None' ? 'no_restriction' : 'unspecified',
+            secure: c.secure,
+            session: c.session,
+            storeId: '0',
+            value: c.value
+        }));
+
+        const { error: cookieUpdateErr } = await supabase
+            .from('profiles')
+            .update({ threads_cookie: JSON.stringify(updatedCookies) })
+            .eq('email', email);
+
+        if (!cookieUpdateErr) {
+            await logToWeb(email, 'threads_post', `✅ Đã lưu Cookie mới vào DB (Gia hạn thành công)!`, 'success');
+        }
+    } catch (cookieErr) {
+        console.error("Lỗi trích xuất Cookie:", cookieErr);
+        await logToWeb(email, 'threads_post', `⚠️ Không thể trích xuất Cookie mới.`, 'warn');
+    }
+    // === END AUTO REFRESH ===
 
     await browser.close();
     
