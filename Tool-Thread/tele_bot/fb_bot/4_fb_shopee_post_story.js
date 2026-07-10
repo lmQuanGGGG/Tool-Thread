@@ -170,6 +170,25 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
     await delay(5000);
 
+    // Xử lý các màn hình "Tiếp tục", "OK", "Bỏ qua" sau khi nạp cookie
+    try {
+        console.log("🔍 Đang kiểm tra xem có màn hình 'Tiếp tục / Continue' không...");
+        await page.evaluate(() => {
+            const btnTexts = ['tiếp tục', 'continue', 'ok', 'chấp nhận', 'accept', 'bỏ qua', 'skip', 'không, cảm ơn', 'no thanks', 'đăng nhập', 'log in'];
+            const elements = [...document.querySelectorAll('div[role="button"], button, span')];
+            for (let el of elements) {
+                const text = (el.innerText || '').toLowerCase().trim();
+                if (btnTexts.some(t => text.includes(t))) {
+                    el.click();
+                    break;
+                }
+            }
+        });
+        await delay(3000);
+    } catch (e) {
+        // Bỏ qua nếu không có nút
+    }
+
     try {
         console.log("✍️ Đang tạo bài post mới trên trang cá nhân...");
         await logToWeb(email, 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');

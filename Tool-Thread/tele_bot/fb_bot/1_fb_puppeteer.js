@@ -115,23 +115,30 @@ async function downloadImageFromTelegram(file_id) {
     await delay(waitTime);
 
     // Xử lý các màn hình "Tiếp tục", "OK", "Bỏ qua" sau khi nạp cookie
-    try {
-        console.log("🔍 Đang kiểm tra xem có màn hình 'Tiếp tục / Continue' không...");
-        await page.evaluate(() => {
-            const btnTexts = ['tiếp tục', 'continue', 'ok', 'chấp nhận', 'accept', 'bỏ qua', 'skip', 'không, cảm ơn', 'no thanks', 'đăng nhập', 'log in'];
-            const elements = [...document.querySelectorAll('div[role="button"], button, span')];
-            for (let el of elements) {
-                const text = (el.innerText || '').toLowerCase().trim();
-                // Dùng includes để bắt được các nút kiểu "Tiếp tục dưới tên ABC"
-                if (btnTexts.some(t => text.includes(t))) {
-                    el.click();
-                    break;
+    console.log("🔍 Đang kiểm tra xem có màn hình 'Tiếp tục / Continue' không (chờ tối đa 10s)...");
+    for (let i = 0; i < 5; i++) {
+        try {
+            const clicked = await page.evaluate(() => {
+                const btnTexts = ['tiếp tục', 'continue', 'ok', 'chấp nhận', 'accept', 'bỏ qua', 'skip', 'không, cảm ơn', 'no thanks', 'đăng nhập', 'log in', 'allow', 'cho phép'];
+                const elements = [...document.querySelectorAll('div[role="button"], button, a, span[dir="auto"]')];
+                for (let el of elements) {
+                    const text = (el.innerText || '').toLowerCase().trim();
+                    if (text && btnTexts.some(t => text.includes(t) || text.startsWith(t))) {
+                        // Click cả bản thân và cha (nếu là span)
+                        el.click();
+                        if (el.closest('div[role="button"]')) el.closest('div[role="button"]').click();
+                        return true;
+                    }
                 }
+                return false;
+            });
+            if (clicked) {
+                console.log("✅ Đã bấm nút Tiếp tục / OK!");
+                await delay(3000);
+                break;
             }
-        });
-        await delay(3000);
-    } catch (e) {
-        // Bỏ qua nếu không có nút
+        } catch (e) {}
+        await delay(2000); // Đợi 2s rồi thử lại
     }
 
     let totalGroups = 0;

@@ -295,16 +295,29 @@ async function fetchLatestVideos(channels) {
     await delay(3000);
 
     console.log("🔄 Kiểm tra màn hình xác nhận đăng nhập (Continue as)...");
-    try {
-        const isLoginScreen = await page.evaluate(() => {
-            return document.body.innerText.includes('Tiếp tục') || document.body.innerText.includes('Continue');
-        });
-        if (isLoginScreen) {
-            console.log("🔄 Phát hiện màn hình xác nhận đăng nhập, đang bấm Tiếp tục...");
-            await clickButtonWithText(page, ['tiếp tục', 'continue'], 2);
-            await delay(5000);
-        }
-    } catch (e) {}
+    for (let i = 0; i < 5; i++) {
+        try {
+            const clicked = await page.evaluate(() => {
+                const btnTexts = ['tiếp tục', 'continue', 'ok', 'chấp nhận', 'accept', 'bỏ qua', 'skip', 'không, cảm ơn', 'no thanks', 'đăng nhập', 'log in', 'allow', 'cho phép'];
+                const elements = [...document.querySelectorAll('div[role="button"], button, a, span[dir="auto"]')];
+                for (let el of elements) {
+                    const text = (el.innerText || '').toLowerCase().trim();
+                    if (text && btnTexts.some(t => text.includes(t) || text.startsWith(t))) {
+                        el.click();
+                        if (el.closest('div[role="button"]')) el.closest('div[role="button"]').click();
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (clicked) {
+                console.log("🔄 Phát hiện màn hình xác nhận, đã bấm Tiếp tục...");
+                await delay(3000);
+                break;
+            }
+        } catch (e) {}
+        await delay(2000);
+    }
 
     console.log("🌐 Đi đến trang tạo Reels...");
     await page.goto('https://www.facebook.com/reels/create', { waitUntil: 'networkidle2' });
