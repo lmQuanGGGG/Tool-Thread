@@ -43,6 +43,17 @@ async function downloadImageFromTelegram(file_id) {
     }
 }
 
+const SEED_COMMENTS = [
+    "Tuyệt vời quá!",
+    "Xuất sắc bạn ơi 💯",
+    "Video hay quá nè",
+    "Đỉnh quá bạn ơi",
+    "Tương tác mạnh nha bạn",
+    "Đẹp xuất sắc luôn",
+    "Thả tim cho video này ❤️",
+    "Quá xịn xò 👏"
+];
+
 (async () => {
     const email = process.env.USER_EMAIL || 'admin@autofarm.com';
     const dbConfig = await fetchBotConfig(email);
@@ -69,8 +80,8 @@ async function downloadImageFromTelegram(file_id) {
     }
 
     const validProducts = scrapedData.filter(p => !p.fb_posted);
-    if (validProducts.length === 0) {
-        console.log("❌ Đã hết sản phẩm Shopee chưa đăng! Vui lòng cào thêm.");
+    if (validProducts.length < 2) {
+        console.log("❌ Không đủ 2 sản phẩm Shopee chưa đăng! Vui lòng cào thêm.");
         return;
     }
 
@@ -91,11 +102,13 @@ async function downloadImageFromTelegram(file_id) {
     console.log("🎭 Đang xem Reels...");
     await delay(3000);
     
-    let commented = 0;
-    const maxComments = 2; // Số lượng cmt dạo mỗi phiên
+    let affCommented = 0;
+    let normalCommented = 0;
+    const maxAff = 2; // Cmt 2 cái link aff
+    const maxNormal = 1; // Cmt 1 cái khen bình thường
     
-    for (let i = 0; i < maxComments + 2; i++) {
-        if (commented >= maxComments) break;
+    for (let i = 0; i < maxAff + maxNormal + 3; i++) {
+        if (affCommented >= maxAff && normalCommented >= maxNormal) break;
         
         try {
             console.log(`🎬 Đang xem Reel thứ ${i + 1}...`);
@@ -137,14 +150,33 @@ async function downloadImageFromTelegram(file_id) {
                 console.log("💬 Đã mở bảng Bình luận, chờ xíu...");
                 await delay(3000);
                 
-                // Chọn ngẫu nhiên 1 sản phẩm
-                let pickedProduct = validProducts[getRandomInt(0, validProducts.length - 1)];
-                let cmtText = `${pickedProduct.suggested_comment || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`;
+                // Quyết định xem cmt loại nào (Affiliate hay Normal)
+                let isAffiliate = false;
+                if (affCommented < maxAff && normalCommented < maxNormal) {
+                    isAffiliate = Math.random() > 0.5; // Random 50/50 nếu cả 2 còn slot
+                } else if (affCommented < maxAff) {
+                    isAffiliate = true;
+                }
                 
-                // Tải ảnh từ Telegram S3
+                let pickedProduct = null;
                 let localImg = null;
-                if (pickedProduct.tele_file_id) {
-                    localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
+                let cmtText = "";
+                
+                if (isAffiliate) {
+                    pickedProduct = validProducts.find(p => !p.fb_posted_temp); // fb_posted_temp để theo dõi trong cùng 1 phiên
+                    if (pickedProduct) {
+                        pickedProduct.fb_posted_temp = true;
+                        cmtText = `${pickedProduct.suggested_comment || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`;
+                        if (pickedProduct.tele_file_id) {
+                            localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
+                        }
+                    } else {
+                        isAffiliate = false; // Hết sản phẩm thì chuyển sang cmt thường
+                    }
+                }
+                
+                if (!isAffiliate) {
+                    cmtText = SEED_COMMENTS[getRandomInt(0, SEED_COMMENTS.length - 1)];
                 }
 
                 // Tìm ô nhập comment và ĐÍNH KÈM ẢNH
@@ -186,8 +218,8 @@ async function downloadImageFromTelegram(file_id) {
                     await page.mouse.click(uploadBoxInfo.boxX, uploadBoxInfo.boxY);
                     await delay(1000);
 
-                    // Đính kèm ảnh
-                    if (localImg && uploadBoxInfo.attachBtn) {
+                    // Đính kèm ảnh (chỉ chạy nếu là Affiliate và có ảnh)
+                    if (isAffiliate && localImg && uploadBoxInfo.attachBtn) {
                         try {
                             const [chooser] = await Promise.all([
                                 page.waitForFileChooser({ timeout: 10000 }),
@@ -202,22 +234,32 @@ async function downloadImageFromTelegram(file_id) {
                     }
 
                     // Gõ từng dòng caption + link
-                    console.log(`⌨️ Đang gõ nội dung kèm link Shopee...`);
-                    const lines = cmtText.split('\n');
-                    for (let line of lines) {
-                        await page.keyboard.type(line, { delay: getRandomInt(20, 50) });
-                        await page.keyboard.down('Shift');
-                        await page.keyboard.press('Enter');
-                        await page.keyboard.up('Shift');
-                        await delay(200);
+                    if (isAffiliate) {
+                        console.log(`⌨️ Đang gõ nội dung kèm link Shopee...`);
+                        const lines = cmtText.split('\n');
+                        for (let line of lines) {
+                            await page.keyboard.type(line, { delay: getRandomInt(20, 50) });
+                            await page.keyboard.down('Shift');
+                            await page.keyboard.press('Enter');
+                            await page.keyboard.up('Shift');
+                            await delay(200);
+                        }
+                    } else {
+                        console.log(`⌨️ Đang gõ khen dạo: "${cmtText}"`);
+                        await page.keyboard.type(cmtText, { delay: getRandomInt(30, 80) });
                     }
 
                     await delay(2000);
                     await page.keyboard.press('Enter');
                     
-                    console.log("✓ Đã bắn Comment rải link thành công!");
-                    commented++;
-                    pickedProduct.fb_posted = true;
+                    if (isAffiliate) {
+                        console.log("✓ Đã bắn Comment rải link thành công!");
+                        affCommented++;
+                        if (pickedProduct) pickedProduct.fb_posted = true;
+                    } else {
+                        console.log("✓ Đã bắn Comment khen dạo thành công!");
+                        normalCommented++;
+                    }
                     
                     if (localImg && fs.existsSync(localImg)) fs.unlinkSync(localImg);
                     
@@ -270,8 +312,8 @@ async function downloadImageFromTelegram(file_id) {
     }
     // ==========================================
 
-    await logToWeb(email, 'fb-cmt-reels', `🎉 Hoàn tất cmt dạo rải link Shopee cho ${commented} Reels!`, 'success');
-    console.log("🎉 Hoàn tất chu trình Seeding rải link Reels!");
+    await logToWeb(email, 'fb-cmt-reels', `🎉 Hoàn tất Seeding: ${affCommented} link Aff + ${normalCommented} lời khen!`, 'success');
+    console.log(`🎉 Hoàn tất chu trình Seeding rải link Reels! (Aff: ${affCommented}, Khen: ${normalCommented})`);
     
     await browser.close();
 })();
