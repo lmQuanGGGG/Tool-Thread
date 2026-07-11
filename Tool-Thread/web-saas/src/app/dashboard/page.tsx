@@ -32,17 +32,17 @@ function UsageBar({ label, icon: Icon, used, limit, color, autoEnabled, onToggle
 
   return (
     <div>
-      <div className="flex items-center justify-between text-sm mb-2">
+      <div className="relative flex items-center justify-between text-sm mb-2">
         <span className="flex items-center gap-2 font-medium text-zinc-700">
           <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
           {label}
         </span>
         <div className="flex items-center gap-3">
-          {onToggle && <button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative h-5 w-9 rounded-full transition-colors ${autoEnabled ? "bg-emerald-500" : "bg-zinc-300"} ${updating ? "opacity-50" : ""}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${autoEnabled ? "translate-x-4" : "translate-x-0.5"}`} /></button>}
           <span className={`font-bold ${isNearLimit ? "text-red-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
             {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
           </span>
         </div>
+        {onToggle && <button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative ml-3 h-5 w-9 shrink-0 rounded-full transition-colors md:absolute md:-right-14 md:top-0 ${autoEnabled ? "bg-emerald-500" : "bg-zinc-300"} ${updating ? "opacity-50" : ""}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${autoEnabled ? "translate-x-4" : "translate-x-0.5"}`} /></button>}
       </div>
       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div
