@@ -28,7 +28,8 @@ const TIER_CONFIG: Record<string, {
 function UsageBar({ label, icon: Icon, used, limit, color, autoEnabled, onToggle, updating }: { label: string; icon: React.ElementType; used: number; limit: number; color: string; autoEnabled?: boolean; onToggle?: () => void; updating?: boolean }) {
   const isUnlimited = limit === -1;
   const pct = isUnlimited ? 100 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
-  const isNearLimit = !isUnlimited && pct >= 80;
+  const isAtLimit = !isUnlimited && used >= limit;
+  const isNearLimit = !isAtLimit && !isUnlimited && pct >= 80;
 
   return (
     <div>
@@ -38,16 +39,16 @@ function UsageBar({ label, icon: Icon, used, limit, color, autoEnabled, onToggle
           {label}
         </span>
         <div className="flex items-center gap-3">
-          <span className={`font-bold ${isNearLimit ? "text-red-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
+          <span className={`font-bold ${isAtLimit ? "text-red-500" : isNearLimit ? "text-amber-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
             {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
           </span>
         </div>
-        {onToggle && <div className="ml-3 inline-flex h-7 shrink-0 items-center gap-2 md:absolute md:-right-28 md:top-[-4px]"><span className="text-[10px] font-semibold text-zinc-900">Auto</span><button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative h-6 w-11 rounded-full transition-colors ${autoEnabled ? "bg-zinc-900" : "bg-zinc-200"} ${updating ? "cursor-wait opacity-50" : "hover:brightness-90"}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full shadow-sm transition-transform ${autoEnabled ? "translate-x-5 bg-white" : "translate-x-0 bg-zinc-900"}`} /></button></div>}
+        {onToggle && <div className="ml-3 inline-flex h-7 shrink-0 items-center gap-2 md:absolute md:-right-28 md:top-[-4px]"><span className="text-[10px] font-semibold text-zinc-900">Auto</span><button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative h-6 w-11 rounded-full transition-colors ${autoEnabled ? "bg-zinc-900" : "bg-zinc-200"} ${updating ? "opacity-50" : "hover:brightness-90"}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full shadow-sm transition-transform ${autoEnabled ? "translate-x-5 bg-white" : "translate-x-0 bg-zinc-900"}`} /></button></div>}
       </div>
       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${
-            isUnlimited ? "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" : isNearLimit ? "bg-red-500" : color
+            isUnlimited ? "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" : isAtLimit ? "bg-red-500" : isNearLimit ? "bg-amber-500" : color
           }`}
           style={{ width: `${pct}%` }}
         />
