@@ -85,7 +85,7 @@ const SEED_COMMENTS = [
         }
 
         if (!rawCookie) {
-            console.log("❌ Không tìm thấy Cookie FB!");
+            console.log("✘Không tìm thấy Cookie FB!");
             return;
         }
 
@@ -103,16 +103,16 @@ const SEED_COMMENTS = [
         // Dùng toàn bộ danh sách sản phẩm, bốc random mãi mãi
         const validProducts = scrapedData;
         if (validProducts.length < 3) {
-            console.log("❌ Cần ít nhất 3 sản phẩm Shopee trong danh sách để chạy tool!");
+            console.log("✘Cần ít nhất 3 sản phẩm Shopee trong danh sách để chạy tool!");
             return;
         }
 
         const hasQuota = await checkQuota(email, 'fb_comments_count');
         if (!hasQuota) {
-            console.log("❌ Đã hết lượt rải link (phiên) hôm nay.");
-            await logToWeb(email, 'fb-cmt-reels', '❌ Đã hết lượt rải link Reels (phiên) hôm nay. Vui lòng nâng cấp gói!', 'warn');
+            console.log("✘Đã hết lượt rải link (phiên) hôm nay.");
+            await logToWeb(email, 'fb-cmt-reels', '✘Đã hết lượt rải link Reels (phiên) hôm nay. Vui lòng nâng cấp gói!', 'warn');
             if (dbConfig && dbConfig.tele_chat_id) {
-                await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Reels Rải Link]</b>\nTừ chối chạy do đã hết giới hạn số phiên hôm nay.\nTài khoản: ${email}`);
+                await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Reels Rải Link]</b>\nTừ chối chạy do đã hết giới hạn số phiên hôm nay.\nTài khoản: ${email}`);
             }
             return;
         }
@@ -123,6 +123,7 @@ const SEED_COMMENTS = [
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications']
         });
         const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         await page.setViewport({ width: 1280, height: 800 });
 
         await page.setCookie(...cookies);
@@ -303,10 +304,10 @@ const SEED_COMMENTS = [
                         await page.keyboard.press('Escape');
                         await delay(1000);
                     } else {
-                        console.log("⚠️ Không tìm thấy ô nhập Comment!");
+                        console.log("⚠ Không tìm thấy ô nhập Comment!");
                     }
                 } else {
-                    console.log("⚠️ Không tìm thấy nút Bình luận trên Reel này.");
+                    console.log("⚠ Không tìm thấy nút Bình luận trên Reel này.");
                 }
 
                 console.log("⬇️ Chuyển sang Reel tiếp theo...");
@@ -337,7 +338,7 @@ const SEED_COMMENTS = [
                     .eq('email', email);
 
                 if (updateErr) {
-                    console.error("❌ Lỗi khi cập nhật Cookie lên Supabase:", updateErr);
+                    console.error("✘Lỗi khi cập nhật Cookie lên Supabase:", updateErr);
                 } else {
                     console.log("✓ Đã lưu Cookie FB mới vào DB thành công (Gia hạn phiên).");
                 }
@@ -357,10 +358,10 @@ const SEED_COMMENTS = [
 
         await browser.close();
     } catch (e) {
-        console.error("❌ Lỗi hệ thống Bot Reels:", e.message);
-        await logToWeb(email, 'fb-cmt-reels', `❌ Lỗi Bot: ${e.message}`, 'error');
+        console.error("✘Lỗi hệ thống Bot Reels:", e.message);
+        await logToWeb(email, 'fb-cmt-reels', `✘Lỗi Bot: ${e.message}`, 'error');
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Reels Rải Link Lỗi]</b>\nLỗi: ${e.message}\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Reels Rải Link Lỗi]</b>\nLỗi: ${e.message}\nTài khoản: ${email}`);
         }
     }
 })();
