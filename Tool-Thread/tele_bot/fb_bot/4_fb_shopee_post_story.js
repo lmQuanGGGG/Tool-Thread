@@ -222,9 +222,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
             // Thử click bằng XPath
             const postBoxXPaths = [
                 '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "nghĩ gì")]',
-                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]',
-                '//span[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "nghĩ gì")]',
-                '//span[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]'
+                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]'
             ];
 
             for (let xpath of postBoxXPaths) {
