@@ -199,12 +199,22 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         console.log("🔍 Đang kiểm tra xem có màn hình 'Tiếp tục / Continue' không...");
         await page.evaluate(() => {
             const btnTexts = ['tiếp tục', 'continue', 'ok', 'chấp nhận', 'accept', 'bỏ qua', 'skip', 'không, cảm ơn', 'no thanks', 'đăng nhập', 'log in'];
-            const elements = [...document.querySelectorAll('div[role="button"], button, span')];
+            const elements = Array.from(document.querySelectorAll('*'));
             for (let el of elements) {
-                const text = (el.innerText || '').toLowerCase().trim();
-                if (btnTexts.some(t => text.includes(t))) {
-                    el.click();
-                    break;
+                if (el.children.length === 0 && el.textContent) {
+                    const text = el.textContent.toLowerCase().trim();
+                    if (btnTexts.includes(text)) {
+                        let clickable = el;
+                        while (clickable && clickable !== document.body) {
+                            if (clickable.tagName === 'BUTTON' || clickable.tagName === 'A' || clickable.getAttribute('role') === 'button') {
+                                clickable.click();
+                                return;
+                            }
+                            clickable = clickable.parentElement;
+                        }
+                        el.click();
+                        return;
+                    }
                 }
             }
         });
