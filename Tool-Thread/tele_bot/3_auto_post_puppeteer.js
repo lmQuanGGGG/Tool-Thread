@@ -562,10 +562,14 @@ async function runFarm() {
             "Hôm bữa ai hỏi tui xài gì thì link đây nha:",
             "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"
         ];
-        let randomThinh = catchphrases[Math.floor(Math.random() * catchphrases.length)];
-        let randomLink = dbConfig.affiliate_links_arr[Math.floor(Math.random() * dbConfig.affiliate_links_arr.length)];
+        let pickedProduct = dbConfig.parsed_affiliate_links[Math.floor(Math.random() * dbConfig.parsed_affiliate_links.length)];
         isNinjaLink = true;
-        ninjaComment = `👉 ${randomThinh} ${randomLink}`;
+        if (pickedProduct.suggested_comment) {
+            ninjaComment = `${pickedProduct.suggested_comment}\n${pickedProduct.aff_link}`;
+        } else {
+            let randomThinh = catchphrases[Math.floor(Math.random() * catchphrases.length)];
+            ninjaComment = `👉 ${randomThinh} ${pickedProduct.aff_link}`;
+        }
     } else if (allProducts.length > 0) {
         const pickedProduct = getRandomProductComment(NICHE);
         if (pickedProduct) {

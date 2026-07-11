@@ -195,8 +195,13 @@ async function downloadImageFromTelegram(file_id) {
                     "Hôm bữa ai hỏi tui xài gì thì link đây nha:",
                     "Đừng hỏi sao tui chăm mua sắm, tại mấy món này xịn quá nè:"
                 ];
-                let randomThinh = catchphrases[getRandomInt(0, catchphrases.length - 1)];
-                let cmtText = `✨ ${pickedProduct.title}\n\n👉 ${randomThinh} ${pickedProduct.aff_link}`;
+                let cmtText = "";
+                if (pickedProduct.suggested_comment) {
+                    cmtText = `${pickedProduct.suggested_comment}\n${pickedProduct.aff_link}`;
+                } else {
+                    let randomThinh = catchphrases[getRandomInt(0, catchphrases.length - 1)];
+                    cmtText = `✨ ${pickedProduct.title}\n\n👉 ${randomThinh} ${pickedProduct.aff_link}`;
+                }
                 let localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
 
                 if (localImg) {
