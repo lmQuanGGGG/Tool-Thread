@@ -70,22 +70,32 @@ async function run() {
 
         // Bỏ logic SPECIAL_REELS_EMAIL vì giờ đã có ProMax
         
-        // Free Logic: 1 phiên/ngày (19h)
+        // Free: theo bảng gói — 2 Reels, 1 Shopee Post/Story, 1 phiên rải link Reels.
         if (isFree) {
-            if (hasFb && [19].includes(vnHour)) {
+            if (hasFb && [11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
+                await dispatchWorkflow('fb_comment_worker.yml', p.email);
+                await dispatchWorkflow('shopee_worker.yml', p.email);
             }
             if (hasThreads && [8, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
 
-        // Lite Logic: 2 phiên/ngày (11h, 19h)
+        // Lite: theo bảng gói — 3 Reels, 3 Shopee Post/Story, 2 phiên rải link Reels.
         if (isLite) {
-            if (hasFb && [11, 19].includes(vnHour)) {
+            if (hasFb && [8, 11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
+            }
+            if (hasFb && [8, 11, 19].includes(vnHour)) {
+                await dispatchWorkflow('shopee_worker.yml', p.email);
+            }
+            if (hasFb && [11, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
+                await dispatchWorkflow('fb_comment_worker.yml', p.email);
             }
             if (hasThreads && [8, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
