@@ -31,8 +31,20 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        // Nếu lỗi là do sai tài khoản (hoặc chưa có tài khoản), thử Đăng ký
         if (signInError.message.includes("Invalid login credentials")) {
+          // Precheck IP and fingerprint limits before creating account
+          const fingerprint = await getDeviceFingerprint().catch(() => undefined);
+          const precheckRes = await fetch('/api/auth/precheck', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fingerprint }),
+          });
+          
+          if (!precheckRes.ok) {
+            const precheckData = await precheckRes.json();
+            throw new Error(precheckData.error || 'Thiết bị/mạng của bạn đã đạt giới hạn số tài khoản.');
+          }
+
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
@@ -46,10 +58,13 @@ export default function LoginPage() {
             throw new Error("Tài khoản đã được tạo nhưng Supabase đang yêu cầu xác minh Email. Vui lòng vào Cài đặt Supabase tắt 'Confirm Email' hoặc kiểm tra hộp thư của sếp!");
           }
           
-          showToast("Đã tự động tạo tài khoản mới cho sếp!");
+          sessionStorage.setItem('new_account', 'true');
         } else {
           throw signInError;
         }
+      } else {
+        // Đăng nhập thành công (tài khoản đã có)
+        sessionStorage.setItem('just_logged_in', 'true');
       }
 
       // 2. Kiểm tra giới hạn IP + Device Fingerprint — tối đa 2 tài khoản

@@ -125,7 +125,7 @@ async function fetchLatestVideos(channels) {
         console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng Reels hôm nay. Dừng script.`);
         await logToWeb(email, 'yt-reels', `Đã hết giới hạn đăng Reels hôm nay. Dừng script.`, 'warn');
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Up Reels]</b>\nTừ chối chạy do đã hết giới hạn đăng Reels hôm nay.\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Up Reels]</b>\nTừ chối chạy do đã hết giới hạn đăng Reels hôm nay.\nTài khoản: ${email}`);
         }
         process.exit(0);
     }
@@ -515,7 +515,7 @@ async function fetchLatestVideos(channels) {
         console.error("✗ Lỗi khi đăng Reels:", err.message);
         await logToWeb(email, 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Up Reels Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Up Reels Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
         }
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track

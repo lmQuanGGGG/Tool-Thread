@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -77,6 +77,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isAdmin, setIsAdmin] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [giftModal, setGiftModal] = useState<{show: boolean, comments: number, tier: string} | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const toastedLimits = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -91,6 +94,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ]).then(([statsRes, profileRes]) => {
         const t = profileRes.data?.tier || "free";
         setTier(t);
+        
+        if (sessionStorage.getItem('new_account') === 'true') {
+          setTimeout(() => {
+            showToast("🎉 Đã tự động tạo tài khoản mới cho sếp!");
+          }, 500);
+          sessionStorage.removeItem('new_account');
+        } else if (sessionStorage.getItem('just_logged_in') === 'true') {
+          setTimeout(() => {
+            showToast(`👋 Chào mừng sếp trở lại!`);
+          }, 500);
+          sessionStorage.removeItem('just_logged_in');
+        }
+
+        if (!localStorage.getItem('gift_modal_dismissed') && !sessionStorage.getItem('gift_notified')) {
+          let comments = 85;
+          if (t === 'promax') comments = 510;
+          else if (t === 'pro') comments = 340;
+          else if (t === 'plus' || t === 'lite') comments = 170;
+
+          setTimeout(() => {
+            setGiftModal({ show: true, comments, tier: t });
+          }, 1500);
+          sessionStorage.setItem('gift_notified', 'true');
+        }
+        
         const stats = statsRes.data || {};
         stats.parse_links_count = profileRes.data?.parsed_affiliate_links?.length || 0;
         setUsed(normalizeUsage(stats));
@@ -146,6 +174,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.removeEventListener('open-pricing', handleOpenPricing);
     };
   }, []);
+
+  // Monitor usage changes to show completion toasts
+  useEffect(() => {
+    if (!used || !limits) return;
+
+    const keys = [
+      { key: 'reels_posted', name: 'Đăng FB Reels', limit: limits.reels_per_day },
+      { key: 'threads_commented', name: 'Auto Cmt Threads', limit: limits.threads_per_day },
+      { key: 'threads_posts_count', name: 'Đăng bài Threads', limit: limits.threads_post_per_day },
+      { key: 'fb_posts_count', name: 'Đăng bài Facebook', limit: limits.fb_post_per_day },
+      { key: 'fb_comments_count', name: 'Auto Cmt mồi FB', limit: limits.fb_comments_per_day },
+      { key: 'fb_story_posted', name: 'FB Post', limit: limits.fb_story_per_day }
+    ];
+
+    keys.forEach(({ key, name, limit }) => {
+      if (limit !== -1 && limit > 0 && used[key] >= limit && !toastedLimits.current[key]) {
+        toastedLimits.current[key] = true;
+        showToast(`🎉 CHÚC MỪNG SẾP! Đã hoàn thành mục tiêu ${name} ngày hôm nay!`);
+      }
+    });
+  }, [used, limits]);
 
   const metaDark = TIER_META_DARK[tier] || TIER_META_DARK.free;
   const metaLight = TIER_META_LIGHT[tier] || TIER_META_LIGHT.free;
@@ -513,6 +562,64 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
+
+      {/* Gift Modal */}
+      {giftModal?.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setGiftModal(null)}></div>
+          
+          <div className="relative rounded-[24px] shadow-2xl overflow-hidden p-[2px] max-w-[380px] w-full transform transition-all duration-300 scale-100 opacity-100">
+            {/* Animated Spinning Border (Green) */}
+            <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_70%,#10b981_100%)]"></div>
+            
+            <div className="relative bg-white rounded-[22px] p-7 w-full h-full">
+              <button 
+                onClick={() => {
+                  if (dontShowAgain) localStorage.setItem('gift_modal_dismissed', 'true');
+                  setGiftModal(null);
+                }} 
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="w-16 h-16 bg-blue-50/80 rounded-[18px] flex items-center justify-center mx-auto mb-5 shadow-[inset_0_2px_10px_rgba(59,130,246,0.1)] border border-blue-100/50 overflow-hidden">
+                <img src="/rocket_logo.png" alt="AutoFarm Logo" className="w-full h-full object-cover" />
+              </div>
+              
+              <h2 className="text-xl font-extrabold text-center text-gray-900 mb-2.5 tracking-tight">Quà Tặng Đặc Quyền!</h2>
+              <p className="text-center text-gray-500 mb-6 text-[14px] leading-relaxed px-2">
+                Cảm ơn sếp đã tin tưởng và đồng hành cùng <strong className="text-gray-700">AutoFarm</strong>! ❤️<br/><br/>
+                Vì sếp đang sử dụng gói <span className="font-bold text-blue-600 uppercase tracking-wide">{giftModal.tier}</span>, hệ thống tặng riêng tính năng <span className="font-semibold text-gray-800">Auto rải {giftModal.comments} comment mồi</span> trên các Group FB mỗi ngày hoàn toàn miễn phí!<br/>
+                <span className="block mt-2.5 font-semibold text-emerald-600">Chúc sếp lụm thật nhiều lúa và bùng nổ doanh số cùng AutoFarm nhé! 🚀🤑</span>
+              </p>
+              
+              <div className="flex items-center gap-2 mb-4 px-2">
+                <input 
+                  type="checkbox" 
+                  id="dontShowAgain" 
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                  checked={dontShowAgain}
+                  onChange={(e) => setDontShowAgain(e.target.checked)}
+                />
+                <label htmlFor="dontShowAgain" className="text-xs text-gray-500 cursor-pointer select-none">
+                  Không hiển thị lại thông báo này
+                </label>
+              </div>
+              
+              <button 
+                onClick={() => {
+                  if (dontShowAgain) localStorage.setItem('gift_modal_dismissed', 'true');
+                  setGiftModal(null);
+                }} 
+                className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-[14px] font-semibold text-[14px] shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98]"
+              >
+                Tuyệt vời, nhận quà!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

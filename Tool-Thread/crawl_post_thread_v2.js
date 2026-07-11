@@ -76,7 +76,7 @@
 
     window.downloadCleanData = function () {
         if (window.rawThreadsData.length === 0) {
-            console.warn("⚠️ Khoan, chưa bắt được data nào cả. Chồng làm lại trick chuyển tab đi!");
+            console.warn("⚠ Khoan, chưa bắt được data nào cả. Chồng làm lại trick chuyển tab đi!");
             return;
         }
 

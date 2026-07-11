@@ -242,6 +242,41 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
     }
 
     console.log(`📊 Updated stats: ${type} +${count} cho user ${userId}`);
+
+    // Check limit to send completion notification
+    const { data: profileWithTele } = await supabase.from('profiles').select('telegram_id, tier, email').eq('id', userId).maybeSingle();
+    if (profileWithTele) {
+      const limits = await getTierLimits(profileWithTele.tier);
+      const limitKey = type === 'reels_posted' ? 'reels_per_day'
+                     : type === 'threads_commented' ? 'threads_per_day'
+                     : type === 'threads_posts_count' ? 'threads_post_per_day'
+                     : type === 'fb_posts_count' ? 'fb_post_per_day'
+                     : type === 'fb_comments_count' ? 'fb_comments_per_day'
+                     : 'fb_story_per_day';
+      let limit = USER_QUOTA_OVERRIDES[profileWithTele.email]?.[limitKey] ?? limits[limitKey];
+      
+      if (limit === undefined && type === 'threads_posts_count') limit = limits['reels_per_day'] || 2; 
+      if (limit === undefined && type === 'fb_posts_count') limit = 3; 
+      if (limit === undefined && type === 'fb_comments_count') limit = profileWithTele.tier === 'promax' ? -1 : profileWithTele.tier === 'pro' ? 6 : profileWithTele.tier === 'plus' ? 4 : profileWithTele.tier === 'lite' ? 2 : 1;
+      
+      if (limit !== -1) {
+        const oldUsed = existing ? (existing[type] || 0) : 0;
+        const newUsed = oldUsed + count;
+        if (oldUsed < limit && newUsed >= limit) {
+          if (profileWithTele.telegram_id) {
+             const typeName = type === 'reels_posted' ? 'Đăng FB Reels' 
+                            : type === 'threads_commented' ? 'Auto Cmt Threads'
+                            : type === 'threads_posts_count' ? 'Đăng bài Threads'
+                            : type === 'fb_posts_count' ? 'Đăng bài Facebook'
+                            : type === 'fb_comments_count' ? 'Auto Cmt mồi FB'
+                            : 'FB Post';
+             const msg = `🎉 <b>CHÚC MỪNG SẾP!</b>\n\nSếp đã hoàn thành mục tiêu <b>${typeName}</b> ngày hôm nay (Đã chạy: ${newUsed}/${limit}).\n\nLụm lúa thôi! 🚀🤑`;
+             await sendTelegramMessage(profileWithTele.telegram_id, msg);
+          }
+        }
+      }
+    }
+
   } catch (err) {
     console.error("✗ updateUsageStats lỗi:", err.message);
   }

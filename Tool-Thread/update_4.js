@@ -8,7 +8,7 @@ content = content.replace(
 
 content = content.replace(
   "        console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);\n        await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');\n        process.exit(0);",
-  "        console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);\n        await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');\n        if (dbConfig && dbConfig.tele_chat_id) {\n            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB]</b>\\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\\nTài khoản: ${email}`);\n        }\n        process.exit(0);"
+  "        console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);\n        await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');\n        if (dbConfig && dbConfig.tele_chat_id) {\n            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Đăng bài FB]</b>\\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\\nTài khoản: ${email}`);\n        }\n        process.exit(0);"
 );
 
 content = content.replace(
@@ -18,7 +18,7 @@ content = content.replace(
 
 content = content.replace(
   "    } catch (e) {\n        console.error(\"✗ Lỗi trong quá trình đăng bài:\", e.message);\n    }",
-  "    } catch (e) {\n        console.error(\"✗ Lỗi trong quá trình đăng bài:\", e.message);\n        if (dbConfig && dbConfig.tele_chat_id) {\n            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB Lỗi]</b>\\nLỗi: ${e.message}\\nTài khoản: ${email}`);\n        }\n    }"
+  "    } catch (e) {\n        console.error(\"✗ Lỗi trong quá trình đăng bài:\", e.message);\n        if (dbConfig && dbConfig.tele_chat_id) {\n            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Đăng bài FB Lỗi]</b>\\nLỗi: ${e.message}\\nTài khoản: ${email}`);\n        }\n    }"
 );
 
 fs.writeFileSync('tele_bot/fb_bot/4_fb_shopee_post_story.js', content);

@@ -12,7 +12,7 @@
          console.log(`✗ Tài khoản ${email} đã hết giới hạn comment Threads hôm nay. Dừng script.`);
          await logToWeb(email, 'threads', `Đã hết giới hạn comment Threads hôm nay. Dừng script.`, 'warn');
 +        if (dbConfig && dbConfig.tele_chat_id) {
-+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Cmt Threads]</b>\nTừ chối chạy do đã hết giới hạn comment hôm nay.\nTài khoản: ${email}`);
++            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Cmt Threads]</b>\nTừ chối chạy do đã hết giới hạn comment hôm nay.\nTài khoản: ${email}`);
 +        }
          process.exit(0);
      }
@@ -53,7 +53,7 @@
 +            }
 +        } catch (cookieErr) {
 +            console.error("Lỗi trích xuất Cookie:", cookieErr);
-+            await logToWeb(email, 'threads', `⚠️ Không thể trích xuất Cookie mới.`, 'warn');
++            await logToWeb(email, 'threads', `⚠ Không thể trích xuất Cookie mới.`, 'warn');
 +        }
 +        // === END AUTO REFRESH ===
 +
@@ -68,7 +68,7 @@
      } catch (err) {
          console.error("Lỗi tổng:", err.message);
 +        if (dbConfig && dbConfig.tele_chat_id) {
-+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Cmt Threads Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
++            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Cmt Threads Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
 +        }
      } finally {
          await browser.close();

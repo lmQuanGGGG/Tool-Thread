@@ -104,15 +104,15 @@ async function generateBatchComments(titles) {
         } catch (e) {
             const isQuotaError = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('RESOURCE_EXHAUSTED');
             if (isQuotaError && i < GEMINI_KEY_POOL.length - 1) {
-                console.warn(`⚠️ Key #${i + 1} hết quota (429), chuyển sang key #${i + 2}...`);
+                console.warn(`⚠ Key #${i + 1} hết quota (429), chuyển sang key #${i + 2}...`);
                 continue; // Thử key tiếp theo
             }
-            console.error(`❌ Key #${i + 1} lỗi: ${e.message}`);
+            console.error(`✘Key #${i + 1} lỗi: ${e.message}`);
         }
     }
 
     // Tất cả key đều thất bại → fallback caption mẫu
-    console.error("❌ Tất cả Gemini API key đã hết quota hoặc lỗi. Dùng caption mẫu dự phòng.");
+    console.error("✘Tất cả Gemini API key đã hết quota hoặc lỗi. Dùng caption mẫu dự phòng.");
     return titles.map(() => "Góc rắc thính: Món này dạo này tui mê cực kì:");
 }
 

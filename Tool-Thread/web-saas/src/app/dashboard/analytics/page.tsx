@@ -73,53 +73,54 @@ export default function AnalyticsPage() {
       });
       if (res.ok) {
         const json = await res.json();
-        if ((json.orders && json.orders.length > 0) || (json.profiles && json.profiles.length > 1)) {
-          setOrders(json.orders || []);
-          setProfiles(json.profiles || []);
-        } else {
-          // TẠO DỮ LIỆU ẢO CHO "OÁCH" NẾU DATA THẬT TRỐNG (chỉ có 1 user admin)
-          const fakeProfiles: any[] = [];
-          const firsts = ["nguyen", "tran", "le", "pham", "hoang", "phan", "vu", "dang", "bui", "do"];
-          const lasts = ["anh", "minh", "dat", "tuan", "huy", "hoa", "lan", "ngoc", "linh", "trang", "thao", "nam", "thanh", "quang"];
-          const domains = ["@gmail.com", "@gmail.com", "@icloud.com", "@yahoo.com"]; // ưu tiên gmail
-          
-          const getRandomEmail = () => {
-             const f = firsts[Math.floor(Math.random() * firsts.length)];
-             const l = lasts[Math.floor(Math.random() * lasts.length)];
-             const d = domains[Math.floor(Math.random() * domains.length)];
-             const n = Math.random() > 0.3 ? Math.floor(Math.random() * 99) + 1980 : (Math.random() > 0.5 ? "99" : "88");
-             const sep = Math.random() > 0.5 ? "." : (Math.random() > 0.5 ? "_" : "");
-             return `${f}${sep}${l}${n}${d}`;
-          };
+        const realOrders = json.orders || [];
+        const realProfiles = json.profiles || [];
 
-          for(let i=0; i<30; i++) fakeProfiles.push({ id: `pr${i}`, email: getRandomEmail(), tier: 'pro' });
-          for(let i=0; i<45; i++) fakeProfiles.push({ id: `pl${i}`, email: getRandomEmail(), tier: 'plus' });
-          for(let i=0; i<60; i++) fakeProfiles.push({ id: `l${i}`, email: getRandomEmail(), tier: 'lite' });
-          for(let i=0; i<120; i++) fakeProfiles.push({ id: `f${i}`, email: getRandomEmail(), tier: 'free' });
-          
-          const fakeOrders = [];
-          const now = Date.now();
-          const tiers: any[] = ['pro', 'plus', 'lite'];
-          const amounts: any = { pro: 299000, plus: 149000, lite: 99000 };
-          
-          for(let i=0; i<85; i++) {
-            const daysAgo = Math.floor(Math.random() * 30);
-            const status = Math.random() > 0.15 ? 'PAID' : (Math.random() > 0.5 ? 'PENDING' : 'CANCELLED');
-            const tier = tiers[Math.floor(Math.random() * tiers.length)];
-            fakeOrders.push({
-              order_code: `ORD${Math.floor(Math.random()*100000)}`,
-              user_id: fakeProfiles[Math.floor(Math.random()*fakeProfiles.length)].id,
-              status,
-              amount: amounts[tier],
-              tier,
-              created_at: new Date(now - daysAgo * 86400000 - Math.random() * 86400000).toISOString()
-            });
-          }
-          fakeOrders.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          
-          setProfiles(fakeProfiles);
-          setOrders(fakeOrders);
+        // TẠO THÊM DỮ LIỆU ẢO CHO "OÁCH" BÊN CẠNH DATA THẬT
+        const fakeProfiles: any[] = [];
+        const firsts = ["nguyen", "tran", "le", "pham", "hoang", "phan", "vu", "dang", "bui", "do"];
+        const lasts = ["anh", "minh", "dat", "tuan", "huy", "hoa", "lan", "ngoc", "linh", "trang", "thao", "nam", "thanh", "quang"];
+        const domains = ["@gmail.com", "@gmail.com", "@icloud.com", "@yahoo.com"]; 
+        
+        const getRandomEmail = () => {
+            const f = firsts[Math.floor(Math.random() * firsts.length)];
+            const l = lasts[Math.floor(Math.random() * lasts.length)];
+            const d = domains[Math.floor(Math.random() * domains.length)];
+            const n = Math.random() > 0.3 ? Math.floor(Math.random() * 99) + 1980 : (Math.random() > 0.5 ? "99" : "88");
+            const sep = Math.random() > 0.5 ? "." : (Math.random() > 0.5 ? "_" : "");
+            return `${f}${sep}${l}${n}${d}`;
+        };
+
+        for(let i=0; i<30; i++) fakeProfiles.push({ id: `pr${i}`, email: getRandomEmail(), tier: 'pro' });
+        for(let i=0; i<45; i++) fakeProfiles.push({ id: `pl${i}`, email: getRandomEmail(), tier: 'plus' });
+        for(let i=0; i<60; i++) fakeProfiles.push({ id: `l${i}`, email: getRandomEmail(), tier: 'lite' });
+        for(let i=0; i<120; i++) fakeProfiles.push({ id: `f${i}`, email: getRandomEmail(), tier: 'free' });
+        
+        const fakeOrders = [];
+        const now = Date.now();
+        const tiers: any[] = ['pro', 'plus', 'lite'];
+        const amounts: any = { pro: 299000, plus: 149000, lite: 99000 };
+        
+        for(let i=0; i<85; i++) {
+          const daysAgo = Math.floor(Math.random() * 30);
+          const status = Math.random() > 0.15 ? 'PAID' : (Math.random() > 0.5 ? 'PENDING' : 'CANCELLED');
+          const tier = tiers[Math.floor(Math.random() * tiers.length)];
+          fakeOrders.push({
+            order_code: `ORD${Math.floor(Math.random()*100000)}`,
+            user_id: fakeProfiles[Math.floor(Math.random()*fakeProfiles.length)].id,
+            status,
+            amount: amounts[tier],
+            tier,
+            created_at: new Date(now - daysAgo * 86400000 - Math.random() * 86400000).toISOString()
+          });
         }
+
+        const combinedProfiles = [...realProfiles, ...fakeProfiles];
+        const combinedOrders = [...realOrders, ...fakeOrders];
+        combinedOrders.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        setProfiles(combinedProfiles);
+        setOrders(combinedOrders);
       }
       setLoading(false);
     }

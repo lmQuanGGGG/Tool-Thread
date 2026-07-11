@@ -79,7 +79,7 @@ async function runSinglePost() {
     await logToWeb(email, 'threads_post', `Đã hết giới hạn đăng Threads hôm nay. Dừng script.`, 'warn');
     const { data: profile } = await supabase.from('profiles').select('tier, tele_chat_id').eq('email', email).maybeSingle();
     if (profile && profile.tele_chat_id) {
-      await sendTelegramNotify(profile.tele_chat_id, `❌ <b>[Bot Đăng bài Threads]</b>\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\nTài khoản: ${email}`);
+      await sendTelegramNotify(profile.tele_chat_id, `✘<b>[Bot Đăng bài Threads]</b>\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\nTài khoản: ${email}`);
     }
     process.exit(0);
   }
@@ -503,7 +503,7 @@ async function runSinglePost() {
       }
     } catch (cookieErr) {
       console.error("Lỗi trích xuất Cookie:", cookieErr);
-      await logToWeb(email, 'threads_post', `⚠️ Không thể trích xuất Cookie mới.`, 'warn');
+      await logToWeb(email, 'threads_post', `⚠ Không thể trích xuất Cookie mới.`, 'warn');
     }
     // === END AUTO REFRESH ===
 

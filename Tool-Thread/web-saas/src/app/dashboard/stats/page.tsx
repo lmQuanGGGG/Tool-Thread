@@ -329,7 +329,7 @@ export default function StatsPage() {
       "reels_posted": ["yt-reels"],
       "fb_comments_count": ["fb-cmt-reels", "fb-cmt-stranger"],
       "threads_commented": ["threads"],
-      "fb_posts_count": ["fb-post"], 
+      "fb_posts_count": ["fb-post", "fb-story"], 
       "threads_posts_count": ["threads_post"],
       "parse_links": ["parse_links"],
       "crawls_count": ["threads_scraper"],
@@ -526,10 +526,10 @@ export default function StatsPage() {
                       </div>
                     </div>
                     <div
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
                       style={{ background: bot.color + "15", color: bot.color }}
                     >
-                      Max: {maxVal}/ngày
+                      Đỉnh: {maxVal}{period === "today" ? "/giờ" : (period === "7d" || period === "30d") ? "/ngày" : period === "3m" ? "/tuần" : "/tháng"}
                     </div>
                   </div>
                   <AreaChart

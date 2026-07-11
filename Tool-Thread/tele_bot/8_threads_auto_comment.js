@@ -361,7 +361,7 @@ async function downloadImageFromTelegram(file_id) {
             }
         } catch (cookieErr) {
             console.error("Lỗi trích xuất Cookie:", cookieErr);
-            await logToWeb(email, 'threads', `⚠️ Không thể trích xuất Cookie mới.`, 'warn');
+            await logToWeb(email, 'threads', `⚠ Không thể trích xuất Cookie mới.`, 'warn');
         }
         // === END AUTO REFRESH ===
 
@@ -371,7 +371,7 @@ async function downloadImageFromTelegram(file_id) {
     } catch (err) {
         console.error("Lỗi tổng:", err.message);
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Cmt Threads Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Cmt Threads Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
         }
     } finally {
         await browser.close();
