@@ -42,7 +42,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
     const isPromax = dbConfig?.tier === 'promax';
     await logToWeb(email, 'fb-story', `Khởi động tool FB Story... Tier: ${dbConfig?.tier}`, 'info');
 
-    if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
+    if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction || process.argv.includes('--manual')) {
         let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
         await logToWeb(email, 'fb-story', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
@@ -216,50 +216,37 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         console.log("✍️ Đang tạo bài post mới trên trang cá nhân...");
         await logToWeb(email, 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');
 
-        // Tìm ô "Bạn đang nghĩ gì?"
-        const postBoxSelectors = [
-            'div[aria-label^="Bạn đang nghĩ gì"]',
-            'div[aria-label^="What\'s on your mind"]'
-        ];
-
         let clicked = false;
-        for (let sel of postBoxSelectors) {
-            try {
-                // Thử click bằng Puppeteer
-                const box = await page.$(sel);
-                if (box) {
-                    await box.click();
+        
+        try {
+            // Thử click bằng XPath
+            const postBoxXPaths = [
+                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "nghĩ gì")]',
+                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]',
+                '//span[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "nghĩ gì")]',
+                '//span[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]'
+            ];
+
+            for (let xpath of postBoxXPaths) {
+                const elements = await page.$$('::-p-xpath(' + xpath + ')');
+                for (let el of elements) {
+                    // Click the element and wait a bit to see if modal opens
+                    await el.click();
                     clicked = true;
                     break;
                 }
-            } catch (e) {}
+                if (clicked) break;
+            }
+        } catch (e) {
+            console.log("XPath click fail: " + e.message);
         }
-        
+
         if (!clicked) {
             try {
-                // Thử dùng evaluate để click cho chuẩn
-                const clickedBox = await page.evaluate(() => {
-                    const box = document.querySelector('div[aria-label^="Bạn đang nghĩ gì"]') || document.querySelector('div[aria-label^="What\'s on your mind"]');
-                    if (box) {
-                        box.click();
-                        return true;
-                    }
-                    const spans = Array.from(document.querySelectorAll('span')).filter(el => {
-                        const txt = (el.innerText || "").toLowerCase();
-                        return txt.includes('nghĩ gì') || txt.includes('mind?');
-                    });
-                    if (spans.length > 0) {
-                        // Tìm thẻ cha là button hoặc role="button"
-                        let parent = spans[0].closest('div[role="button"]');
-                        if (parent) parent.click();
-                        else spans[0].click();
-                        return true;
-                    }
-                    return false;
-                });
-                if (clickedBox) {
-                    clicked = true;
-                }
+                // Fallback: Thử bấm phím 'p' trên bàn phím (Phím tắt FB mở hộp thoại Đăng bài)
+                console.log("Thử dùng phím tắt 'p' để mở ô đăng bài...");
+                await page.keyboard.press('p');
+                clicked = true;
             } catch (e) { }
         }
 
@@ -288,7 +275,10 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         // Lấy đúng ô input của form tạo bài (thường là ô cuối cùng)
         const fileInputs = await page.$$(fileInputSelector);
         if (fileInputs.length > 0 && imagePaths.length > 0) {
-            await fileInputs[fileInputs.length - 1].uploadFile(...imagePaths);
+            const fileInput = fileInputs[fileInputs.length - 1];
+            // Ép thẻ input nhận multiple file để tránh lỗi Puppeteer
+            await page.evaluate(el => el.setAttribute('multiple', 'multiple'), fileInput);
+            await fileInput.uploadFile(...imagePaths);
             console.log("🖼 Đã tải ảnh lên bài post!");
             await logToWeb(email, 'fb-story', '🖼 Đã tải ảnh lên bài post!', 'info');
             await delay(8000); // Tăng thời gian chờ load nhiều ảnh lên FB
