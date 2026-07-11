@@ -199,7 +199,9 @@ const SEED_COMMENTS = [
                         if (availableProducts.length > 0) {
                             pickedProduct = availableProducts[getRandomInt(0, availableProducts.length - 1)];
                             pickedProduct.fb_posted_temp = true;
-                            cmtText = `${pickedProduct.suggested_comment || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`;
+                            cmtText = (pickedProduct.suggested_comment && pickedProduct.suggested_comment.includes(pickedProduct.aff_link))
+                                ? pickedProduct.suggested_comment
+                                : (pickedProduct.suggested_comment ? `${pickedProduct.suggested_comment}\n${pickedProduct.aff_link}` : `${pickedProduct.title || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`);
                             if (pickedProduct.tele_file_id) {
                                 localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
                             }
