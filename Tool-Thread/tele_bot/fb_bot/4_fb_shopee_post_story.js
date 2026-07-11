@@ -15,6 +15,39 @@ function getRandomInt(min, max) {
 
 const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMessage } = require('../supabase_helper');
 
+const normalizeText = (value) => String(value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi-VN');
+
+/** Click một action Facebook đang hiển thị; ưu tiên action nằm trong popup composer. */
+async function clickFacebookAction(page, labels, { contains = false, preferDialog = true } = {}) {
+    return page.evaluate(({ labels, contains, preferDialog }) => {
+        const wanted = labels.map(value => value.toLocaleLowerCase('vi-VN'));
+        const isVisible = (el) => {
+            const rect = el.getBoundingClientRect();
+            const style = window.getComputedStyle(el);
+            return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+        };
+        const normalized = (value) => String(value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi-VN');
+        const matches = (value) => wanted.some(label => contains ? value.includes(label) : value === label);
+        const roots = preferDialog
+            ? [...document.querySelectorAll('[role="dialog"]'), document]
+            : [document];
+
+        for (const root of roots) {
+            const candidates = [...root.querySelectorAll('button, [role="button"]')];
+            for (const candidate of candidates) {
+                if (!isVisible(candidate) || candidate.getAttribute('aria-disabled') === 'true' || candidate.hasAttribute('disabled')) continue;
+                const values = [candidate.innerText, candidate.textContent, candidate.getAttribute('aria-label'), candidate.getAttribute('title')]
+                    .map(normalized);
+                if (values.some(matches)) {
+                    candidate.click();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }, { labels: labels.map(normalizeText), contains, preferDialog });
+}
+
 (async () => {
     const pm2ProcessName = 'fb-story-farmer';
     const manualFlagPath = path.resolve(__dirname, '..', `${pm2ProcessName}.manual`);
@@ -191,8 +224,9 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
     await delay(2000);
     // === END HÀNH VI ===
 
-    // Chuyển sang trang cá nhân để đăng bài
-    await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
+    // Composer ở Home ổn định hơn trang /me (trang profile có thể không render ô đăng bài).
+    await page.goto('https://www.facebook.com/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await delay(4000);
 
     // Xử lý các màn hình "Tiếp tục", "OK", "Bỏ qua" sau khi nạp cookie
     try {
@@ -227,42 +261,33 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         console.log("✍️ Đang tạo bài post mới trên trang cá nhân...");
         await logToWeb(email, 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');
 
-        let clicked = false;
-        
-        try {
-            // Thử click bằng XPath
-            const postBoxXPaths = [
-                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "nghĩ gì")]',
-                '//div[@role="button" and contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "mind")]'
-            ];
-
-            for (let xpath of postBoxXPaths) {
-                const elements = await page.$$('::-p-xpath(' + xpath + ')');
-                for (let el of elements) {
-                    // Click the element and wait a bit to see if modal opens
-                    await el.click();
-                    clicked = true;
-                    break;
-                }
-                if (clicked) break;
-            }
-        } catch (e) {
-            console.log("XPath click fail: " + e.message);
-        }
+        let clicked = await clickFacebookAction(
+            page,
+            ['Bạn đang nghĩ gì?', "What's on your mind?", 'Tạo bài viết', 'Create post'],
+            { contains: true, preferDialog: false }
+        );
 
         if (!clicked) {
+            // Fallback qua menu Tạo ở thanh điều hướng khi Home chưa có composer inline.
+            clicked = await clickFacebookAction(page, ['Tạo', 'Create'], { preferDialog: false });
+            if (clicked) {
+                await delay(1000);
+                clicked = await clickFacebookAction(page, ['Bài viết', 'Post'], { contains: true, preferDialog: false });
+            }
+        }
+
+        if (clicked) {
             try {
-                // Fallback: Thử bấm phím 'p' trên bàn phím (Phím tắt FB mở hộp thoại Đăng bài)
-                console.log("Thử dùng phím tắt 'p' để mở ô đăng bài...");
-                await page.keyboard.press('p');
-                clicked = true;
-            } catch (e) { }
+                await page.waitForSelector('[role="dialog"] div[role="textbox"], [role="dialog"] input[type="file"]', { timeout: 7000 });
+            } catch (_) {
+                clicked = false;
+            }
         }
 
         if (!clicked) {
             console.log("!!! Không click được ô post bằng JS, chụp ảnh debug...");
             await page.screenshot({ path: 'debug_fb_post_box.png' });
-            throw new Error("Không tìm thấy ô đăng bài. Có thể FB chưa đăng nhập thành công hoặc Cookie đã chết!");
+            throw new Error("Không mở được popup tạo bài viết. Kiểm tra lại cookie hoặc giao diện Facebook trong ảnh debug.");
         }
 
         await delay(3000);
@@ -318,56 +343,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         console.log("🚀 Bấm Đăng (Post)...");
         await logToWeb(email, 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
         // Hàm click button
-        const clickPostBtn = async (btnTexts) => {
-            let clicked = false;
-            // 1. Thử click JS
-            clicked = await page.evaluate((texts) => {
-                const btns = Array.from(document.querySelectorAll('div[role="button"]'));
-                const postBtn = btns.find(b => {
-                    const text = (b.innerText || '').trim();
-                    const ariaLabel = b.getAttribute('aria-label') || '';
-                    return texts.includes(text) || texts.includes(ariaLabel);
-                });
-                if (postBtn) {
-                    postBtn.click();
-                    return true;
-                }
-                return false;
-            }, btnTexts);
-
-            if (clicked) return true;
-
-            // 2. Thử click bằng toạ độ
-            await delay(1000);
-            try {
-                const postBtnInfo = await page.evaluate((texts) => {
-                    const btns = Array.from(document.querySelectorAll('div[role="button"]'));
-                    const postBtn = btns.find(b => {
-                        const text = (b.innerText || '').trim();
-                        const ariaLabel = b.getAttribute('aria-label') || '';
-                        return texts.includes(text) || texts.includes(ariaLabel);
-                    });
-                    if (postBtn) {
-                        const style = window.getComputedStyle(postBtn);
-                        if (postBtn.hasAttribute('disabled') || postBtn.getAttribute('aria-disabled') === 'true' || style.opacity !== '1') {
-                            return 'DISABLED';
-                        }
-                        const rect = postBtn.getBoundingClientRect();
-                        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-                    }
-                    return 'NOT_FOUND';
-                }, btnTexts);
-
-                if (postBtnInfo !== 'NOT_FOUND' && postBtnInfo !== 'DISABLED') {
-                    console.log(`[INFO] Đã tìm thấy toạ độ nút ${btnTexts[0]}, thử click bằng chuột thật...`);
-                    await page.mouse.click(postBtnInfo.x, postBtnInfo.y);
-                    return true;
-                }
-            } catch (err) {
-                console.log("Lỗi khi click toạ độ:", err.message);
-            }
-            return false;
-        };
+        const clickPostBtn = (btnTexts) => clickFacebookAction(page, btnTexts, { preferDialog: true });
 
         const clickedNext = await clickPostBtn(['Tiếp', 'Next', 'Tiếp tục', 'Continue']);
         if (clickedNext) {
@@ -375,7 +351,11 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
             await delay(2000);
         }
 
-        await clickPostBtn(['Đăng', 'Post']);
+        const posted = await clickPostBtn(['Đăng', 'Post']);
+        if (!posted) {
+            await page.screenshot({ path: 'debug_fb_publish_button.png' });
+            throw new Error('Không tìm thấy nút Đăng đang bật trong popup tạo bài viết.');
+        }
 
         console.log("⏳ Chờ 15s để bài viết lên tường...");
         await delay(15000);
