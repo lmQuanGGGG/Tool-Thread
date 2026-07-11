@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota } = require('./supabase_helper');
+const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota, supabase, sendTelegramMessage } = require('./supabase_helper');
 puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
