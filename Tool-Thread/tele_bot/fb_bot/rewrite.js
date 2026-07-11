@@ -194,7 +194,7 @@ async function downloadImageFromTelegram(file_id) {
                     let titleStr = pickedProduct.product_name || pickedProduct.title || "";
                     let cmtText = (pickedProduct.suggested_comment && pickedProduct.suggested_comment.includes(linkStr))
                         ? pickedProduct.suggested_comment
-                        : (pickedProduct.suggested_comment ? `${pickedProduct.suggested_comment}\n${linkStr}` : `${titleStr}\n${linkStr}`);
+                        : (pickedProduct.suggested_comment ? \`\${pickedProduct.suggested_comment}\\n\${linkStr}\` : \`\${titleStr}\\n\${linkStr}\`);
                     
                     console.log(\`📸 Tải ảnh sản phẩm về...\`);
                     let localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
