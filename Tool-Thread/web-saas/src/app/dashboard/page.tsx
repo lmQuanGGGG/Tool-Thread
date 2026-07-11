@@ -25,7 +25,7 @@ const TIER_CONFIG: Record<string, {
   promax: { label: "PROMAX", color: "text-white", bg: "bg-gradient-to-r from-violet-600 to-pink-500", icon: Crown },
 };
 
-function UsageBar({ label, icon: Icon, used, limit, color }: { label: string; icon: React.ElementType; used: number; limit: number; color: string }) {
+function UsageBar({ label, icon: Icon, used, limit, color, autoEnabled, onToggle, updating }: { label: string; icon: React.ElementType; used: number; limit: number; color: string; autoEnabled?: boolean; onToggle?: () => void; updating?: boolean }) {
   const isUnlimited = limit === -1;
   const pct = isUnlimited ? 100 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
   const isNearLimit = !isUnlimited && pct >= 80;
@@ -37,9 +37,12 @@ function UsageBar({ label, icon: Icon, used, limit, color }: { label: string; ic
           <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
           {label}
         </span>
-        <span className={`font-bold ${isNearLimit ? "text-red-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
-          {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
-        </span>
+        <div className="flex items-center gap-3">
+          {onToggle && <button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative h-5 w-9 rounded-full transition-colors ${autoEnabled ? "bg-emerald-500" : "bg-zinc-300"} ${updating ? "opacity-50" : ""}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${autoEnabled ? "translate-x-4" : "translate-x-0.5"}`} /></button>}
+          <span className={`font-bold ${isNearLimit ? "text-red-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
+            {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
+          </span>
+        </div>
       </div>
       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div
@@ -80,7 +83,7 @@ function normalizeLimits(limits: any, tier: string) {
     fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 6 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
     threads_per_day: toCount(limits?.threads_per_day),
     fb_story_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
-    threads_post_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
+    threads_post_per_day: toCount(limits?.threads_post_per_day ?? limits?.reels_per_day),
     price_vnd: toCount(limits?.price_vnd),
     crawl_per_day: toCount(limits?.crawl_per_day),
     max_links: toCount(limits?.max_links),
@@ -95,6 +98,8 @@ export default function DashboardPage() {
   const [todayStats, setTodayStats] = useState<any>(globalCache?.todayStats || null);
   const [loading, setLoading] = useState(!globalCache);
   const [error, setError] = useState<string | null>(null);
+  const [autoSettings, setAutoSettings] = useState<Record<string, boolean>>({});
+  const [updatingAuto, setUpdatingAuto] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -135,6 +140,11 @@ export default function DashboardPage() {
 
         setLimits(limitsData);
         setTodayStats(statsData);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const res = await fetch("/api/auto-bots", { headers: { Authorization: `Bearer ${session.access_token}` } });
+          if (res.ok) setAutoSettings((await res.json()).settings || {});
+        }
       } catch (e) {
         console.error(e);
         setError(e instanceof Error ? e.message : "Không tải được dữ liệu dashboard");
@@ -193,6 +203,23 @@ export default function DashboardPage() {
       if (channel) supabase.removeChannel(channel);
     };
   }, []);
+
+  const toggleAuto = async (key: string) => {
+    const enabled = autoSettings[key] === false;
+    setUpdatingAuto(key);
+    setAutoSettings(prev => ({ ...prev, [key]: enabled }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/auto-bots", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token || ""}` }, body: JSON.stringify({ key, enabled }) });
+      if (!res.ok) throw new Error("Không lưu được cấu hình tự động");
+      setAutoSettings((await res.json()).settings || {});
+    } catch (e) {
+      setAutoSettings(prev => ({ ...prev, [key]: !enabled }));
+      setError(e instanceof Error ? e.message : "Không lưu được cấu hình tự động");
+    } finally {
+      setUpdatingAuto(null);
+    }
+  };
 
   const tier = profile?.tier || "free";
   const tierConf = TIER_CONFIG[tier] || TIER_CONFIG.free;
@@ -322,6 +349,7 @@ export default function DashboardPage() {
                   used={todayStats?.reels_posted || 0}
                   limit={limits?.reels_per_day ?? 1}
                   color="bg-zinc-900"
+                  autoEnabled={autoSettings.reels !== false} onToggle={() => toggleAuto("reels")} updating={updatingAuto === "reels"}
                 />
                 <UsageBar
                   label="FB Comment (Số phiên/ngày)"
@@ -329,6 +357,7 @@ export default function DashboardPage() {
                   used={todayStats?.fb_comments_count || 0}
                   limit={limits?.fb_comments_per_day ?? 1}
                   color="bg-zinc-900"
+                  autoEnabled={autoSettings.fb_comment !== false} onToggle={() => toggleAuto("fb_comment")} updating={updatingAuto === "fb_comment"}
                 />
                 <UsageBar
                   label="Threads đã Comment"
@@ -336,6 +365,7 @@ export default function DashboardPage() {
                   used={todayStats?.threads_commented || 0}
                   limit={limits?.threads_per_day ?? 10}
                   color="bg-zinc-900"
+                  autoEnabled={autoSettings.threads_comment !== false} onToggle={() => toggleAuto("threads_comment")} updating={updatingAuto === "threads_comment"}
                 />
                 <UsageBar
                   label="FB Post đã đăng"
@@ -343,6 +373,7 @@ export default function DashboardPage() {
                   used={todayStats?.fb_story_posted || 0}
                   limit={limits?.fb_story_per_day ?? limits?.fb_post_per_day ?? 0}
                   color="bg-zinc-900"
+                  autoEnabled={autoSettings.fb_post !== false} onToggle={() => toggleAuto("fb_post")} updating={updatingAuto === "fb_post"}
                 />
                 <UsageBar
                   label="Threads Post đã đăng"
@@ -350,6 +381,7 @@ export default function DashboardPage() {
                   used={todayStats?.threads_posts_count || 0}
                   limit={limits?.threads_post_per_day ?? 0}
                   color="bg-zinc-900"
+                  autoEnabled={autoSettings.threads_post !== false} onToggle={() => toggleAuto("threads_post")} updating={updatingAuto === "threads_post"}
                 />
                 <UsageBar
                   label="Data Shopee (Link đã lưu)"

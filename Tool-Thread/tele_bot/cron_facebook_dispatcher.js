@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
+const { getAutoBotSettings, isAutoBotEnabled } = require('./auto_settings');
 require('dotenv').config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -52,6 +53,7 @@ async function run() {
         console.error("Error fetching profiles:", error);
         return;
     }
+    const autoSettings = await getAutoBotSettings(supabase, profiles.map(p => p.email).filter(Boolean));
 
     for (const p of profiles) {
         if (!p.email || !p.tier) continue;
@@ -65,6 +67,7 @@ async function run() {
         const isPlus = p.tier === 'plus';
         const isPro = p.tier === 'pro';
         const isProMax = p.tier === 'promax';
+        const auto = (key) => isAutoBotEnabled(autoSettings, p.email, key);
 
         if (!isFree && !isLite && !isPlus && !isPro && !isProMax) continue;
 
@@ -72,80 +75,84 @@ async function run() {
         
         // Free: theo bảng gói — 2 Reels, 1 Shopee Post/Story, 1 phiên rải link Reels.
         if (isFree) {
-            if (hasFb && [11, 19].includes(vnHour)) {
+            if (hasFb && auto('reels') && [11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
             if (hasFb && [19].includes(vnHour)) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-                await dispatchWorkflow('fb_comment_worker.yml', p.email);
-                await dispatchWorkflow('shopee_worker.yml', p.email);
+                if (auto('fb_comment')) {
+                    await dispatchWorkflow('fb_worker.yml', p.email);
+                    await dispatchWorkflow('fb_comment_worker.yml', p.email);
+                }
+                if (auto('fb_post')) await dispatchWorkflow('shopee_worker.yml', p.email);
             }
-            if (hasThreads && [8, 19].includes(vnHour)) {
+            if (hasThreads && auto('threads_post') && [8, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
 
         // Lite: theo bảng gói — 3 Reels, 3 Shopee Post/Story, 2 phiên rải link Reels.
         if (isLite) {
-            if (hasFb && [8, 11, 19].includes(vnHour)) {
+            if (hasFb && auto('reels') && [8, 11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
-            if (hasFb && [8, 11, 19].includes(vnHour)) {
+            if (hasFb && auto('fb_post') && [8, 11, 19].includes(vnHour)) {
                 await dispatchWorkflow('shopee_worker.yml', p.email);
             }
             if (hasFb && [11, 19].includes(vnHour)) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-                await dispatchWorkflow('fb_comment_worker.yml', p.email);
+                if (auto('fb_comment')) {
+                    await dispatchWorkflow('fb_worker.yml', p.email);
+                    await dispatchWorkflow('fb_comment_worker.yml', p.email);
+                }
             }
-            if (hasThreads && [8, 13, 19].includes(vnHour)) {
+            if (hasThreads && auto('threads_post') && [8, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
 
         // Plus Logic: 4 phiên/ngày (8h, 13h, 16h, 19h)
         if (isPlus) {
-            if (hasFb && [8, 13, 16, 19].includes(vnHour)) {
+            if (hasFb && auto('reels') && [8, 13, 16, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
-            if (hasFb && [13, 19].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
-            if (hasFb && [8, 11, 13, 16].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [8, 11, 13, 16].includes(vnHour)) {
                 await dispatchWorkflow('fb_comment_worker.yml', p.email);
             }
-            if (hasThreads && [13, 19].includes(vnHour)) {
+            if (hasThreads && auto('threads_post') && [13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
 
         // Pro Logic: 6 phiên/ngày (8h, 11h, 13h, 16h, 19h, 21h)
         if (isPro) {
-            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
+            if (hasFb && auto('reels') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
-            if (hasFb && [8, 11, 13, 19].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [8, 11, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
-            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('fb_comment_worker.yml', p.email);
             }
-            if (hasThreads && [8, 11, 13, 19].includes(vnHour)) {
+            if (hasThreads && auto('threads_post') && [8, 11, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }
         
         // ProMax Logic: 8 phiên/ngày (8h, 10h, 11h, 13h, 15h, 16h, 19h, 21h)
         if (isProMax) {
-            if (hasFb && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
+            if (hasFb && auto('reels') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
             }
-            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
-            if (hasFb && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
+            if (hasFb && auto('fb_comment') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('fb_comment_worker.yml', p.email);
             }
-            if (hasThreads && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
+            if (hasThreads && auto('threads_post') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
         }

@@ -2,20 +2,53 @@ name: FB Shopee Post Story Bot
 
 on:
   schedule:
-    - cron: '15 4,7,9,13,15 * * 1-5' # Chạy giờ UTC (tương đương 11:15, 14:15, 16:15, 20:15, 22:15 VN)
+    - cron: '15 4,7,9,13,15 * * *' # Chạy mỗi ngày lúc 11:15, 14:15, 16:15, 20:15, 22:15 VN
   workflow_dispatch:
     inputs:
-      nick_index:
-        description: 'Chỉ định bot (mặc định shopee)'
+      email:
+        description: 'Email khách hàng (dashboard tự truyền)'
         required: false
-        default: 'shopee'
+        default: 'lmquang.devops@gmail.com'
 
 permissions:
   contents: write
 
 jobs:
-  run-shopee-bot:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install DB deps
+        run: npm install @supabase/supabase-js dotenv
+      - name: Lấy danh sách Khách hàng từ Supabase
+        id: set-matrix
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTO_BOT_KEY: fb_post
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
+          else
+            USERS=$(cd "Tool-Thread"/tele_bot && node get_users.js | grep -o '\[.*\]' | tail -n 1)
+            echo "matrix=$USERS" >> $GITHUB_OUTPUT
+          fi
+
+  run-shopee-bot:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        email: ${{ fromJson(needs.setup.outputs.matrix) }}
+      max-parallel: 20
+      fail-fast: false
     
     steps:
     - name: Checkout code
@@ -32,7 +65,11 @@ jobs:
 
     - name: Run FB Shopee Post Story Bot with Xvfb
       env:
-        FB_COOKIE: ${{ secrets.FB_COOKIE }}
+        USER_EMAIL: ${{ matrix.email }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        FB_COOKIE: ${{ secrets.FB_COOKIE }} # Fallback nếu Supabase không có cookie
       run: |
+        echo "🔥 Đang chạy Shopee Post cho khách hàng: ${{ matrix.email }}"
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
         cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const { getAutoBotSettings, isAutoBotEnabled } = require('./auto_settings');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -36,6 +37,11 @@ async function main() {
     if (error) throw error;
 
     let emails = data.map(row => row.email);
+    const autoBotKey = process.env.AUTO_BOT_KEY;
+    if (autoBotKey) {
+      const settings = await getAutoBotSettings(supabase, emails);
+      emails = emails.filter(email => isAutoBotEnabled(settings, email, autoBotKey));
+    }
     const excludedEmails = new Set(
       (process.env.EXCLUDED_AUTO_RUN_EMAILS || '')
         .split(',')

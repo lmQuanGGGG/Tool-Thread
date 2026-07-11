@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
+const { getAutoBotSettings, isAutoBotEnabled } = require('./auto_settings');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -32,6 +33,7 @@ async function run() {
         console.error("Error fetching profiles:", error);
         return;
     }
+    const autoSettings = await getAutoBotSettings(supabase, profiles.map(p => p.email).filter(Boolean));
 
     const vnTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
     const today = vnTime.toISOString().split('T')[0];
@@ -45,6 +47,10 @@ async function run() {
 
     for (const p of profiles) {
         if (!p.email || !p.tier) continue;
+        if (!isAutoBotEnabled(autoSettings, p.email, 'threads_comment')) {
+            console.log(`[SKIP] ${p.email} - đã tắt auto Threads Comment`);
+            continue;
+        }
         const tierLimit = limitsMap[p.tier] || limitsMap['free'];
         
         const vnHour = (new Date().getUTCHours() + 7) % 24;

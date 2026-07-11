@@ -63,7 +63,7 @@ function normalizeLimits(l: any, tier: string) {
     fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 6 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
     threads_per_day: toCount(l?.threads_per_day),
     fb_story_per_day: toCount(l?.fb_story_per_day ?? l?.fb_post_per_day),
-    threads_post_per_day: toCount(l?.fb_story_per_day ?? l?.fb_post_per_day),
+    threads_post_per_day: toCount(l?.threads_post_per_day ?? l?.reels_per_day),
   };
 }
 
@@ -151,15 +151,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const metaLight = TIER_META_LIGHT[tier] || TIER_META_LIGHT.free;
   const isPro = tier === "pro" || tier === "promax";
 
-  const getThreadsPostLimit = (t: string) => {
-    if (t === 'promax') return -1;
-    if (t === 'pro') return 15;
-    if (t === 'plus') return 6;
-    if (t === 'lite') return 3;
-    if (t === 'free') return 1;
-    return 3;
-  };
-
   const getThreadsCrawlLimit = (t: string) => {
     if (t === 'promax') return 129;
     if (t === 'pro') return 59;
@@ -173,7 +164,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { label: "Cmt FB (Rải link)", used: used?.fb_comments_count || 0, limit: limits?.fb_comments_per_day, color: "bg-zinc-900" },
     { label: "Cmt Threads", used: used?.threads_commented || 0, limit: limits?.threads_per_day, color: "bg-zinc-900" },
     { label: "FB Post", used: used?.fb_story_posted || 0, limit: limits?.fb_story_per_day, color: "bg-zinc-900" },
-    { label: "Th. Post", used: used?.threads_posts_count || 0, limit: getThreadsPostLimit(tier), color: "bg-zinc-900" },
+    { label: "Th. Post", used: used?.threads_posts_count || 0, limit: limits?.threads_post_per_day, color: "bg-zinc-900" },
     { label: "Quét Shopee", used: used?.parse_links_count || 0, limit: limits?.max_links ?? -1, color: "bg-zinc-900" },
     { label: "Cào Threads (lần/ngày)", used: used?.crawls_count || 0, limit: limits?.crawl_per_day || 0, color: "bg-zinc-900" },
   ];

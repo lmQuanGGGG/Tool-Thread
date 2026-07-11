@@ -31,6 +31,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTO_BOT_KEY: reels
+          EXCLUDED_AUTO_RUN_EMAILS: lmquang.devops@gmail.com
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # Free user bấm tay: Chỉ chạy cho đúng email được truyền vào

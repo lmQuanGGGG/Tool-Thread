@@ -37,6 +37,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTO_BOT_KEY: threads_post
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'matrix=["${{ github.event.inputs.email }}"]' >> $GITHUB_OUTPUT
@@ -74,4 +75,13 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           cd "Tool-Thread"/tele_bot
-          xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 10_threads_post_single.js
+          xvfb-run -a --server-args="-screen 0 1280x960x24" node 10_threads_post_single.js
+
+      - name: 📸 Lưu ảnh debug khi đăng Threads lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: threads-post-debug-${{ matrix.email }}
+          path: Tool-Thread/tele_bot/debug_single_*.png
+          if-no-files-found: ignore
+          retention-days: 3
