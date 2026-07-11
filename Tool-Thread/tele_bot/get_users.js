@@ -36,6 +36,13 @@ async function main() {
     if (error) throw error;
 
     let emails = data.map(row => row.email);
+    const excludedEmails = new Set(
+      (process.env.EXCLUDED_AUTO_RUN_EMAILS || '')
+        .split(',')
+        .map(email => email.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    emails = emails.filter(email => !excludedEmails.has(email.toLowerCase()));
     
     // Nếu không có ai, trả về mảng có admin để chạy fallback
     if (emails.length === 0) {

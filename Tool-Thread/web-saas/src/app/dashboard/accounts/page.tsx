@@ -4,7 +4,7 @@ import {
   Cookie, Link as LinkIcon, MessageCircle,
   Zap, Loader2, Bot, Play, Terminal, Trash2, Info, FileText, ChevronLeft, ChevronRight, Image as ImageIcon, Video
 } from "lucide-react";
-import { useState, useEffect, useRef, type ElementType } from "react";
+import { useState, useEffect, useRef, useCallback, type ElementType } from "react";
 import { supabase } from "../../../utils/supabase";
 import ThreadsCrawler from "@/components/ThreadsCrawler";
 import { showToast } from "@/components/Toast";
@@ -97,6 +97,7 @@ export default function AccountsPage() {
   const [fbLogs, setFbLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "FB System khởi động..." }]);
   const [threadsLogs, setThreadsLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Threads System khởi động..." }]);
   const [threadsPosts, setThreadsPosts] = useState<any[]>([]);
+  const [threadsVisibleCount, setThreadsVisibleCount] = useState(20);
   const [activeTab, setActiveTab] = useState<"global" | "fb" | "threads">("global");
   const [pausedCarousel, setPausedCarousel] = useState<"global" | "fb" | "threads" | null>(null);
   const shopeeCarouselRef = useRef<HTMLDivElement>(null);
@@ -183,12 +184,12 @@ export default function AccountsPage() {
     threadsLogContainerRef.current?.scrollTo({ top: threadsLogContainerRef.current.scrollHeight, behavior: "smooth" });
   }, [threadsLogs]);
 
-  const fetchThreadsPosts = async (uid: string) => {
+  const fetchThreadsPosts = useCallback(async (uid: string, limit = threadsVisibleCount) => {
     const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('posted', false);
     setThreadsTotalCount(count || 0);
-    const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', uid).eq('posted', false).order('created_at', { ascending: false }).limit(20);
+    const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', uid).eq('posted', false).order('created_at', { ascending: false }).limit(limit);
     if (cData) setThreadsPosts(cData);
-  };
+  }, [threadsVisibleCount]);
 
   useEffect(() => {
     async function load() {
@@ -212,18 +213,44 @@ export default function AccountsPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`crawl-data-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'crawl_data',
+        filter: `user_id=eq.${userId}`,
+      }, () => {
+        void fetchThreadsPosts(userId);
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, fetchThreadsPosts]);
+
   const handleUpdatePostText = (id: string, newText: string) => {
     setThreadsPosts(prev => prev.map(p => p.id === id ? { ...p, text_content: newText } : p));
   };
   const handleRemovePostImage = (id: string, imgIdx: number) => {
     setThreadsPosts(prev => prev.map(p => {
-      if (p.id === id) { const newUrls = [...(p.image_urls || [])]; newUrls.splice(imgIdx, 1); return { ...p, image_urls: newUrls }; }
+      if (p.id === id) {
+        const newUrls = [...(p.image_urls || [])];
+        const newFileIds = [...(p.image_file_ids || [])];
+        newUrls.splice(imgIdx, 1);
+        newFileIds.splice(imgIdx, 1);
+        return { ...p, image_urls: newUrls, image_file_ids: newFileIds };
+      }
       return p;
     }));
   };
   const handleSavePost = async (post: any) => {
     pushLog("INFO", `Đang lưu bài viết...`, "threads");
-    const { error } = await supabase.from('crawl_data').update({ text_content: post.text_content, image_urls: post.image_urls }).eq('id', post.id);
+    const { error } = await supabase.from('crawl_data').update({ text_content: post.text_content, image_urls: post.image_urls, image_file_ids: post.image_file_ids }).eq('id', post.id);
     if (error) {
       pushLog("ERROR", `Lỗi lưu bài viết: ${error.message}`, "threads");
       showToast(`Lỗi lưu bài viết: ${error.message}`);
@@ -267,10 +294,24 @@ export default function AccountsPage() {
   const handleDeleteParsedLink = async (index: number) => {
     if (!confirm("Xoá link này khỏi danh sách?")) return;
     pushLog("INFO", `Đang xoá link...`, "global");
-    const updated = parsedLinks.filter((_, i) => i !== index);
-    const { error } = await supabase.from('profiles').update({ parsed_affiliate_links: updated }).eq('id', userId);
+    
+    const linkToDelete = parsedLinks[index];
+    const updatedParsed = parsedLinks.filter((_, i) => i !== index);
+    
+    // Xoá luôn link gốc trong ô text
+    const currentRawLinks = formData.affiliate_links.split("\n").map(l => l.trim()).filter(Boolean);
+    const updatedRawLinks = currentRawLinks.filter(l => l !== linkToDelete.aff_link);
+    const newAffiliateLinksText = updatedRawLinks.join("\n");
+    
+    setParsedLinks(updatedParsed);
+    setFormData(prev => ({ ...prev, affiliate_links: newAffiliateLinksText }));
+    
+    const { error } = await supabase.from('profiles').update({ 
+      parsed_affiliate_links: updatedParsed,
+      affiliate_links: newAffiliateLinksText
+    }).eq('id', userId);
+    
     if (error) { pushLog("ERROR", `Lỗi xoá link: ${error.message}`, "global"); return; }
-    setParsedLinks(updated);
     pushLog("SUCCESS", `Đã xoá link thành công.`, "global");
   };
 
@@ -307,20 +348,8 @@ export default function AccountsPage() {
       }
     }).subscribe();
 
-    // Realtime lắng nghe dữ liệu crawl mới nhất
-    const crawlChannel = supabase.channel('realtime_crawl_data')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'crawl_data', filter: `user_id=eq.${userId}` }, (payload) => {
-        setThreadsPosts(prev => {
-          // Bỏ qua nếu đã tồn tại
-          if (prev.find(p => p.id === payload.new.id)) return prev;
-          return [payload.new, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
-        });
-        setThreadsTotalCount(prev => prev + 1);
-      }).subscribe();
-
     return () => {
       supabase.removeChannel(channel);
-      supabase.removeChannel(crawlChannel);
     };
   }, [userEmail, userId]);
 
@@ -338,7 +367,7 @@ export default function AccountsPage() {
 
     const payloadToSave = { ...formData, affiliate_links: cleanedText };
 
-    const getMaxLinks = (tier: string) => { if (tier === 'lite') return 3; if (tier === 'plus') return 10; if (tier === 'pro') return 20; if (tier === 'promax') return 9999; return 2; };
+    const getMaxLinks = (tier: string) => { if (tier === 'lite') return 8; if (tier === 'plus') return 20; if (tier === 'pro') return 100; if (tier === 'promax') return 9999; return 4; };
     const maxLinks = getMaxLinks(userTier);
     const linkCount = uniqueLinks.length;
     if (linkCount > maxLinks) {
@@ -537,7 +566,7 @@ export default function AccountsPage() {
                       tone="blue"
                     />
                   </div>
-                  <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Lite(3), Plus(10), Pro(20), Promax(∞)"} className={`${inputClass} resize-none mb-6`} />
+                  <textarea rows={4} value={formData.affiliate_links} onChange={(e) => setFormData({ ...formData, affiliate_links: e.target.value })} onBlur={handleSave} placeholder={"Nhập mỗi link 1 dòng.\nGiới hạn: Free(4), Lite(8), Plus(20), Pro(100), Promax(∞)"} className={`${inputClass} resize-none mb-6`} />
                   <button onClick={() => handleTrigger("parse_links")} disabled={triggeringType !== null || !formData.affiliate_links} className={`${btnPrimary} w-full py-3.5 rounded-[16px]`}>
                     {triggeringType === "parse_links" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
                     Đồng Bộ Tên & Sinh Comment AI
@@ -774,7 +803,18 @@ export default function AccountsPage() {
                       subtitle="Chỉnh nội dung và ảnh trước khi đăng thủ công lên Threads."
                       tone="violet"
                     />
-                    <span className="shrink-0 px-2.5 py-1 rounded-full bg-violet-50 border border-violet-100 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
+                    <div className="shrink-0 flex flex-col items-end gap-1.5">
+                      <span className="px-2.5 py-1 rounded-full bg-violet-50 text-[11px] font-mono text-violet-600 font-semibold">{threadsTotalCount} Bài</span>
+                      {threadsPosts.length < threadsTotalCount && (
+                        <button onClick={() => {
+                          const nextCount = Math.min(threadsVisibleCount + 20, threadsTotalCount);
+                          setThreadsVisibleCount(nextCount);
+                          if (userId) void fetchThreadsPosts(userId, nextCount);
+                        }} className="rounded-full bg-transparent px-3 py-1 text-[11px] font-semibold text-violet-600 transition-colors hover:bg-violet-50">
+                          Xem thêm
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="relative flex-1 min-h-0">
                     {threadsPosts.length > 0 && (
@@ -790,12 +830,17 @@ export default function AccountsPage() {
 
                     <div ref={threadsPosterCarouselRef} {...carouselPauseHandlers("threads")} className="flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2 -mx-2 md:-mx-6 px-2 md:px-6 [&::-webkit-scrollbar]:hidden">
                       {[...threadsPosts, ...threadsPosts].map((post, i) => {
-                        const hasImages = post.image_urls && post.image_urls.length > 0;
+                        const imageUrls = post.image_urls || [];
+                        const imageFileIds = post.image_file_ids || [];
+                        const mediaSources = imageUrls.length > 0
+                          ? imageUrls
+                          : imageFileIds.map((fileId: string) => `/api/telegram-file/${encodeURIComponent(fileId)}`);
+                        const hasImages = mediaSources.length > 0;
                         return (
                           <div key={`threads-${post.id}-${i}`} className="w-[75vw] md:w-[360px] shrink-0 min-h-full flex flex-col snap-center group/post">
                             {hasImages ? (
                               <div className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden mb-5 bg-gray-50/50 border border-black/[0.03] group/img-carousel">
-                                {post.image_urls.length > 1 && (
+                                {mediaSources.length > 1 && (
                                   <>
                                     <button onClick={(e) => {
                                       const c = e.currentTarget.parentElement?.querySelector('.scroll-container');
@@ -812,9 +857,14 @@ export default function AccountsPage() {
                                   </>
                                 )}
                                 <div className="scroll-container flex h-full overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
-                                  {post.image_urls.map((url: string, idx: number) => (
+                                  {mediaSources.map((url: string, idx: number) => (
                                     <div key={idx} className="w-full h-full shrink-0 snap-center relative group/img">
-                                      <img src={url} alt="Threads media" className="h-full w-full object-cover" />
+                                      <img src={url} alt="Threads media" className="h-full w-full object-cover" onError={(event) => {
+                                        const fallbackFileId = imageFileIds[idx];
+                                        if (!fallbackFileId || event.currentTarget.dataset.telegramFallback === 'true') return;
+                                        event.currentTarget.dataset.telegramFallback = 'true';
+                                        event.currentTarget.src = `/api/telegram-file/${encodeURIComponent(fallbackFileId)}`;
+                                      }} />
                                       <button onClick={() => handleRemovePostImage(post.id, idx)} className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md hover:bg-red-500 text-gray-700 hover:text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all shadow-md">
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>

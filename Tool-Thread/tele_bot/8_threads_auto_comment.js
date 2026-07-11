@@ -324,13 +324,50 @@ async function downloadImageFromTelegram(file_id) {
 
         console.log(`🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`);
         await logToWeb(email, 'threads', `🎉 Hoàn tất cmt dạo Threads. Tổng cộng: ${commentedCount} bài.`, 'success');
+
+        // === AUTO REFRESH COOKIE ===
         try {
-            const TELEGRAM_CHAT_ID = dbConfig?.tele_chat_id || process.env.TELE_CHAT_ID || -5396355060;
-            const msg = `✓ **Báo cáo Threads Comment Bot (Nick ${NICK_INDEX})**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **Trang chủ (For You)**\n- Tổng số bài viết đã cmt: **${commentedCount} bài**`;
-            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' });
-        } catch (err) { }
+            await logToWeb(email, 'threads', `🍪 Đang lấy Cookie mới để gia hạn...`, 'info');
+            const currentCookies = await page.cookies();
+
+            // Chuyển format để lưu vào DB giống Cookie v3
+            const updatedCookies = currentCookies.map(c => ({
+                domain: c.domain,
+                expirationDate: c.expires,
+                hostOnly: !c.domain.startsWith('.'),
+                httpOnly: c.httpOnly,
+                name: c.name,
+                path: c.path,
+                sameSite: c.sameSite === 'None' ? 'no_restriction' : 'unspecified',
+                secure: c.secure,
+                session: c.session,
+                storeId: '0',
+                value: c.value
+            }));
+
+            const { error: cookieUpdateErr } = await supabase
+                .from('profiles')
+                .update({ threads_cookie: JSON.stringify(updatedCookies) })
+                .eq('email', email);
+
+            if (!cookieUpdateErr) {
+                console.log("✓ Đã lấy Cookie Threads mới thành công và cập nhật lên DB!");
+                await logToWeb(email, 'threads', `✓ Đã lưu Cookie mới vào DB (Gia hạn thành công)!`, 'success');
+            }
+        } catch (cookieErr) {
+            console.error("Lỗi trích xuất Cookie:", cookieErr);
+            await logToWeb(email, 'threads', `⚠️ Không thể trích xuất Cookie mới.`, 'warn');
+        }
+        // === END AUTO REFRESH ===
+
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✓ <b>[Bot Cmt Threads]</b>\nHoàn thành phiên chạy:\n- Số lượng comment: <b>${commentedCount}</b> bài\nTài khoản: ${email}`);
+        }
     } catch (err) {
         console.error("Lỗi tổng:", err.message);
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Cmt Threads Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
+        }
     } finally {
         await browser.close();
     }

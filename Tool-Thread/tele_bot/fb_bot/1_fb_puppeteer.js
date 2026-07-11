@@ -9,9 +9,9 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { fetchBotConfig, updateUsageStats } = require('../supabase_helper');
 
 function delay(time) {
-  return new Promise(function(resolve) { 
-      setTimeout(resolve, time)
-  });
+    return new Promise(function (resolve) {
+        setTimeout(resolve, time)
+    });
 }
 
 function getRandomInt(min, max) {
@@ -48,7 +48,7 @@ async function downloadImageFromTelegram(file_id) {
 (async () => {
     const pm2ProcessName = 'fb-puppeteer-farmer';
     const manualFlagPath = path.resolve(__dirname, '..', `${pm2ProcessName}.manual`);
-    
+
     if (fs.existsSync(manualFlagPath)) {
         console.log(`⚡ Phát hiện lệnh chạy tay từ Sếp (Telegram)! Bỏ qua bước ngâm nick...`);
         fs.unlinkSync(manualFlagPath);
@@ -60,7 +60,7 @@ async function downloadImageFromTelegram(file_id) {
     // HÚT CONFIG TỪ SUPABASE
     const dbConfig = await fetchBotConfig();
     let fbCookieStr = dbConfig?.fb_cookie || process.env.FB_COOKIE;
-    
+
     if (!fbCookieStr) {
         console.error("✗ Lỗi: Chưa có FB_COOKIE trong file .env!");
         process.exit(1);
@@ -77,11 +77,11 @@ async function downloadImageFromTelegram(file_id) {
     });
 
     let targets = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fb_targets.json'), 'utf8'));
-    
+
     // Đọc data từ data_products.json (tệp đã chứa link ảnh và comment mẫu)
     const productsPath = path.resolve(__dirname, '../data_products.json');
     let products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
-    
+
     // Lọc ra các sản phẩm CÓ ẢNH (để đảm bảo cmt cho real)
     let validProducts = products.filter(p => p.tele_file_id && p.suggested_comment);
 
@@ -93,25 +93,25 @@ async function downloadImageFromTelegram(file_id) {
     const browser = await puppeteer.launch({
         headless: "new", // Ẩn trình duyệt khi chạy PM2
         args: [
-            '--no-sandbox', 
+            '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-notifications'
         ]
     });
-    
+
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
-    
+
     await page.goto('https://www.facebook.com/login', { waitUntil: 'domcontentloaded' });
-    
+
     console.log("🍪 Nạp Cookie Facebook...");
     await page.setCookie(...cleanCookies);
 
     console.log("🌐 Đang truy cập Facebook (sau khi nạp Cookie)...");
     await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
-    
+
     let waitTime = getRandomInt(3000, 7000);
-    console.log(`⏳ Đợi ${waitTime/1000}s cho Facebook load hoàn tất...`);
+    console.log(`⏳ Đợi ${waitTime / 1000}s cho Facebook load hoàn tất...`);
     await delay(waitTime);
 
     // Xử lý các màn hình "Tiếp tục", "OK", "Bỏ qua" sau khi nạp cookie
@@ -133,11 +133,11 @@ async function downloadImageFromTelegram(file_id) {
                 return false;
             });
             if (clicked) {
-                console.log("✅ Đã bấm nút Tiếp tục / OK!");
+                console.log("✓ Đã bấm nút Tiếp tục / OK!");
                 await delay(3000);
                 break;
             }
-        } catch (e) {}
+        } catch (e) { }
         await delay(2000); // Đợi 2s rồi thử lại
     }
 
@@ -148,14 +148,14 @@ async function downloadImageFromTelegram(file_id) {
         console.log(`\n🎯 Di chuyển đến mục tiêu: ${target}`);
         await page.goto(target, { waitUntil: 'networkidle2' });
         await delay(getRandomInt(5000, 8000));
-        
+
         try {
             await page.evaluate(() => {
-                const closeBtns = [...document.querySelectorAll('div[aria-label="Đóng"], div[aria-label="Close"], div[aria-label="Tôi đồng ý"], div[aria-label="I agree"], div[aria-label="Tham gia nhóm"], div[aria-label="Join Group"]' )];
+                const closeBtns = [...document.querySelectorAll('div[aria-label="Đóng"], div[aria-label="Close"], div[aria-label="Tôi đồng ý"], div[aria-label="I agree"], div[aria-label="Tham gia nhóm"], div[aria-label="Join Group"]')];
                 closeBtns.forEach(btn => { if (btn) btn.click(); });
             });
             await delay(2000);
-        } catch(e) {}
+        } catch (e) { }
 
         console.log("Cuộn trang nhiều lần để vượt qua 5 bài viết đầu tiên...");
         for (let s = 0; s < 5; s++) {
@@ -165,7 +165,7 @@ async function downloadImageFromTelegram(file_id) {
 
         try {
             console.log("👀 Đang quét các bài viết...");
-            
+
             // Tìm tất cả các nút Bình luận
             const cmtBtns = await page.$$('div[role="button"]');
             let validCmtBtns = [];
@@ -173,31 +173,31 @@ async function downloadImageFromTelegram(file_id) {
                 const isValid = await page.evaluate(el => {
                     const text = (el.innerText || '').trim();
                     const aria = (el.getAttribute('aria-label') || '').trim();
-                    
+
                     // Bắt Kiểu 1 (Nút có chữ "Bình luận") và Kiểu 2 (Nút Icon có aria-label="Bình luận")
                     // Tuyệt đối không dùng includes('Bình luận') để tránh click nhầm "Xem thêm bình luận" hoặc "490 bình luận"
                     return (
-                        text === 'Bình luận' || text === 'Comment' || 
+                        text === 'Bình luận' || text === 'Comment' ||
                         aria === 'Bình luận' || aria === 'Comment' || aria === 'Viết bình luận' || aria === 'Leave a comment'
                     );
                 }, btn);
-                
+
                 if (isValid) {
                     validCmtBtns.push(btn);
                 }
             }
 
             console.log(`[INFO] Tìm thấy ${validCmtBtns.length} bài viết có thể comment.`);
-            
+
             // Bỏ qua 5 bài đầu tiên, bắt đầu từ bài thứ 6 (index 5)
             let startIndex = validCmtBtns.length > 5 ? 5 : 0;
             // Comment đúng 5 bài
-            let postsToComment = 5; 
+            let postsToComment = 5;
             let commentedCount = 0;
 
             for (let i = startIndex; i < validCmtBtns.length; i++) {
                 if (commentedCount >= postsToComment) break;
-                
+
                 let btn = validCmtBtns[i];
                 try {
                     await page.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), btn);
@@ -207,7 +207,7 @@ async function downloadImageFromTelegram(file_id) {
                     console.log(`👍 Đang thả Like cho bài thứ ${i + 1}...`);
                     await page.evaluate((cmtEl) => {
                         let parent = cmtEl.parentElement;
-                        for(let k=0; k<3; k++) {
+                        for (let k = 0; k < 3; k++) {
                             if (!parent) break;
                             const likeBtn = Array.from(parent.querySelectorAll('div[role="button"]')).find(el => el.innerText === 'Thích' || el.innerText === 'Like');
                             if (likeBtn) {
@@ -224,7 +224,7 @@ async function downloadImageFromTelegram(file_id) {
                     await delay(3000);
 
                     const commentBoxSelector = 'div[role="textbox"][aria-label="Viết bình luận"], div[role="textbox"][aria-label="Leave a comment"], div[role="textbox"][aria-label*="Viết bình luận"], div[role="textbox"][contenteditable="true"]';
-                    
+
                     const commentBoxes = await page.$$(commentBoxSelector);
                     if (commentBoxes.length > 0) {
                         let targetBox = null;
@@ -247,18 +247,18 @@ async function downloadImageFromTelegram(file_id) {
                         // Bốc sản phẩm ngẫu nhiên
                         let pickedProduct = validProducts[getRandomInt(0, validProducts.length - 1)];
                         let cmtText = pickedProduct.suggested_comment;
-                        
+
                         console.log(`📸 Tải ảnh sản phẩm về...`);
                         let localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
-                        
+
                         if (localImg) {
                             console.log(`🖼️ Đính kèm ảnh vào comment...`);
-                            
+
                             // Tìm vị trí nút Đính kèm ảnh để click chuột thật
                             const attachBtnBox = await page.evaluate((box) => {
                                 let parent = box;
-                                for(let k=0; k<6; k++) {
-                                    if(!parent) break;
+                                for (let k = 0; k < 6; k++) {
+                                    if (!parent) break;
                                     const fileIcons = Array.from(parent.querySelectorAll('div[aria-label="Đính kèm một ảnh hoặc video"], div[aria-label="Đính kèm ảnh hoặc video"], div[aria-label="Attach a photo or video"]'));
                                     if (fileIcons.length > 0) {
                                         const rect = fileIcons[0].getBoundingClientRect();
@@ -298,7 +298,7 @@ async function downloadImageFromTelegram(file_id) {
 
                         await delay(2000);
                         await page.keyboard.press('Enter');
-                        
+
                         // Dự phòng: Click thẳng vào nút Gửi (đề phòng FB chặn phím Enter khi có ảnh)
                         await page.evaluate((box) => {
                             let parent = box;
@@ -315,9 +315,9 @@ async function downloadImageFromTelegram(file_id) {
                         await delay(3000);
                         console.log("✓ Đã bắn Comment + Ảnh thành công!");
                         commentedCount++;
-                        
+
                         if (localImg && fs.existsSync(localImg)) fs.unlinkSync(localImg);
-                        
+
                         if (commentedCount < postsToComment) {
                             let restTime = getRandomInt(15, 25);
                             console.log(`😴 Bot nghỉ mệt ${restTime}s trước khi cmt bài tiếp theo...`);
@@ -330,7 +330,7 @@ async function downloadImageFromTelegram(file_id) {
                     console.log(`✗ Lỗi khi comment bài ${i + 1}:`, err.message);
                 }
             }
-            
+
             console.log(`🚀 Đã hoàn thành ${commentedCount} bài ở Group/Page này. Chuyển mục tiêu...`);
             if (commentedCount > 0) {
                 totalGroups++;
@@ -348,7 +348,7 @@ async function downloadImageFromTelegram(file_id) {
         const msg = `✓ **Báo cáo FB Comment Bot**\n\nTiến trình vừa chạy xong!\n- Đã rải thính tại: **${totalGroups} nhóm/page**\n- Tổng số bài viết đã cmt: **${totalPosts} bài**`;
         const sendUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         await axios.post(sendUrl, { chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' });
-    } catch(err) {
+    } catch (err) {
         console.log("Lỗi gửi báo cáo Tele:", err.message);
     }
     await browser.close();

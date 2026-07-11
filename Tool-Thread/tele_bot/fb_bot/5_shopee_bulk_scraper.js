@@ -33,7 +33,7 @@ async function getShopeeOGData(shortUrl) {
         const html = response.data;
         const titleMatch = html.match(/<meta property="og:title" content="([^"]+)"/);
         let imageMatch = html.match(/<meta property="og:square_image" content="(.*?)"/i) || html.match(/<meta property="og:image" content="(.*?)"/i);
-        
+
         if (titleMatch && imageMatch) {
             let title = titleMatch[1].replace(' | Shopee Việt Nam', '').trim();
             return { title, imageUrl: imageMatch[1] };
@@ -50,23 +50,23 @@ async function uploadToTelegram(imageUrl, chatId) {
         // Tải ảnh bằng curl để vượt anti-bot
         execSync(`curl -s -o "${tempFile}" "${imageUrl}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Referer: https://shopee.vn/"`);
         if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size < 100) return null;
-        
+
         const form = new FormData();
         if (!chatId) chatId = process.env.TELE_CHAT_ID || '-5396355060';
         form.append('chat_id', chatId);
         form.append('photo', fs.createReadStream(tempFile));
-        
+
         const teleRes = await axios.post(`https://api.telegram.org/bot${TELE_BOT_TOKEN}/sendPhoto`, form, {
             headers: form.getHeaders()
         });
-        
+
         fs.unlinkSync(tempFile);
-        
+
         // Trả về file_id lớn nhất (chất lượng tốt nhất)
         const photoArr = teleRes.data.result.photo;
         return photoArr[photoArr.length - 1].file_id;
-    } catch(e) {
-        if(fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+    } catch (e) {
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         console.error("Lỗi upload Telegram:", e.message);
         return null;
     }
@@ -88,16 +88,16 @@ async function generateBatchComments(titles) {
             console.log(`🔑 Thử Gemini key #${i + 1}/${GEMINI_KEY_POOL.length}...`);
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-            
+
             const result = await model.generateContent(prompt);
             let rawText = result.response.text().trim();
             // Dọn dẹp markdown nếu AI lỡ sinh ra
             if (rawText.startsWith('```json')) rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
             if (rawText.startsWith('```')) rawText = rawText.replace(/```/g, '').trim();
-            
+
             const commentsArray = JSON.parse(rawText);
             if (Array.isArray(commentsArray) && commentsArray.length === titles.length) {
-                console.log(`✅ Key #${i + 1} thành công!`);
+                console.log(`✓ Key #${i + 1} thành công!`);
                 return commentsArray;
             }
             throw new Error("Số lượng comment trả về không khớp!");
@@ -133,7 +133,7 @@ async function generateBatchComments(titles) {
 
     // Helper: Chia mảng thành các chunk
     const chunkArray = (arr, size) => arr.length ? [arr.slice(0, size), ...chunkArray(arr.slice(size), size)] : [];
-    
+
     // Bước 1: Thu thập thông tin sản phẩm (Lấy title, image). Xử lý song song 5 link để tải ảnh lẹ.
     const linkChunks = chunkArray(rawLinks.filter(l => l.trim()), 5);
 
@@ -141,7 +141,7 @@ async function generateBatchComments(titles) {
         await Promise.all(chunk.map(async (link) => {
             link = link.trim();
             const existing = parsedLinks.find(p => p.aff_link === link);
-            
+
             if (existing && existing.title && existing.tele_file_id) {
                 if (existing.suggested_comment && existing.suggested_comment.trim() !== '') {
                     newParsed.push(existing);
@@ -178,7 +178,7 @@ async function generateBatchComments(titles) {
         // Gom tối đa 20 sản phẩm 1 lần gọi Gemini
         const batchChunks = chunkArray(itemsToProcess, 20);
         const userTier = dbConfig.tier || 'free';
-        
+
         const DEFAULT_CAPTIONS = [
             "Món này dạo này tui mê cực kì, recommend mng nha:",
             "Góc rắc thính: Chân ái của tui là đây chứ đâu:",
@@ -192,7 +192,7 @@ async function generateBatchComments(titles) {
 
         for (let batch of batchChunks) {
             let comments = [];
-            
+
             if (userTier === 'free') {
                 console.log(`🎁 [Tier FREE] Dùng caption mẫu có sẵn cho ${batch.length} sản phẩm...`);
                 comments = batch.map(() => DEFAULT_CAPTIONS[Math.floor(Math.random() * DEFAULT_CAPTIONS.length)]);
@@ -201,15 +201,15 @@ async function generateBatchComments(titles) {
                 const titles = batch.map(item => item.title);
                 comments = await generateBatchComments(titles);
             }
-            
+
             batch.forEach((item, idx) => {
                 item.suggested_comment = comments[idx];
                 const msgAI = userTier === 'free' ? `📝 Caption tự động: ${comments[idx]}` : `🤖 AI Caption: ${comments[idx]}`;
                 console.log(msgAI);
-                
+
                 // Fire and forget logToWeb (Không block luồng)
                 logToWeb(USER_EMAIL, 'parse_links', msgAI, 'success').catch(console.error);
-                
+
                 newParsed.push(item);
             });
             isModified = true;

@@ -240,7 +240,15 @@ const iconItems = [
    ═══════════════════════════════════════════════ */
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    if (videoRef.current) {
+      // Force browser to begin downloading the video immediately regardless of scroll position
+      videoRef.current.load();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-zinc-900 font-sans selection:bg-blue-100 relative overflow-x-hidden">
@@ -265,7 +273,12 @@ export default function Home() {
 
       {/* ── Nav ── */}
       <nav className="relative z-50 flex items-center justify-between px-6 md:px-10 py-5 max-w-[1280px] mx-auto">
-        <div className="font-bold text-[22px] tracking-tight">AutoFarm<span className="text-blue-600">.</span></div>
+        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 rounded-[9px] overflow-hidden shadow-sm shrink-0">
+            <img src="/rocket_logo.png" alt="AutoFarm Logo" className="w-full h-full object-cover" />
+          </div>
+          <div className="font-bold text-[22px] tracking-tight">AutoFarm<span className="text-blue-600">.</span></div>
+        </Link>
         <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-zinc-500">
           <a href="#features" className="hover:text-zinc-900 transition-colors">Tính năng</a>
           <a href="#tutorial" className="hover:text-zinc-900 transition-colors">Hướng dẫn</a>
@@ -476,6 +489,7 @@ export default function Home() {
               <div className="rounded-[24px] overflow-hidden bg-zinc-950 aspect-[16/10] relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] border border-zinc-200/60 group w-full mx-auto">
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none duration-500 z-10"></div>
                 <video 
+                  ref={videoRef}
                   autoPlay
                   loop
                   muted
@@ -510,7 +524,7 @@ export default function Home() {
               btn1: "Dùng miễn phí", btn1Class: "bg-[#161618] text-white hover:bg-black",
               featuresTitle: "Gói bao gồm:",
               features: [
-                "2 Reels, 1 FB Post, 2 Threads", "10 Cmt Threads", "1 Crawl Data", "Chia 2 khung giờ chạy"
+                "Auto Cmt FB rải link: 1 phiên (19h tối)", "Auto Up Reels FB: 2 video", "Auto Cmt Threads (10/10)", "Auto Đăng: 1 FB, 2 Threads", "Cào Threads: 1 lần/ngày (max 5 bài)", "Caption cơ bản (Mẫu ngẫu nhiên)"
               ]
             },
             { 
@@ -520,7 +534,7 @@ export default function Home() {
               btn1: "Đăng ký Lite", btn1Class: "bg-[#161618] text-white hover:bg-black",
               featuresTitle: "Gói bao gồm:",
               features: [
-                "3 Reels, 3 FB, 3 Threads", "30 Cmt Threads", "2 Crawl Data", "Chia 3 khung giờ chạy"
+                "Auto Cmt FB rải link: 2 phiên (11h, 19h)", "Auto Up Reels FB: 3 video", "Auto Cmt Threads (20/30)", "Auto Đăng: 3 FB, 3 Threads", "Cào Threads: 2 lần/ngày (max 12 bài)", "Caption AI (Gemini tự động)"
               ]
             },
             { 
@@ -530,7 +544,7 @@ export default function Home() {
               btn1: "Đăng ký Plus", btn1Class: "bg-[#161618] text-white hover:bg-black",
               featuresTitle: "Gói bao gồm:",
               features: [
-                "6 Reels, 5 FB, 6 Threads", "80 Cmt Threads", "3 Crawl Data", "Auto max 50% comment"
+                "Auto Cmt FB rải link: 4 phiên (trải đều)", "Auto Up Reels FB: 6 video", "Auto Cmt Threads (max 50% tổng 80 bài)", "Auto Đăng: 5 FB, 6 Threads", "Cào Threads: 3 lần/ngày (max 25 bài)", "Caption AI (Gemini tự động)"
               ]
             },
             { 
@@ -540,7 +554,7 @@ export default function Home() {
               btn1: "Đăng ký Pro", btn1Class: "bg-[#161618] text-white hover:bg-black",
               featuresTitle: "Gói bao gồm:",
               features: [
-                "12 Reels, 10 FB, 12 Threads", "160 Cmt Threads", "4 Crawl Data", "Chạy auto 24/7 liên tục", "Tối đa 10 luồng auto chạy song song"
+                "Auto Cmt FB rải link: 6 phiên (trải đều)", "Auto Up Reels FB: 12 video", "Auto Cmt Threads (max 50% tổng 160 bài)", "Auto Đăng: 10 FB, 12 Threads", "Cào Threads: 4 lần/ngày (max 59 bài)", "Caption AI (Gemini tự động)"
               ]
             }
           ].map((plan, idx) => (

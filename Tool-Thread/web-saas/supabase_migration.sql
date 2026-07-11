@@ -29,10 +29,10 @@ create table if not exists public.tier_limits (
 insert into public.tier_limits 
   (tier, auto_run, reels_per_day, threads_per_day, fb_post_per_day, threads_post_per_day, crawl_per_day, max_links, telegram_notify, price_vnd) 
 values
-  ('free',    false,  2,   10,  1,   2,   1,   2,   false,  0),
-  ('lite',    false,  3,   30,  3,   3,   2,   4,   false,  59000),
-  ('plus',    true,   6,   80,  5,   6,   3,   10,  true,   129000),
-  ('pro',     true,   12,  160, 10,  12,  4,   20,  true,   199000),
+  ('free',    false,  2,   10,  1,   2,   1,   4,   false,  0),
+  ('lite',    false,  3,   30,  3,   3,   2,   8,   false,  59000),
+  ('plus',    true,   6,   80,  5,   6,   3,   20,  true,   129000),
+  ('pro',     true,   12,  160, 10,  12,  4,   100, true,   199000),
   ('promax',  true,  -1,   -1,  -1,  -1,  -1,  -1,  true,   499000)
 on conflict (tier) do update set
   auto_run = excluded.auto_run,
@@ -219,3 +219,11 @@ alter table public.bot_logs enable row level security;
 create policy "Users can view own logs" on bot_logs for select using (
   auth.uid() in (select id from profiles where profiles.email = bot_logs.email)
 );
+
+-- ==========================================
+-- MIGRATION V5 - FB COMMENT QUOTA
+-- ==========================================
+
+-- Thêm cột đếm số phiên Comment FB rải link vào bảng usage_stats
+alter table public.usage_stats
+  add column if not exists fb_comments_count integer default 0;

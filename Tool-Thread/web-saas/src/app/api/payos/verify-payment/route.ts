@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Kiểm tra đơn hàng trên PayOS
     const paymentInfo = await payos.paymentRequests.get(Number(orderCode));
-    
+
     if (!paymentInfo || paymentInfo.status !== 'PAID') {
       return NextResponse.json({ error: "Payment not completed or not found" }, { status: 400 });
     }
@@ -60,10 +60,10 @@ export async function POST(req: NextRequest) {
         ref_id: paymentInfo.id
       }]);
 
-    console.log(`✅ Verify API: Đã nâng cấp ${order.user_id} lên gói ${order.tier}`);
-    
+    console.log(`✓ Verify API: Đã nâng cấp ${order.user_id} lên gói ${order.tier}`);
+
     return NextResponse.json({ success: true, message: "Payment verified and tier updated" });
-    
+
   } catch (error: any) {
     console.error("PayOS Verify Payment Error:", error);
     return NextResponse.json({ error: error.message || "Lỗi xác thực thanh toán" }, { status: 500 });

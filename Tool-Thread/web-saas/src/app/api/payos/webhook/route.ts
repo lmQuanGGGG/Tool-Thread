@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
           ref_id: null // có thể lưu ID giao dịch của PayOS nếu cần
         }]);
 
-      console.log(`✅ Webhook: Đã nâng cấp ${order.user_id} lên gói ${order.tier}`);
+      console.log(`✓ Webhook: Đã nâng cấp ${order.user_id} lên gói ${order.tier}`);
     }
 
     return NextResponse.json({ success: true });

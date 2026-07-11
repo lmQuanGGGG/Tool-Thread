@@ -44,11 +44,11 @@ products.forEach(p => {
 });
 
 fs.writeFileSync(DATA_PATH, JSON.stringify(products, null, 2));
-console.log(`✅ Đã fill comment cho ${count} sản phẩm!`);
+console.log(`✓ Đã fill comment cho ${count} sản phẩm!`);
 console.log(`📂 ${DATA_PATH}`);
 
 // Preview kết quả
 products.forEach((p, i) => {
-    console.log(`\n[${i+1}] [${p.category}] ${p.link}`);
+    console.log(`\n[${i + 1}] [${p.category}] ${p.link}`);
     console.log(`   💬 ${p.suggested_comment}`);
 });

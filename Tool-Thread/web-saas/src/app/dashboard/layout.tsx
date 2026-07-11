@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, LineChart, Rocket, CircleDollarSign, Bot,
-  Crown, Zap, Activity, ChevronRight, ChevronLeft, LogOut, X, Menu
+  Crown, Zap, Activity, ChevronRight, ChevronLeft, LogOut, LogIn, X, Menu, BarChart3
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PricingModal from "../../components/PricingModal";
@@ -32,10 +32,11 @@ const TIER_META_LIGHT: Record<string, { label: string; icon: React.ElementType; 
 const ADMIN_EMAIL = "lmquang.devops@gmail.com";
 
 const NAV_ITEMS = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
-  { name: "Bots & Config", href: "/dashboard/accounts", icon: Bot, adminOnly: false },
-  { name: "Analytics", href: "/dashboard/analytics", icon: LineChart, adminOnly: true },
-  { name: "Pricing", href: "/pricing", icon: CircleDollarSign, adminOnly: false },
+  { name: "Tổng quan", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
+  { name: "Quản lý Bots", href: "/dashboard/accounts", icon: Bot, adminOnly: false },
+  { name: "Thống kê", href: "/dashboard/stats", icon: BarChart3, adminOnly: false },
+  { name: "Thống kê Admin", href: "/dashboard/analytics", icon: LineChart, adminOnly: true },
+  { name: "Bảng giá", href: "/pricing", icon: CircleDollarSign, adminOnly: false },
 ];
 
 function todayLocalDate() {
@@ -47,15 +48,19 @@ function toCount(v: unknown) {
 function normalizeUsage(s: any) {
   return {
     reels_posted: toCount(s?.reels_posted),
+    fb_comments_count: toCount(s?.fb_comments_count),
     threads_commented: toCount(s?.threads_commented),
     fb_story_posted: Math.max(toCount(s?.fb_story_posted), toCount(s?.fb_posts_count)),
     threads_posts_count: toCount(s?.threads_posts_count),
+    crawls_count: toCount(s?.crawls_count),
+    parse_links_count: toCount(s?.parse_links_count),
   };
 }
-function normalizeLimits(l: any) {
+function normalizeLimits(l: any, tier: string) {
   return {
     ...(l || {}),
     reels_per_day: toCount(l?.reels_per_day),
+    fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 6 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
     threads_per_day: toCount(l?.threads_per_day),
     fb_story_per_day: toCount(l?.fb_story_per_day ?? l?.fb_post_per_day),
     threads_post_per_day: toCount(l?.fb_story_per_day ?? l?.fb_post_per_day),
@@ -82,48 +87,64 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const today = todayLocalDate();
       Promise.all([
         supabase.from("usage_stats").select("*").eq("user_id", user.id).eq("date", today).maybeSingle(),
-        supabase.from("profiles").select("tier").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("tier, parsed_affiliate_links").eq("id", user.id).maybeSingle()
       ]).then(([statsRes, profileRes]) => {
         const t = profileRes.data?.tier || "free";
         setTier(t);
-        setUsed(normalizeUsage(statsRes.data));
+        const stats = statsRes.data || {};
+        stats.parse_links_count = profileRes.data?.parsed_affiliate_links?.length || 0;
+        setUsed(normalizeUsage(stats));
         supabase.from("tier_limits").select("*").eq("tier", t).maybeSingle()
-          .then(({ data }) => setLimits(normalizeLimits(data)));
+          .then(({ data }) => setLimits(normalizeLimits(data, t)));
       });
 
       const chName = `realtime_layout_${user.id}_${Date.now()}`;
       channel = supabase.channel(chName)
         .on("postgres_changes", { event: "*", schema: "public", table: "usage_stats", filter: `user_id=eq.${user.id}` }, (p) => {
           const today = todayLocalDate();
-          if (p.new && (p.new as any).date === today) setUsed(normalizeUsage(p.new));
+          if (p.new && (p.new as any).date === today) {
+            setUsed((prev: any) => ({ ...normalizeUsage(p.new), parse_links_count: prev?.parse_links_count || 0 }));
+          }
         })
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, (p) => {
-          if (p.new && (p.new as any).tier) {
-            const nt = (p.new as any).tier;
-            setTier(prev => {
-               if (prev && prev !== nt) {
-                  showToast(`🎉 Chúc mừng sếp! Đã nâng cấp thành công lên gói ${nt.toUpperCase()}!`);
-               }
-               return nt;
-            });
-            supabase.from("tier_limits").select("*").eq("tier", nt).maybeSingle()
-              .then(({ data }) => setLimits(normalizeLimits(data)));
+          if (p.new) {
+            if ((p.new as any).tier) {
+              const nt = (p.new as any).tier;
+              setTier(prev => {
+                if (prev && prev !== nt) {
+                  setTimeout(() => showToast(`🎉 Chúc mừng sếp! Đã nâng cấp thành công lên gói ${nt.toUpperCase()}!`), 0);
+                }
+                return nt;
+              });
+              supabase.from("tier_limits").select("*").eq("tier", nt).maybeSingle()
+                .then(({ data }) => setLimits(normalizeLimits(data, nt)));
+            }
+            if ((p.new as any).parsed_affiliate_links !== undefined) {
+              setUsed((prev: any) => ({ ...prev, parse_links_count: (p.new as any).parsed_affiliate_links?.length || 0 }));
+            }
           }
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "bot_logs", filter: `email=eq.${user.email}` }, (payload) => {
           const newLog = payload.new as any;
           if (newLog.level === 'success') {
-             showToast(`${newLog.message}`);
+            showToast(`${newLog.message}`);
           } else if (newLog.level === 'error') {
-             showToast(`${newLog.message}`);
+            showToast(`${newLog.message}`);
           } else if (newLog.message.toLowerCase().includes('hết hạn') || newLog.message.toLowerCase().includes('chết')) {
-             // Cố tình vớt thêm các log bị đánh warn/info nhưng có nội dung cookie chết
-             showToast(`${newLog.message}`);
+            // Cố tình vớt thêm các log bị đánh warn/info nhưng có nội dung cookie chết
+            showToast(`${newLog.message}`);
           }
         })
         .subscribe();
     });
-    return () => { if (channel) supabase.removeChannel(channel); };
+    
+    const handleOpenPricing = () => setPricingOpen(true);
+    window.addEventListener('open-pricing', handleOpenPricing);
+
+    return () => { 
+      if (channel) supabase.removeChannel(channel); 
+      window.removeEventListener('open-pricing', handleOpenPricing);
+    };
   }, []);
 
   const metaDark = TIER_META_DARK[tier] || TIER_META_DARK.free;
@@ -139,11 +160,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return 3;
   };
 
+  const getThreadsCrawlLimit = (t: string) => {
+    if (t === 'promax') return 129;
+    if (t === 'pro') return 59;
+    if (t === 'plus') return 25;
+    if (t === 'lite') return 12;
+    return 5;
+  };
+
   const usageRows = [
-    { label: "Reels", used: used?.reels_posted || 0, limit: limits?.reels_per_day, color: "bg-blue-500" },
-    { label: "Comment", used: used?.threads_commented || 0, limit: limits?.threads_per_day, color: "bg-violet-500" },
-    { label: "FB Post", used: used?.fb_story_posted || 0, limit: limits?.fb_story_per_day, color: "bg-amber-500" },
-    { label: "Th. Post", used: used?.threads_posts_count || 0, limit: getThreadsPostLimit(tier), color: "bg-pink-500" },
+    { label: "Up Reels", used: used?.reels_posted || 0, limit: limits?.reels_per_day, color: "bg-zinc-900" },
+    { label: "Cmt FB (Rải link)", used: used?.fb_comments_count || 0, limit: limits?.fb_comments_per_day, color: "bg-zinc-900" },
+    { label: "Cmt Threads", used: used?.threads_commented || 0, limit: limits?.threads_per_day, color: "bg-zinc-900" },
+    { label: "FB Post", used: used?.fb_story_posted || 0, limit: limits?.fb_story_per_day, color: "bg-zinc-900" },
+    { label: "Th. Post", used: used?.threads_posts_count || 0, limit: getThreadsPostLimit(tier), color: "bg-zinc-900" },
+    { label: "Quét Shopee", used: used?.parse_links_count || 0, limit: limits?.max_links ?? -1, color: "bg-zinc-900" },
+    { label: "Cào Threads (lần/ngày)", used: used?.crawls_count || 0, limit: limits?.crawl_per_day || 0, color: "bg-zinc-900" },
   ];
 
   const avatarUrl = user?.user_metadata?.avatar_url
@@ -199,15 +231,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </button>
                 );
               }
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active = item.href === "/dashboard" ? pathname === "/dashboard" : (pathname === item.href || pathname.startsWith(`${item.href}/`));
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98] ${active
-                      ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium"
+                    ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium"
                     }`}
                 >
                   <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-600" : "text-gray-400"}`} />
@@ -228,7 +260,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {usageRows.map(({ label, used: u, limit: l, color }) => {
                     const unlimited = l === -1;
                     const remaining = unlimited ? "∞" : Math.max(0, l - u);
-                    const pct = unlimited ? 12 : l === 0 ? 100 : Math.min(100, (u / l) * 100);
+                    const pct = unlimited ? 100 : l === 0 ? 100 : Math.min(100, (u / l) * 100);
                     const nearLimit = !unlimited && l > 0 && pct >= 80;
                     return (
                       <div key={label}>
@@ -240,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
                         {l !== 0 && (
                           <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-500 ${nearLimit ? "bg-red-500" : color}`} style={{ width: `${pct}%` }} />
+                            <div className={`h-full rounded-full transition-all duration-500 ${unlimited ? "bg-gradient-to-r from-purple-500 to-pink-500" : nearLimit ? "bg-red-500" : color}`} style={{ width: `${pct}%` }} />
                           </div>
                         )}
                       </div>
@@ -267,18 +299,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-gray-900 truncate">{user?.email}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <metaLight.icon className={`w-3 h-3 ${metaLight.color}`} />
-                  <span className={`text-[10px] font-bold ${metaLight.color} uppercase tracking-wider`}>{metaLight.label}</span>
-                </div>
+                <p className="text-[12px] font-semibold text-gray-900 truncate">{user ? user.email : "Chưa đăng nhập"}</p>
+                {user && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <metaLight.icon className={`w-3 h-3 ${metaLight.color}`} />
+                    <span className={`text-[10px] font-bold ${metaLight.color} uppercase tracking-wider`}>{metaLight.label}</span>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all active:scale-95"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+              {user ? (
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all active:scale-95"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all active:scale-95"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -330,15 +373,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </button>
                 );
               }
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active = item.href === "/dashboard" ? pathname === "/dashboard" : (pathname === item.href || pathname.startsWith(`${item.href}/`));
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   title={collapsed ? item.name : undefined}
                   className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
-                      ? "bg-blue-50 text-blue-700 font-semibold shadow-sm border border-blue-100/50"
-                      : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900 font-medium"
+                    ? "bg-blue-50 text-blue-700 font-semibold shadow-sm border border-blue-100/50"
+                    : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900 font-medium"
                     }`}
                 >
                   <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600"}`} />
@@ -357,11 +400,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <img src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email || "U")}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="overflow-hidden flex-1">
-                  <p className="text-[12px] font-semibold text-gray-900 truncate">{user?.email}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <metaLight.icon className={`w-3 h-3 ${metaLight.color}`} />
-                    <span className={`text-[10px] font-bold ${metaLight.color} uppercase tracking-wider`}>{metaLight.label}</span>
-                  </div>
+                  <p className="text-[12px] font-semibold text-gray-900 truncate">{user ? user.email : "Chưa đăng nhập"}</p>
+                  {user && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <metaLight.icon className={`w-3 h-3 ${metaLight.color}`} />
+                      <span className={`text-[10px] font-bold ${metaLight.color} uppercase tracking-wider`}>{metaLight.label}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -393,7 +438,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                   <div className="mt-2 text-[9px] leading-relaxed">
                     {isPro
-                      ? <span className="text-emerald-600 font-medium">✅ Bot chạy tự động hàng ngày</span>
+                      ? <span className="text-emerald-600 font-medium">Bot chạy tự động hàng ngày</span>
                       : <span className="text-gray-400">
                         {tier === "free" && "Nâng cấp để bot tự động!"}
                         {tier === "lite" && "Nâng Plus để tự động mỗi ngày!"}
@@ -411,23 +456,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               )}
 
-              <button
-                onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
-                className="flex items-center justify-between w-full bg-red-50 text-red-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-red-100 transition-colors group"
-              >
-                <span>Đăng xuất</span>
-                <LogOut className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
-              </button>
+              {user ? (
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+                  className="flex items-center justify-between w-full bg-red-50 text-red-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-red-100 transition-colors group"
+                >
+                  <span>Đăng xuất</span>
+                  <LogOut className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center justify-between w-full bg-blue-50 text-blue-600 font-semibold text-[11px] tracking-wide py-2.5 px-4 rounded-xl hover:bg-blue-100 transition-colors group"
+                >
+                  <span>Đăng nhập</span>
+                  <LogIn className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </Link>
+              )}
             </div>
           ) : (
             <div className="p-3 border-t border-zinc-100">
-              <button
-                onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
-                title="Đăng xuất"
-                className="flex items-center justify-center w-full py-2.5 rounded-xl text-red-400 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              {user ? (
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+                  title="Đăng xuất"
+                  className="flex items-center justify-center w-full py-2.5 rounded-xl text-red-400 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  title="Đăng nhập"
+                  className="flex items-center justify-center w-full py-2.5 rounded-xl text-blue-500 hover:bg-blue-50 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                </Link>
+              )}
             </div>
           )}
         </aside>

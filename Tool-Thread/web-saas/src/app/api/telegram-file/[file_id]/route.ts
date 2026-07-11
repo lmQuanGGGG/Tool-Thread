@@ -6,7 +6,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
   const { file_id } = await params;
   if (!file_id) return NextResponse.json({ error: 'Missing file_id' }, { status: 400 });
 
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || process.env.TELE_BOT_TOKEN;
   if (!BOT_TOKEN) return NextResponse.json({ error: 'Bot token not configured' }, { status: 500 });
 
   try {
@@ -24,23 +24,30 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     // 2. Fetch the actual file stream
     const downloadUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
     
-    // Cloudflare Edge workers can fetch up to 50MB into an ArrayBuffer
-    // This video is a short loop, so buffering it is safe and ensures iOS playback
     const videoRes = await fetch(downloadUrl);
     
     if (!videoRes.ok) {
       return NextResponse.json({ error: 'Failed to download from Telegram' }, { status: 500 });
     }
 
-    const buffer = await videoRes.arrayBuffer();
-    const fileSize = buffer.byteLength;
-    
     const rangeHeader = request.headers.get('range');
     
     const responseHeaders = new Headers();
     responseHeaders.set('Accept-Ranges', 'bytes');
-    responseHeaders.set('Content-Type', 'video/mp4');
-    responseHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+    responseHeaders.set('Content-Type', videoRes.headers.get('content-type') || 'application/octet-stream');
+    responseHeaders.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
+
+    // Ảnh không gửi Range header: stream trực tiếp từ Telegram để không phải đợi tải xong toàn bộ file.
+    if (!rangeHeader) {
+      return new Response(videoRes.body, {
+        status: 200,
+        headers: responseHeaders,
+      });
+    }
+
+    // Video có thể gửi Range header, nên giữ xử lý byte range để tua phát được.
+    const buffer = await videoRes.arrayBuffer();
+    const fileSize = buffer.byteLength;
     
     if (rangeHeader) {
       const parts = rangeHeader.replace(/bytes=/, "").split("-");
@@ -56,13 +63,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
         headers: responseHeaders,
       });
     }
-
-    responseHeaders.set('Content-Length', fileSize.toString());
-    
-    return new Response(buffer, {
-      status: 200,
-      headers: responseHeaders
-    });
   } catch (error) {
     console.error('Proxy Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

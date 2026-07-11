@@ -7,7 +7,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // TÍCH HỢP ĐƯỜNG ỐNG SUPABASE
-const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota } = require('./supabase_helper');
+const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota, sendTelegramMessage } = require('./supabase_helper');
 
 puppeteer.use(StealthPlugin());
 
@@ -65,11 +65,11 @@ async function fetchLatestVideos(channels) {
                     try {
                         let info = JSON.parse(line);
                         if (info.id) {
-                            allVideos.push({ 
-                                id: info.id, 
-                                title: info.title, 
+                            allVideos.push({
+                                id: info.id,
+                                title: info.title,
                                 url: info.url || info.webpage_url || channel,
-                                isTikTok: false 
+                                isTikTok: false
                             });
                         }
                     } catch (e) { }
@@ -92,7 +92,7 @@ async function fetchLatestVideos(channels) {
                     const text = (b.innerText || '').trim().toLowerCase();
                     const disabled = b.getAttribute('aria-disabled') === 'true' || b.disabled;
                     if (disabled) return false;
-                    
+
                     // So khớp chính xác hoặc chỉ flexible với chữ 'tiếp tục' / 'continue'
                     return texts.some(t => {
                         if (text === t) return true;
@@ -117,16 +117,19 @@ async function fetchLatestVideos(channels) {
 
     try {
         dbConfig = await fetchBotConfig(email);
-    } catch (e) {}
+    } catch (e) { }
 
     // Kiểm tra Quota trước khi chạy
     const hasQuota = await checkQuota(email, 'reels_posted');
     if (!hasQuota) {
         console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng Reels hôm nay. Dừng script.`);
         await logToWeb(email, 'yt-reels', `Đã hết giới hạn đăng Reels hôm nay. Dừng script.`, 'warn');
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Up Reels]</b>\nTừ chối chạy do đã hết giới hạn đăng Reels hôm nay.\nTài khoản: ${email}`);
+        }
         process.exit(0);
     }
-    
+
     // Đọc danh sách kênh từ DB, nếu không có thì fallback mặc định
     let channels = [];
     if (dbConfig?.target_channels) {
@@ -138,14 +141,14 @@ async function fetchLatestVideos(channels) {
             "https://www.youtube.com/@CutReviewPhim/shorts"
         ];
     }
-    
+
     const isPromax = dbConfig?.tier === 'promax';
     await logToWeb(email, 'yt-reels', `Khởi động tool FB Reels... Channels: ${channels.length}`, 'info');
 
     const pm2ProcessName = 'fb-reels-farmer';
     const manualFlagPath = path.resolve(__dirname, `${pm2ProcessName}.manual`);
     const isGithubAction = process.env.GITHUB_ACTIONS === 'true';
-    
+
     if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
         let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
@@ -156,15 +159,15 @@ async function fetchLatestVideos(channels) {
         console.log(`⏱ HỆ THỐNG BOT TỰ ĐỘNG: Đang ngâm nick (delay ngẫu nhiên) ${randomMinutes} phút trước khi bắt đầu...`);
         await delay(randomMinutes * 60 * 1000); // Đổi ra mili-giây
     }
-    
+
     console.log("🚀 KHỞI ĐỘNG TOOL: QUÉT VIDEO SANG FB REELS...");
 
     // 1. Lấy danh sách video
     const videos = await fetchLatestVideos(channels);
-    
+
     // Lọc ra tất cả các video chưa từng tải
     const unpostedVideos = videos.filter(vid => !postedIds.includes(vid.id));
-    
+
     if (unpostedVideos.length === 0) {
         console.log("🤷‍♂️ Toàn bộ video trong tệp quét đã được đăng. Dừng hệ thống.");
         process.exit(0);
@@ -180,7 +183,7 @@ async function fetchLatestVideos(channels) {
 
     try {
         const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : (videoToProcess.isTikTok ? `https://www.tiktok.com/@user/video/${videoToProcess.id}` : `https://www.youtube.com/watch?v=${videoToProcess.id}`);
-        
+
         console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho video: ${videoUrl}`);
         await logToWeb(email, 'yt-reels', `Đang gọi API GenDownload lấy video 1080p cho đa nền tảng...`, 'info');
         const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
@@ -191,55 +194,55 @@ async function fetchLatestVideos(channels) {
             throw new Error("API gendownload không trả về formats nào.");
         }
 
-            // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
-            let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
-            if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.label === '720p' && f.type === 'video');
-            if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.type === 'video'); 
-            
-            if (!bestFormat) {
-                throw new Error("Không tìm thấy format video hợp lệ từ API.");
-            }
+        // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
+        let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
+        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.label === '720p' && f.type === 'video');
+        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.type === 'video');
 
-            console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
-            
-            const axios = require('axios');
-            const response = await axios({
-                url: bestFormat.url,
-                method: 'GET',
-                responseType: 'stream',
-                timeout: 300000 // 5 minutes timeout
-            });
+        if (!bestFormat) {
+            throw new Error("Không tìm thấy format video hợp lệ từ API.");
+        }
 
-            const totalLength = parseInt(response.headers['content-length'], 10);
-            let downloadedLength = 0;
-            let lastReportedProgress = 0; // For percentage
-            let lastReportedMB = 0; // For MB if no totalLength
+        console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
 
-            const writer = fs.createWriteStream(outputPath);
-            response.data.on('data', (chunk) => {
-                downloadedLength += chunk.length;
-                if (totalLength) {
-                    const percent = Math.floor((downloadedLength / totalLength) * 100);
-                    if (percent >= lastReportedProgress + 10) {
-                        console.log(`⏳ Đang tải: ${percent}%...`);
-                        lastReportedProgress = percent;
-                    }
-                } else {
-                    const downloadedMB = Math.floor(downloadedLength / (1024 * 1024));
-                    if (downloadedMB >= lastReportedMB + 5) { // Report every 5MB
-                        console.log(`⏳ Đang tải... (đã tải được ${downloadedMB} MB)`);
-                        lastReportedMB = downloadedMB;
-                    }
+        const axios = require('axios');
+        const response = await axios({
+            url: bestFormat.url,
+            method: 'GET',
+            responseType: 'stream',
+            timeout: 300000 // 5 minutes timeout
+        });
+
+        const totalLength = parseInt(response.headers['content-length'], 10);
+        let downloadedLength = 0;
+        let lastReportedProgress = 0; // For percentage
+        let lastReportedMB = 0; // For MB if no totalLength
+
+        const writer = fs.createWriteStream(outputPath);
+        response.data.on('data', (chunk) => {
+            downloadedLength += chunk.length;
+            if (totalLength) {
+                const percent = Math.floor((downloadedLength / totalLength) * 100);
+                if (percent >= lastReportedProgress + 10) {
+                    console.log(`⏳ Đang tải: ${percent}%...`);
+                    lastReportedProgress = percent;
                 }
-            });
+            } else {
+                const downloadedMB = Math.floor(downloadedLength / (1024 * 1024));
+                if (downloadedMB >= lastReportedMB + 5) { // Report every 5MB
+                    console.log(`⏳ Đang tải... (đã tải được ${downloadedMB} MB)`);
+                    lastReportedMB = downloadedMB;
+                }
+            }
+        });
 
-            response.data.pipe(writer);
+        response.data.pipe(writer);
 
-            await new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-            });
-            console.log(`✓ Tải video ${bestFormat.label} hoàn tất!`);
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+        console.log(`✓ Tải video ${bestFormat.label} hoàn tất!`);
     } catch (err) {
         console.error("✗ Lỗi tải video:", err.message);
         process.exit(1);
@@ -257,7 +260,7 @@ async function fetchLatestVideos(channels) {
     // 3. Đăng lên Facebook Reels
     // Lấy cookie
     let cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
-    
+
     if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
         try {
             cookies = JSON.parse(process.env.FB_COOKIE);
@@ -276,7 +279,7 @@ async function fetchLatestVideos(channels) {
     const browser = await puppeteer.launch({
         headless: false, // Hiển thị màn hình cho Sếp xem
         args: [
-            '--no-sandbox', 
+            '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-notifications',
             '--window-size=1280,800'
@@ -292,13 +295,13 @@ async function fetchLatestVideos(channels) {
 
     console.log("🌐 Đang truy cập Trang Chủ Facebook (để nhận diện Cookie)...");
     await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
-    
+
     // === THÊM HÀNH VI NGƯỜI THẬT ===
     console.log("🎭 Đang giả lập hành vi người dùng (scroll, lướt feed)...");
     for (let i = 0; i < 3; i++) {
         await page.mouse.wheel({ deltaY: 300 + Math.random() * 500 });
         await delay(2000 + Math.random() * 3000);
-        
+
         // Rê chuột ngẫu nhiên
         const rx = 100 + Math.random() * 600;
         const ry = 100 + Math.random() * 600;
@@ -330,7 +333,7 @@ async function fetchLatestVideos(channels) {
                 await delay(3000);
                 break;
             }
-        } catch (e) {}
+        } catch (e) { }
         await delay(2000);
     }
 
@@ -341,12 +344,12 @@ async function fetchLatestVideos(channels) {
     try {
         console.log("⬆️ Đang tải video lên...");
         await logToWeb(email, 'yt-reels', `Đang upload video lên Facebook Reels...`, 'info');
-        
+
         let fileInput = await page.$('input[type="file"]');
         if (!fileInput) {
             const currentUrl = page.url();
             console.error("✗ Không tìm thấy input up video. URL hiện tại:", currentUrl);
-            
+
             await page.screenshot({ path: 'error_fb_reels.png' });
             console.log("📸 Đang upload ảnh chụp màn hình lỗi lên mạng...");
             try {
@@ -356,7 +359,7 @@ async function fetchLatestVideos(channels) {
             } catch (e) {
                 console.log("Upload ảnh lỗi thất bại:", e.message);
             }
-            
+
             throw new Error("Không tìm thấy input up video. Có thể bị FB văng ra login hoặc đổi giao diện.");
         }
 
@@ -500,6 +503,9 @@ async function fetchLatestVideos(channels) {
         console.log("✓ Đăng FB Reels thành công!");
         await logToWeb(email, 'yt-reels', `Đăng FB Reels thành công: ${videoToProcess.title}`, 'success');
         await updateUsageStats(email, 'reels_posted', 1);
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✓ <b>[Bot Up Reels]</b>\nĐăng FB Reels thành công:\n- Video: <b>${videoToProcess.title}</b>\nTài khoản: ${email}`);
+        }
 
         // Lưu lịch sử
         postedIds.push(videoToProcess.id);
@@ -508,6 +514,9 @@ async function fetchLatestVideos(channels) {
     } catch (err) {
         console.error("✗ Lỗi khi đăng Reels:", err.message);
         await logToWeb(email, 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Up Reels Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
+        }
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
         process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track
     } finally {
@@ -515,7 +524,7 @@ async function fetchLatestVideos(channels) {
         try {
             console.log("🍪 Đang trích xuất Cookie FB mới để gia hạn...");
             const currentCookies = await page.cookies();
-            
+
             const updatedCookies = currentCookies.map(c => ({
                 domain: c.domain,
                 expirationDate: c.expires,
@@ -538,8 +547,8 @@ async function fetchLatestVideos(channels) {
                     .eq('id', dbConfig.id);
 
                 if (!cookieUpdateErr) {
-                    console.log("✅ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
-                    await logToWeb(email, 'yt-reels', `✅ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
+                    console.log("✓ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
+                    await logToWeb(email, 'yt-reels', `✓ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
                 }
             }
         } catch (cookieErr) {

@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const { execSync } = require('child_process');
-const { supabase } = require('./supabase_helper');
+const { supabase, logToWeb, updateUsageStats } = require('./supabase_helper');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-5396355060';
@@ -123,11 +123,18 @@ async function run() {
     }
 
     const dbConfig = profiles[0];
-    const TIER_LIMITS = { free: 5, lite: 12, plus: 25, pro: 59, promax: 129 };
+    const TIER_LIMITS = {
+        free: { posts: 5, scrolls: 12 },
+        lite: { posts: 12, scrolls: 18 },
+        plus: { posts: 25, scrolls: 30 },
+        pro: { posts: 59, scrolls: 45 },
+        promax: { posts: 129, scrolls: 60 },
+    };
     const userTier = dbConfig.tier || 'free';
-    const MAX_POSTS_TO_SAVE = TIER_LIMITS[userTier] || 5;
-    // Mỗi nhịp scroll thường lấy được tầm 5-10 bài. Tính toán dư ra vài nhịp để chắc chắn đủ bài.
-    const MAX_SCROLLS = process.env.MAX_SCROLLS ? parseInt(process.env.MAX_SCROLLS) : Math.ceil(MAX_POSTS_TO_SAVE / 5) + 5;
+    const tierConfig = TIER_LIMITS[userTier] || TIER_LIMITS.free;
+    const MAX_POSTS_TO_SAVE = tierConfig.posts;
+    // Cuộn sâu hơn cho Plus/Pro để thay thế các bài đã cào bằng bài mới chưa có trong kho.
+    const MAX_SCROLLS = process.env.MAX_SCROLLS ? parseInt(process.env.MAX_SCROLLS) : tierConfig.scrolls;
 
     const targetUrl = process.env.PROFILE_URL;
 
@@ -222,6 +229,8 @@ async function run() {
     await delay(5000);
 
     console.log(`🤖 Bắt đầu auto-scroll tối đa ${MAX_SCROLLS} nhịp...`);
+    let lastUniqueCount = 0;
+    let stalledScrolls = 0;
     for (let i = 0; i < MAX_SCROLLS; i++) {
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await delay(2500); // Chờ GraphQL load
@@ -241,13 +250,38 @@ async function run() {
 
         console.log(`Đã cuộn ${i + 1}/${MAX_SCROLLS} nhịp... Tìm thấy ${uniqueCount} bài / ${MAX_POSTS_TO_SAVE} bài (gói ${userTier.toUpperCase()})`);
         
-        if (uniqueCount >= MAX_POSTS_TO_SAVE) {
-            console.log(`🎯 Đã đủ ${uniqueCount} bài! Dừng cuộn sớm để tiết kiệm tài nguyên.`);
+        // Không dừng chỉ vì đã thấy đủ bài: chúng có thể đều đã tồn tại trong Supabase.
+        // Chỉ dừng khi đã cuộn thêm nhiều lần mà không nhận được bài mới từ nguồn.
+        if (uniqueCount <= lastUniqueCount) {
+            stalledScrolls += 1;
+        } else {
+            stalledScrolls = 0;
+            lastUniqueCount = uniqueCount;
+        }
+        if (stalledScrolls >= 4) {
+            console.log(`🏁 Không có bài mới sau ${stalledScrolls} nhịp cuộn liên tiếp. Dừng tại ${i + 1}/${MAX_SCROLLS}.`);
             break;
         }
     }
 
     const rawThreadsData = await page.evaluate(() => window.rawThreadsData || []);
+
+    try {
+        const currentCookies = await page.cookies();
+        if (currentCookies && currentCookies.length > 0) {
+            const { error: cookieErr } = await supabase
+                .from('profiles')
+                .update({ ig_cookie: JSON.stringify(currentCookies) })
+                .eq('email', email);
+            if (cookieErr) {
+                console.error("✗ Lỗi cập nhật cookie Threads mới vào DB:", cookieErr.message);
+            } else {
+                console.log("✓ Đã cập nhật Cookie Threads mới vào Database!");
+            }
+        }
+    } catch (e) {
+        console.error("✗ Không thể lấy cookie mới:", e.message);
+    }
     
     console.log("✓ Đã cuộn xong, đóng browser...");
     await browser.close();
@@ -321,20 +355,19 @@ async function run() {
 
     console.log(`📌 Gói ${userTier.toUpperCase()} - Giới hạn tối đa ${MAX_POSTS_TO_SAVE} bài`);
     
-    // Áp dụng giới hạn TRƯỚC KHI lọc trùng, để đảm bảo luôn chỉ check số lượng bài mới nhất giới hạn trong khoảng này
-    uniqueData = uniqueData.slice(0, MAX_POSTS_TO_SAVE);
-    
     const postIds = uniqueData.map(p => p.post_id.toString());
-    
-    const { data: existingPosts, error: existErr } = await supabase
-        .from('crawl_data')
-        .select('post_id')
-        .eq('user_id', dbConfig.id)
-        .in('post_id', postIds);
+    const existingIds = new Set();
+    for (let i = 0; i < postIds.length; i += 200) {
+        const { data: existingPosts, error: existErr } = await supabase
+            .from('crawl_data')
+            .select('post_id')
+            .eq('user_id', dbConfig.id)
+            .in('post_id', postIds.slice(i, i + 200));
+        if (existErr) throw existErr;
+        (existingPosts || []).forEach(post => existingIds.add(post.post_id));
+    }
 
-    const existingIds = new Set((existingPosts || []).map(p => p.post_id));
-    
-    // Lọc bỏ bài đã có trong DB, và cắt đúng 25 bài
+    // Lọc trùng trên toàn bộ dữ liệu đã cuộn, rồi mới lấy đúng quota bài mới.
     const newPosts = uniqueData.filter(p => !existingIds.has(p.post_id.toString())).slice(0, MAX_POSTS_TO_SAVE);
 
     if (newPosts.length === 0) {
@@ -392,6 +425,7 @@ async function run() {
             } else {
                 successCount++;
                 console.log(`✓ Lưu thành công post ${post.post_id} vào Database (crawl_data).`);
+                logToWeb(email, 'threads_scraper', `✓ Cào thành công post ${post.post_id}`, 'success').catch(console.error);
             }
         } catch (dbErr) {
             console.error(`✗ Lỗi kết nối Supabase post ${post.post_id}:`, dbErr.message);
@@ -399,6 +433,7 @@ async function run() {
     }
 
     console.log(`\n🎯 HOÀN TẤT! Cào thành công ${successCount}/${newPosts.length} bài viết vào Database!`);
+    await updateUsageStats(email, 'crawls_count', 1);
     
     if (dbConfig.tele_chat_id) {
         await sendTelegramNotify(dbConfig.tele_chat_id, `🎯 <b>Hoàn tất cào bài!</b>\n✓ Thành công: <b>${successCount}</b> bài mới\n⏭️ Đã có trong DB (bỏ qua): <b>${uniqueData.length - newPosts.length}</b> bài\n🔗 Nguồn: <code>${targetUrl}</code>`);

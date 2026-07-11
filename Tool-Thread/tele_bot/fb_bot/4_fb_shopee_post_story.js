@@ -13,7 +13,7 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../supabase_helper');
+const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMessage } = require('../supabase_helper');
 
 (async () => {
     const pm2ProcessName = 'fb-story-farmer';
@@ -26,13 +26,16 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     let dbConfig = null;
     try {
         dbConfig = await fetchBotConfig(email);
-    } catch (e) {}
+    } catch (e) { }
 
     // Kiểm tra Quota trước khi chạy
     const hasQuota = await checkQuota(email, 'fb_posts_count');
     if (!hasQuota) {
         console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);
         await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB]</b>\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\nTài khoản: ${email}`);
+        }
         process.exit(0);
     }
 
@@ -54,7 +57,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     console.log("🚀 Đang khởi động FB Shopee Post & Story Bot...");
 
     let fbCookieStr = dbConfig?.fb_cookie || process.env.FB_COOKIE;
-    
+
     if (!fbCookieStr) {
         console.error("✗ Lỗi: Chưa có FB_COOKIE trong file .env!");
         process.exit(1);
@@ -79,7 +82,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             scrapedData = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
         }
     }
-    
+
     if (scrapedData.length === 0) {
         console.error("✗ Không tìm thấy dữ liệu sản phẩm (Chưa nhập link hoặc chưa đồng bộ).");
         await logToWeb(email, 'fb-story', '✗ Lỗi: Bạn chưa nhập Affiliate Link hoặc chưa bấm Đồng Bộ trên Web!', 'error');
@@ -88,7 +91,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
 
     // Lọc ra các sản phẩm chưa đăng
     let unpostedData = scrapedData.filter(item => !item.fb_posted);
-    
+
     // Nếu hết bài hoặc chỉ còn 1 bài (không đủ 2 bài để đăng), reset lại toàn bộ
     if (unpostedData.length < 2) {
         console.log("♻️ Đã đăng hết 1 vòng (hoặc không đủ 2 bài). Đang reset lại danh sách đăng từ đầu...");
@@ -104,22 +107,22 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             p2Index = getRandomInt(0, unpostedData.length - 1);
         }
     }
-    
+
     let product1 = unpostedData[p1Index];
     let product2 = unpostedData[p2Index];
-    
+
     // Đánh dấu 2 sản phẩm này là đã đăng trong mảng gốc
     let originalIdx1 = scrapedData.findIndex(item => item.aff_link === product1.aff_link);
     let originalIdx2 = scrapedData.findIndex(item => item.aff_link === product2.aff_link);
     if (originalIdx1 !== -1) scrapedData[originalIdx1].fb_posted = true;
     if (originalIdx2 !== -1) scrapedData[originalIdx2].fb_posted = true;
-    
+
     console.log("🎯 Sản phẩm mục tiêu 1:", product1.title);
     console.log("🎯 Sản phẩm mục tiêu 2:", product2.title);
-    
+
     // Tải ảnh về lưu tạm để upload
     const https = require('https');
-    
+
     async function downloadImage(url, filename) {
         return new Promise((resolve) => {
             https.get(url, (res) => {
@@ -141,24 +144,24 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         await downloadImage(product2.image_url, p2);
         imagePaths.push(p2);
     }
-    
+
     console.log("📸 Đã tải ảnh xong:", imagePaths);
 
     // Ghép Caption 2 sản phẩm
-    let caption1 = product1.suggested_comment && product1.suggested_comment.includes(product1.aff_link) 
-        ? product1.suggested_comment 
+    let caption1 = product1.suggested_comment && product1.suggested_comment.includes(product1.aff_link)
+        ? product1.suggested_comment
         : (product1.suggested_comment ? `${product1.suggested_comment}\n🛒 Link: ${product1.aff_link}` : `${product1.title}\n🛒 Đặt hàng tại đây: ${product1.aff_link}`);
-        
-    let caption2 = product2.suggested_comment && product2.suggested_comment.includes(product2.aff_link) 
-        ? product2.suggested_comment 
+
+    let caption2 = product2.suggested_comment && product2.suggested_comment.includes(product2.aff_link)
+        ? product2.suggested_comment
         : (product2.suggested_comment ? `${product2.suggested_comment}\n🛒 Link: ${product2.aff_link}` : `${product2.title}\n🛒 Đặt hàng tại đây: ${product2.aff_link}`);
-        
+
     let finalCaption = `✨ Gom lẹ 2 deal này cho bà nào cần nha:\n\n1️⃣ ${caption1}\n\n2️⃣ ${caption2}`;
 
     // Khởi tạo trình duyệt
-    const browser = await puppeteer.launch({ 
+    const browser = await puppeteer.launch({
         headless: 'new', // Chạy ngầm hoàn toàn
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications'] 
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications']
     });
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
@@ -167,16 +170,16 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     console.log("🌐 Đang truy cập Facebook (sau khi nạp Cookie)...");
     await logToWeb(email, 'fb-story', '🌐 Đang truy cập Facebook (sau khi nạp Cookie)...', 'info');
     await page.setCookie(...cleanCookies);
-    
+
     // Tới trang chủ để lướt Feed giống người thật
     await page.goto('https://www.facebook.com/', { waitUntil: 'networkidle2' });
-    
+
     // === THÊM HÀNH VI NGƯỜI THẬT ===
     console.log("🎭 Đang giả lập hành vi người dùng (scroll, lướt feed)...");
     for (let i = 0; i < 3; i++) {
         await page.mouse.wheel({ deltaY: 300 + Math.random() * 500 });
         await delay(2000 + Math.random() * 3000);
-        
+
         // Rê chuột ngẫu nhiên
         const rx = 100 + Math.random() * 600;
         const ry = 100 + Math.random() * 600;
@@ -212,7 +215,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     try {
         console.log("✍️ Đang tạo bài post mới trên trang cá nhân...");
         await logToWeb(email, 'fb-story', '✍️ Đang tạo bài post mới trên trang cá nhân...', 'info');
-        
+
         // Tìm ô "Bạn đang nghĩ gì?"
         const postBoxSelectors = [
             'div[aria-label="Bạn đang nghĩ gì?"]',
@@ -220,37 +223,37 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             'span:contains("Bạn đang nghĩ gì?")',
             'div[role="button"]:has(span:contains("nghĩ gì"))'
         ];
-        
+
         let clicked = false;
         for (let sel of postBoxSelectors) {
             try {
                 // Thử dùng evaluate để click cho chuẩn
                 const clickedBox = await page.evaluate(() => {
                     const box = document.querySelector('div[aria-label="Bạn đang nghĩ gì?"]') || document.querySelector('div[aria-label="What\'s on your mind?"]');
-                    if(box) {
+                    if (box) {
                         box.click();
                         return true;
                     }
                     const spans = Array.from(document.querySelectorAll('span')).filter(el => el.innerText.includes('nghĩ gì') || el.innerText.includes('mind?'));
-                    if(spans.length > 0) {
+                    if (spans.length > 0) {
                         spans[0].click();
                         return true;
                     }
                     return false;
                 });
-                if(clickedBox) {
+                if (clickedBox) {
                     clicked = true;
                     break;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
-        
+
         if (!clicked) {
             console.log("!!! Không click được ô post bằng JS, chụp ảnh debug...");
             await page.screenshot({ path: 'debug_fb_post_box.png' });
             throw new Error("Không tìm thấy ô đăng bài. Có thể FB chưa đăng nhập thành công hoặc Cookie đã chết!");
         }
-        
+
         await delay(3000);
 
         // Kích hoạt nút thêm Ảnh/Video trên giao diện FB trước
@@ -266,7 +269,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         // Upload ảnh
         const fileInputSelector = 'input[type="file"][accept*="image"]';
         await page.waitForSelector(fileInputSelector, { timeout: 10000 }).catch(e => console.log("Không thấy nút up file, thử up mò"));
-        
+
         // Lấy đúng ô input của form tạo bài (thường là ô cuối cùng)
         const fileInputs = await page.$$(fileInputSelector);
         if (fileInputs.length > 0 && imagePaths.length > 0) {
@@ -279,24 +282,24 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
         // Gõ nội dung
         console.log("⌨️ Đang gõ Caption...");
         let caption = finalCaption;
-        
+
         const textBoxSelector = 'div[aria-label^="Bạn đang nghĩ gì"], div[aria-label^="What\'s on your mind"], div[role="textbox"]';
         const textBoxes = await page.$$(textBoxSelector);
         if (textBoxes.length > 0) {
-            await textBoxes[textBoxes.length - 1].click(); 
+            await textBoxes[textBoxes.length - 1].click();
             // Đợi lâu hơn một chút để FB focus con trỏ vào ô nhập liệu
-            await delay(1500); 
-            
+            await delay(1500);
+
             // Sử dụng insertText để paste nội dung thay vì type từng chữ, tránh lỗi emoji
             await page.evaluate((text) => {
                 document.execCommand('insertText', false, text);
             }, caption);
-            
+
             await delay(2000);
         }
-        
+
         await delay(3000);
-        
+
         // Bấm nút Đăng
         console.log("🚀 Bấm Đăng (Post)...");
         await logToWeb(email, 'fb-story', '🚀 Bấm Đăng (Post)...', 'info');
@@ -311,13 +314,13 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
                     const ariaLabel = b.getAttribute('aria-label') || '';
                     return texts.includes(text) || texts.includes(ariaLabel);
                 });
-                if(postBtn) {
+                if (postBtn) {
                     postBtn.click();
                     return true;
                 }
                 return false;
             }, btnTexts);
-            
+
             if (clicked) return true;
 
             // 2. Thử click bằng toạ độ
@@ -340,7 +343,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
                     }
                     return 'NOT_FOUND';
                 }, btnTexts);
-                
+
                 if (postBtnInfo !== 'NOT_FOUND' && postBtnInfo !== 'DISABLED') {
                     console.log(`[INFO] Đã tìm thấy toạ độ nút ${btnTexts[0]}, thử click bằng chuột thật...`);
                     await page.mouse.click(postBtnInfo.x, postBtnInfo.y);
@@ -357,61 +360,61 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
             console.log("👉 Đã bấm nút Tiếp. Chờ popup Đăng hiện ra...");
             await delay(2000);
         }
-        
+
         await clickPostBtn(['Đăng', 'Post']);
-        
+
         console.log("⏳ Chờ 15s để bài viết lên tường...");
         await delay(15000);
-        
+
         // 3. Chuyển sang Share Story
         console.log("♻️ Đang tìm bài viết vừa đăng để Share lên Story...");
         await logToWeb(email, 'fb-story', '♻️ Đang tìm bài viết vừa đăng để Share lên Story...', 'info');
         await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2' });
         await delay(5000);
-        
+
         // Bấm nút Chia sẻ (Share) đầu tiên (chính là bài vừa đăng)
         await page.evaluate(() => {
             const shareBtns = Array.from(document.querySelectorAll('div[aria-label="Chia sẻ"], div[aria-label="Share"], div[aria-label="Gửi đi"], div[role="button"]')).filter(b => b.innerText === 'Chia sẻ' || b.innerText === 'Share');
-            if(shareBtns.length > 0) shareBtns[0].click();
+            if (shareBtns.length > 0) shareBtns[0].click();
         });
         await delay(3000);
-        
+
         // Bấm nút Share lên Story
         await page.evaluate(() => {
             const menuItems = Array.from(document.querySelectorAll('span'));
             const storyBtn = menuItems.find(s => s.innerText.includes('tin của bạn') || s.innerText.includes('your story'));
-            if(storyBtn) {
+            if (storyBtn) {
                 // Click ngược lên parent để chọn trúng nút
                 let parent = storyBtn.parentElement;
-                while(parent && parent.getAttribute('role') !== 'menuitem') {
+                while (parent && parent.getAttribute('role') !== 'menuitem') {
                     parent = parent.parentElement;
                 }
-                if(parent) parent.click();
+                if (parent) parent.click();
                 else storyBtn.click();
             }
         });
-        
+
         console.log("⏳ Chờ 10s để load giao diện chỉnh sửa Story...");
         await delay(10000);
-        
+
         // Bấm nút Đăng (trong giao diện Story)
         await page.evaluate(() => {
             const btns = Array.from(document.querySelectorAll('div[role="button"]'));
             const shareBtn = btns.find(b => b.innerText === 'Chia sẻ lên tin' || b.innerText === 'Share to Story');
-            if(shareBtn) shareBtn.click();
+            if (shareBtn) shareBtn.click();
         });
-        
+
         console.log("✓ Đã Share lên Story thành công!");
         await logToWeb(email, 'fb-story', '✓ Đã Share lên Story thành công!', 'success');
         await updateUsageStats(email, 'fb_posts_count', 1);
-        
+
         // Cập nhật lại mảng dữ liệu (đã đánh dấu fb_posted) lên DB và file local
         const { supabase } = require('../supabase_helper');
         if (dbConfig && dbConfig.id && supabase) {
             await supabase.from('profiles').update({ parsed_affiliate_links: scrapedData }).eq('id', dbConfig.id);
             console.log("💾 Đã lưu trạng thái Đã Đăng (fb_posted) của 2 sản phẩm vào Database.");
         }
-        
+
         const dataFile = path.resolve(__dirname, 'shopee_data.json');
         if (fs.existsSync(dataFile)) {
             fs.writeFileSync(dataFile, JSON.stringify(scrapedData, null, 2));
@@ -421,8 +424,11 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
 
     } catch (e) {
         console.error("✗ Lỗi trong quá trình đăng bài:", e.message);
+        if (dbConfig && dbConfig.tele_chat_id) {
+            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB Lỗi]</b>\nLỗi: ${e.message}\nTài khoản: ${email}`);
+        }
     }
-    
+
     // Dọn dẹp
     for (let p of imagePaths) {
         if (fs.existsSync(p)) {
@@ -431,12 +437,15 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
     }
     console.log("🎉 Hoàn tất chu trình Đăng & Share Shopee!");
     await logToWeb(email, 'fb-story', '🎉 Hoàn tất chu trình Đăng & Share Shopee!', 'success');
+    if (dbConfig && dbConfig.tele_chat_id) {
+        await sendTelegramMessage(dbConfig.tele_chat_id, `✓ <b>[Bot Đăng bài FB]</b>\nHoàn thành 1 vòng đăng FB (Post & Story).\nTài khoản: ${email}`);
+    }
 
     // === AUTO REFRESH COOKIE ===
     try {
         console.log("🍪 Đang trích xuất Cookie FB mới để gia hạn...");
         const currentCookies = await page.cookies();
-        
+
         const updatedCookies = currentCookies.map(c => ({
             domain: c.domain,
             expirationDate: c.expires,
@@ -459,8 +468,8 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats } = require('../s
                 .eq('id', dbConfig.id);
 
             if (!cookieUpdateErr) {
-                console.log("✅ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
-                await logToWeb(email, 'fb-story', `✅ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
+                console.log("✓ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
+                await logToWeb(email, 'fb-story', `✓ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
             }
         }
     } catch (cookieErr) {

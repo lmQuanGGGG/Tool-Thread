@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { supabase, uploadMediaBatch } = require('./supabase_helper');
+const { supabase, uploadMediaBatch, logToWeb } = require('./supabase_helper');
 
 async function processPendingImages() {
   console.log("🚀 Đang khởi động Worker: Tải ảnh từ Crawl Data lên Telegram (S3)...");

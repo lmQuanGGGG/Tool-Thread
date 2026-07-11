@@ -2,6 +2,11 @@ require('dotenv').config();
 global.WebSocket = require('ws');
 const { createClient } = require('@supabase/supabase-js');
 
+// Ngoại lệ quota theo từng tài khoản, dùng khi cần điều chỉnh mà không làm đổi gói chung.
+const USER_QUOTA_OVERRIDES = {
+  'lmquang.devops@gmail.com': { reels_per_day: 8 },
+};
+
 const supabaseUrl = process.env.SUPABASE_URL;
 // BẮT BUỘC dùng Service Role Key để bypass RLS
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -53,10 +58,10 @@ function parseCookieString(cookieStr, domain = '.facebook.com') {
  */
 async function getTierLimits(tier = 'free') {
   const defaults = {
-    free:   { auto_run: false, reels_per_day: 2,  threads_per_day: 10,  fb_post_per_day: 1,  crawl_per_day: 1,  max_links: 2  },
-    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 3,  crawl_per_day: 2,  max_links: 4  },
-    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 80,  fb_post_per_day: 5,  crawl_per_day: 3,  max_links: 10 },
-    pro:    { auto_run: true,  reels_per_day: 12, threads_per_day: 160, fb_post_per_day: 10, crawl_per_day: 4,  max_links: 20 },
+    free:   { auto_run: false, reels_per_day: 2,  threads_per_day: 10,  fb_post_per_day: 1,  crawl_per_day: 1,  max_links: 4  },
+    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 3,  crawl_per_day: 2,  max_links: 8  },
+    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 80,  fb_post_per_day: 5,  crawl_per_day: 3,  max_links: 20 },
+    pro:    { auto_run: true,  reels_per_day: 12, threads_per_day: 160, fb_post_per_day: 10, crawl_per_day: 4,  max_links: 100 },
     promax: { auto_run: true,  reels_per_day: -1, threads_per_day: -1,  fb_post_per_day: -1, crawl_per_day: -1,  max_links: -1 },
   };
 
@@ -153,7 +158,7 @@ async function checkQuota(email, type = 'reels_posted') {
 
   try {
     const { data: profile } = await supabase
-      .from('profiles').select('id, tier').eq('email', email).maybeSingle();
+      .from('profiles').select('id, tier, email').eq('email', email).maybeSingle();
     if (!profile) return false;
 
     const limits = await getTierLimits(profile.tier);
@@ -161,15 +166,19 @@ async function checkQuota(email, type = 'reels_posted') {
                    : type === 'threads_commented' ? 'threads_per_day'
                    : type === 'threads_posts_count' ? 'threads_post_per_day'
                    : type === 'fb_posts_count' ? 'fb_post_per_day'
+                   : type === 'fb_comments_count' ? 'fb_comments_per_day'
                    : 'fb_story_per_day';
                    
-    let limit = limits[limitKey];
+    let limit = USER_QUOTA_OVERRIDES[profile.email]?.[limitKey] ?? limits[limitKey];
     // Fallback nếu DB thiếu column
     if (limit === undefined && type === 'threads_posts_count') {
         limit = limits['reels_per_day'] || 2; 
     }
     if (limit === undefined && type === 'fb_posts_count') {
         limit = 3; 
+    }
+    if (limit === undefined && type === 'fb_comments_count') {
+        limit = profile.tier === 'promax' ? -1 : profile.tier === 'pro' ? 6 : profile.tier === 'plus' ? 4 : profile.tier === 'lite' ? 2 : 1;
     }
     if (limit === -1) return true; // unlimited
 
@@ -325,6 +334,22 @@ async function logToWeb(email, botType, message, level = 'info') {
   }
 }
 
+/**
+ * Gửi tin nhắn text qua Telegram (cho thông báo bot).
+ */
+async function sendTelegramMessage(chatId, text) {
+  if (!chatId) return;
+  const bot = getBot();
+  if (bot) {
+    try {
+      await bot.sendMessage(chatId, text, { parse_mode: 'HTML' });
+      console.log(`✓ Đã gửi tin nhắn Tele tới ${chatId}`);
+    } catch (e) {
+      console.error(`✗ Lỗi gửi tin nhắn Tele tới ${chatId}:`, e.message);
+    }
+  }
+}
+
 module.exports = {
   supabase,
   parseCookieString,
@@ -334,6 +359,7 @@ module.exports = {
   updateUsageStats,
   uploadMediaToTelegram,
   uploadMediaBatch,
+  sendTelegramMessage,
   logToWeb,
   STORAGE_CHAT,
   TELE_TOKEN,

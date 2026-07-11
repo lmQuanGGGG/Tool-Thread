@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import {
-  Activity, Crown, Zap, TrendingUp, Video, MessageSquare, Image,
-  ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket, Send
+  Activity, Crown, Zap, TrendingUp, ShieldCheck, Loader2, AlertCircle, ChevronRight, Download, Link2, Copy, CheckCircle2, Rocket, Bot, Code,
+  Video, MessageSquare, Image as ImageIcon, Send
 } from "lucide-react";
 import Link from "next/link";
 import ConfettiCanvas from "../../components/ConfettiCanvas";
@@ -27,7 +27,7 @@ const TIER_CONFIG: Record<string, {
 
 function UsageBar({ label, icon: Icon, used, limit, color }: { label: string; icon: React.ElementType; used: number; limit: number; color: string }) {
   const isUnlimited = limit === -1;
-  const pct = isUnlimited ? 20 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
+  const pct = isUnlimited ? 100 : limit <= 0 ? 0 : Math.min(100, (used / limit) * 100);
   const isNearLimit = !isUnlimited && pct >= 80;
 
   return (
@@ -37,13 +37,15 @@ function UsageBar({ label, icon: Icon, used, limit, color }: { label: string; ic
           <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
           {label}
         </span>
-        <span className={`font-bold ${isNearLimit ? "text-red-500" : "text-zinc-900"}`}>
-          {isUnlimited ? `${used} / ∞` : `${used} / ${limit}`}
+        <span className={`font-bold ${isNearLimit ? "text-red-500" : isUnlimited ? "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-500" : "text-zinc-900"}`}>
+          {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
         </span>
       </div>
       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-700 ${isNearLimit ? "bg-red-500" : color}`}
+          className={`h-full rounded-full transition-all duration-700 ${
+            isUnlimited ? "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500" : isNearLimit ? "bg-red-500" : color
+          }`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -65,17 +67,23 @@ function normalizeStats(stats: any) {
     threads_commented: toCount(stats?.threads_commented),
     fb_story_posted: Math.max(toCount(stats?.fb_story_posted), toCount(stats?.fb_posts_count)),
     threads_posts_count: toCount(stats?.threads_posts_count),
+    fb_comments_count: toCount(stats?.fb_comments_count), // Số phiên rải link FB Comment
+    crawls_count: toCount(stats?.crawls_count),
+    parse_links_count: toCount(stats?.parse_links_count),
   };
 }
 
-function normalizeLimits(limits: any) {
+function normalizeLimits(limits: any, tier: string) {
   return {
     ...(limits || {}),
     reels_per_day: toCount(limits?.reels_per_day),
+    fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 6 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
     threads_per_day: toCount(limits?.threads_per_day),
     fb_story_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
     threads_post_per_day: toCount(limits?.fb_story_per_day ?? limits?.fb_post_per_day),
     price_vnd: toCount(limits?.price_vnd),
+    crawl_per_day: toCount(limits?.crawl_per_day),
+    max_links: toCount(limits?.max_links),
   };
 }
 
@@ -98,12 +106,12 @@ export default function DashboardPage() {
 
         // Load profile + today stats song song. Select * để hỗ trợ cả schema cũ/mới.
         const [profileRes, statsRes] = await Promise.all([
-          supabase.from("profiles").select("tier, email, fb_cookie, threads_cookie, credits").eq("id", user.id).maybeSingle(),
+          supabase.from("profiles").select("tier, email, fb_cookie, threads_cookie, credits, parsed_affiliate_links").eq("id", user.id).maybeSingle(),
           supabase.from("usage_stats")
             .select("*")
             .eq("user_id", user.id)
             .eq("date", today)
-            .maybeSingle(),
+            .maybeSingle()
         ]);
 
         if (profileRes.error) throw profileRes.error;
@@ -115,8 +123,9 @@ export default function DashboardPage() {
         // Lấy giới hạn từ tier_limits
         const limitsRes = await supabase.from("tier_limits").select("*").eq("tier", tier).maybeSingle();
         if (limitsRes.error) throw limitsRes.error;
-        const limitsData = normalizeLimits(limitsRes.data);
+        const limitsData = normalizeLimits(limitsRes.data, tier);
         const statsData = normalizeStats(statsRes.data);
+        statsData.parse_links_count = profileRes.data?.parsed_affiliate_links?.length || 0;
 
         globalCache = {
           profile: profileRes.data,
@@ -209,8 +218,8 @@ export default function DashboardPage() {
         <div className={`rounded-[32px] overflow-hidden relative border-none bg-gradient-to-br from-indigo-50/90 via-white/80 to-blue-50/90 p-8 md:p-12 shadow-[0_8px_32px_-12px_rgba(59,130,246,0.15)]`}>
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 rounded-full blur-[80px] pointer-events-none" />
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-400/20 rounded-full blur-[80px] pointer-events-none" />
-          <div className="relative z-10 max-w-2xl">
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight text-gray-900 leading-tight flex flex-wrap items-center gap-2 md:gap-3">
+          <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
+            <h1 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight text-gray-900 leading-tight flex flex-wrap items-center justify-center gap-2 md:gap-3">
             Chào mừng đến với AutoFarm 
             <img src="/rocket_logo.png" alt="AutoFarm" className="inline-block w-8 h-8 md:w-10 md:h-10 rounded-xl shadow-sm hover:scale-110 transition-transform origin-bottom" />
           </h1>
@@ -218,12 +227,11 @@ export default function DashboardPage() {
               Hệ thống tự động hóa đa nền tảng giúp bạn quản lý Threads, Facebook Reels và Shopee một cách dễ dàng.
               Cấu hình Bot một lần và để hệ thống tự động cày view, tương tác và đăng bài mỗi ngày.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/dashboard/accounts" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full text-sm font-semibold transition-all shadow-[0_4px_20px_-4px_rgba(79,70,229,0.5)] hover:shadow-[0_8px_25px_-4px_rgba(79,70,229,0.6)] flex items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/dashboard/accounts" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full text-sm font-semibold transition-all shadow-[0_4px_20px_-4px_rgba(79,70,229,0.5)] hover:shadow-[0_8px_25px_-4px_rgba(79,70,229,0.6)] flex items-center justify-center gap-2">
                 <Zap className="w-4 h-4" />
                 Thiết lập Bot
               </Link>
-
             </div>
           </div>
           {/* Decorative elements */}
@@ -294,10 +302,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-
-          {/* LEFT - Usage today */}
-          <div className="lg:col-span-7 space-y-6">
+        <div className="flex justify-center w-full">
+          {/* Usage Today */}
+          <div className="w-full max-w-3xl space-y-6">
 
             {/* Usage Today */}
             <div className={`${cardClass} p-6 md:p-8 flex flex-col`}>
@@ -310,78 +317,56 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-5">
                 <UsageBar
-                  label="FB Reels đã đăng"
-                  icon={Video}
+                  label="Up Reels (Video/ngày)"
+                  icon={Zap}
                   used={todayStats?.reels_posted || 0}
                   limit={limits?.reels_per_day ?? 1}
-                  color="bg-violet-500"
+                  color="bg-zinc-900"
+                />
+                <UsageBar
+                  label="FB Comment (Số phiên/ngày)"
+                  icon={MessageSquare}
+                  used={todayStats?.fb_comments_count || 0}
+                  limit={limits?.fb_comments_per_day ?? 1}
+                  color="bg-zinc-900"
                 />
                 <UsageBar
                   label="Threads đã Comment"
                   icon={MessageSquare}
                   used={todayStats?.threads_commented || 0}
                   limit={limits?.threads_per_day ?? 10}
-                  color="bg-blue-500"
+                  color="bg-zinc-900"
                 />
                 <UsageBar
                   label="FB Post đã đăng"
-                  icon={Image}
+                  icon={Send}
                   used={todayStats?.fb_story_posted || 0}
                   limit={limits?.fb_story_per_day ?? limits?.fb_post_per_day ?? 0}
-                  color="bg-pink-500"
+                  color="bg-zinc-900"
                 />
                 <UsageBar
                   label="Threads Post đã đăng"
                   icon={Send}
                   used={todayStats?.threads_posts_count || 0}
                   limit={limits?.threads_post_per_day ?? 0}
-                  color="bg-emerald-500"
+                  color="bg-zinc-900"
+                />
+                <UsageBar
+                  label="Data Shopee (Link đã lưu)"
+                  icon={Code}
+                  used={todayStats?.parse_links_count || 0}
+                  limit={limits?.max_links || 4}
+                  color="bg-zinc-900"
+                />
+                <UsageBar
+                  label="Cào Threads (lần/ngày)"
+                  icon={Bot}
+                  used={todayStats?.crawls_count || 0}
+                  limit={limits?.crawl_per_day || 1}
+                  color="bg-zinc-900"
                 />
               </div>
             </div>
-
-
-          </div>
-
-          {/* RIGHT - Tier card + upsell */}
-          <div className="lg:col-span-5 space-y-6">
-
-            {/* Current Plan */}
-            <div className={`${cardClass} p-6 md:p-8`}>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100/50">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Gói hiện tại</h3>
-              </div>
-
-              <div className="mt-4">
-                <div className={`text-4xl font-black tracking-tight mb-1 ${tier === "promax" ? "bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-pink-600" : "text-gray-900"}`}>
-                  {tierConf.label}
-                </div>
-                <div className="text-xs font-semibold uppercase tracking-wider mb-6 text-gray-400">
-                  {limits?.price_vnd === 0 ? "Gói Miễn phí" : `${(limits?.price_vnd || 0).toLocaleString("vi-VN")}đ / Tháng`}
-                </div>
-                <div className="text-[13px] font-medium space-y-3 text-gray-600">
-                  <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Reels: {limits?.reels_per_day === -1 ? "Không giới hạn" : `${limits?.reels_per_day} video/ngày`}</div>
-                  <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Comment: {limits?.threads_per_day === -1 ? "Không giới hạn" : `${limits?.threads_per_day} bài/ngày`}</div>
-                  <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Chạy tự động: {limits?.auto_run ? "Hỗ trợ" : "Chưa hỗ trợ"}</div>
-                </div>
-              </div>
-
-              {/* Upsell nếu không phải promax */}
-              {tier !== "promax" && (
-                <Link
-                  href="/pricing"
-                  className="mt-6 flex items-center justify-between w-full bg-gray-900 text-white font-bold text-xs tracking-wider py-3.5 px-5 rounded-full hover:bg-gray-800 transition-all shadow-[0_4px_12px_-4px_rgba(0,0,0,0.5)] group"
-                >
-                  <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-amber-400" /> Nâng cấp gói ngay</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              )}
-            </div>
-
-
 
           </div>
         </div>

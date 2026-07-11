@@ -57,7 +57,7 @@
         return send.apply(this, arguments);
     };
 
-    console.log("✅ Đã cài Hook thành công!");
+    console.log("✓ Đã cài Hook thành công!");
     console.log("👉 NHỚ LÀM TRICK: Chuyển qua tab 'Câu trả lời' rồi quay lại tab 'Threads' để bắt bài mới nhất nha chồng!");
     console.log("👉 Gõ lệnh này để Tool TỰ ĐỘNG CUỘN TRANG (đổi số 30 thành số trang chồng muốn):");
     console.log("%cautoScrape(30)", "background: #2f3640; color: #4cd137; padding: 5px; font-size: 16px; border-radius: 4px;");
@@ -128,7 +128,7 @@
                     });
                 }
                 Object.values(node).forEach(extractFullData);
-           }
+            }
         }
 
         extractFullData(window.rawThreadsData);

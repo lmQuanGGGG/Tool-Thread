@@ -39,6 +39,8 @@ export default function ConfettiCanvas() {
     resize();
     window.addEventListener("resize", resize);
 
+    const isMobile = w < 768;
+
     const count = Math.min(250, Math.floor(w * h / 4500)); // Tăng số lượng hạt để giống dải ngân hà
     const pts: Particle[] = [];
     for (let i = 0; i < count; i++) {
@@ -181,9 +183,13 @@ export default function ConfettiCanvas() {
         }
         ctx.restore();
       }
-      raf = requestAnimationFrame(draw);
+      if (!isMobile) {
+        raf = requestAnimationFrame(draw);
+      }
     };
-    raf = requestAnimationFrame(draw);
+    
+    // Draw initial frame
+    draw();
 
     return () => {
       cancelAnimationFrame(raf);
