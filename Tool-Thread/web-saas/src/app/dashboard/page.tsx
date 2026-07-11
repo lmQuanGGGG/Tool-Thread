@@ -42,7 +42,7 @@ function UsageBar({ label, icon: Icon, used, limit, color, autoEnabled, onToggle
             {isUnlimited ? `${used.toLocaleString()} (Không giới hạn)` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}
           </span>
         </div>
-        {onToggle && <button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`ml-3 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-bold transition-all md:absolute md:-right-20 md:top-[-4px] ${autoEnabled ? "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700" : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"} ${updating ? "cursor-wait opacity-50" : ""}`}><Zap className="h-3 w-3" />{autoEnabled ? "Auto" : "Tắt"}</button>}
+        {onToggle && <div className="ml-3 inline-flex h-7 shrink-0 items-center gap-2 md:absolute md:-right-28 md:top-[-4px]"><span className={`text-[10px] font-semibold ${autoEnabled ? "text-emerald-600" : "text-zinc-400"}`}>{autoEnabled ? "Đang bật" : "Đã tắt"}</span><button type="button" onClick={onToggle} disabled={updating} aria-label={`Bật tắt tự động ${label}`} className={`relative h-6 w-11 rounded-full transition-colors ${autoEnabled ? "bg-emerald-500" : "bg-zinc-700"} ${updating ? "cursor-wait opacity-50" : "hover:brightness-95"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${autoEnabled ? "translate-x-6" : "translate-x-1"}`} /></button></div>}
       </div>
       <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
         <div
