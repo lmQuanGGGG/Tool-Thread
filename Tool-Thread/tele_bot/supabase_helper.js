@@ -100,7 +100,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('fb_cookie, threads_cookie, affiliate_links, parsed_affiliate_links, tele_chat_id, tier, target_channels')
+      .select('id, email, fb_cookie, threads_cookie, affiliate_links, parsed_affiliate_links, tele_chat_id, tier, target_channels')
       .eq('email', email)
       .maybeSingle();
 

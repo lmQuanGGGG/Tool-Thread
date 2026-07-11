@@ -6,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const { fetchBotConfig, logToWeb, updateUsageStats, checkQuota, sendTelegramMessage, parseCookieString } = require('../supabase_helper');
+const { fetchBotConfig, logToWeb, updateUsageStats, checkQuota, sendTelegramMessage, parseCookieString, supabase } = require('../supabase_helper');
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
