@@ -246,9 +246,11 @@ async function downloadImageFromTelegram(file_id) {
 
                         // Bốc sản phẩm ngẫu nhiên
                         let pickedProduct = validProducts[getRandomInt(0, validProducts.length - 1)];
-                        let cmtText = (pickedProduct.suggested_comment && pickedProduct.suggested_comment.includes(pickedProduct.aff_link))
+                        let linkStr = pickedProduct.link || pickedProduct.aff_link || "";
+                        let titleStr = pickedProduct.product_name || pickedProduct.title || "";
+                        let cmtText = (pickedProduct.suggested_comment && pickedProduct.suggested_comment.includes(linkStr))
                             ? pickedProduct.suggested_comment
-                            : (pickedProduct.suggested_comment ? `${pickedProduct.suggested_comment}\n${pickedProduct.aff_link}` : `${pickedProduct.title}\n${pickedProduct.aff_link}`);
+                            : (pickedProduct.suggested_comment ? `${pickedProduct.suggested_comment}\n${linkStr}` : `${titleStr}\n${linkStr}`);
 
                         console.log(`📸 Tải ảnh sản phẩm về...`);
                         let localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
