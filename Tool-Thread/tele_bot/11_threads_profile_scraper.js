@@ -271,7 +271,7 @@ async function run() {
         if (currentCookies && currentCookies.length > 0) {
             const { error: cookieErr } = await supabase
                 .from('profiles')
-                .update({ ig_cookie: JSON.stringify(currentCookies) })
+                .update({ threads_cookie: JSON.stringify(currentCookies) })
                 .eq('email', email);
             if (cookieErr) {
                 console.error("✗ Lỗi cập nhật cookie Threads mới vào DB:", cookieErr.message);

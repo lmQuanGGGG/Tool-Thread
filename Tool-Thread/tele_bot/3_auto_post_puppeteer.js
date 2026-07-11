@@ -1,7 +1,7 @@
 require('dotenv').config(); // Load .env local khi test, bỏ qua khi chạy trên GitHub Actions
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { fetchBotConfig } = require('./supabase_helper');
+const { fetchBotConfig, supabase } = require('./supabase_helper');
 puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const axios = require('axios');
@@ -681,6 +681,20 @@ async function runFarm() {
                 await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, { chat_id: chatId, text: `✗ **Bot Threads (Nick ${NICK_INDEX} - ${NICHE})**\nLỗi: Đăng bài thất bại!`, parse_mode: 'Markdown' });
             } catch(err) {}
         }
+        
+        try {
+            const currentCookies = await page.cookies();
+            if (currentCookies && currentCookies.length > 0 && supabase) {
+                const email = dbConfig?.email || process.env.USER_EMAIL;
+                if (email) {
+                    await supabase.from('profiles').update({ threads_cookie: JSON.stringify(currentCookies) }).eq('email', email);
+                    console.log("✓ Đã cập nhật Cookie Threads mới vào Database!");
+                }
+            }
+        } catch (e) {
+            console.error("✗ Không thể lưu cookie Threads mới:", e.message);
+        }
+        
     } catch (e) {
         console.error('[ERROR] Lỗi Puppeteer:', e.message);
         try {

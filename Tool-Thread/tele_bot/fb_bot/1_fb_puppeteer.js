@@ -6,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const { fetchBotConfig, updateUsageStats } = require('../supabase_helper');
+const { fetchBotConfig, updateUsageStats, supabase } = require('../supabase_helper');
 
 function delay(time) {
     return new Promise(function (resolve) {
@@ -355,5 +355,19 @@ async function downloadImageFromTelegram(file_id) {
     } catch (err) {
         console.log("Lỗi gửi báo cáo Tele:", err.message);
     }
+    
+    try {
+        const currentCookies = await page.cookies();
+        if (currentCookies && currentCookies.length > 0 && supabase) {
+            const email = dbConfig?.email || process.env.USER_EMAIL;
+            if (email) {
+                await supabase.from('profiles').update({ fb_cookie: JSON.stringify(currentCookies) }).eq('email', email);
+                console.log("✓ Đã cập nhật Cookie FB mới vào Database!");
+            }
+        }
+    } catch (e) {
+        console.error("✗ Không thể lưu cookie FB mới:", e.message);
+    }
+
     await browser.close();
 })();
