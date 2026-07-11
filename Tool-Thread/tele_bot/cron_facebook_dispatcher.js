@@ -100,6 +100,9 @@ async function run() {
             if (hasFb && [13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
+            if (hasFb && [8, 11, 13, 16].includes(vnHour)) {
+                await dispatchWorkflow('fb_comment_worker.yml', p.email);
+            }
             if (hasThreads && [13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
@@ -113,6 +116,9 @@ async function run() {
             if (hasFb && [8, 11, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
             }
+            if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
+                await dispatchWorkflow('fb_comment_worker.yml', p.email);
+            }
             if (hasThreads && [8, 11, 13, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
@@ -125,6 +131,9 @@ async function run() {
             }
             if (hasFb && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('fb_worker.yml', p.email);
+            }
+            if (hasFb && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
+                await dispatchWorkflow('fb_comment_worker.yml', p.email);
             }
             if (hasThreads && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);

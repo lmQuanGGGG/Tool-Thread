@@ -9,7 +9,7 @@ on:
         default: 'admin@autofarm.com'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   run-fb-comment-bot:
@@ -34,7 +34,16 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         FB_COOKIE: ${{ secrets.FB_COOKIE }}
+        TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
       run: |
-        # Xvfb giả lập màn hình để lách thuật toán Headless
+        # Chạy bot rải link vào Facebook Reels (không dùng file test_fb_cmt.js).
         cd "Tool-Thread/tele_bot"
-        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node test_fb_cmt.js
+        xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/6_fb_comment_strangers.js
+
+    - name: Upload debug screenshots when failed
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fb-cmt-reels-debug
+        path: Tool-Thread/tele_bot/fb_bot/debug_*.png
+        if-no-files-found: ignore

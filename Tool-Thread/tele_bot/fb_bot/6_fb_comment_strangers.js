@@ -6,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const { fetchBotConfig, logToWeb, updateUsageStats, checkQuota, sendTelegramMessage, supabase } = require('../supabase_helper');
+const { fetchBotConfig, logToWeb, updateUsageStats, checkQuota, sendTelegramMessage, parseCookieString } = require('../supabase_helper');
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
@@ -17,9 +17,13 @@ function getRandomInt(min, max) {
 }
 
 // Token Telegram từ .env để tải ảnh
-const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN || "8990210506:AAENkVoEQGWpduKsPvaCIUs4qmRBeJItUuc";
+const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
 
 async function downloadImageFromTelegram(file_id) {
+    if (!TELEGRAM_BOT_TOKEN) {
+        console.warn('[WARN] Chưa có TELE_BOT_TOKEN, bỏ qua ảnh đính kèm của sản phẩm.');
+        return null;
+    }
     console.log(`[INFO] Kéo ảnh từ Telegram... (file_id: ${file_id})`);
     try {
         const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${file_id}`;
@@ -79,17 +83,15 @@ const SEED_COMMENTS = [
     try {
         dbConfig = await fetchBotConfig(email);
 
-        let rawCookie = process.env.FB_COOKIE;
-        if (dbConfig && dbConfig.fb_cookie) {
-            rawCookie = dbConfig.fb_cookie;
+        let cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
+        if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
+            cookies = parseCookieString(process.env.FB_COOKIE, '.facebook.com');
         }
 
-        if (!rawCookie) {
+        if (!cookies || cookies.length === 0) {
             console.log("✘Không tìm thấy Cookie FB!");
             return;
         }
-
-        const cookies = typeof rawCookie === 'string' ? JSON.parse(rawCookie) : rawCookie;
 
         // Lấy data Shopee Affiliate
         let scrapedData = dbConfig?.parsed_affiliate_links || [];
@@ -130,7 +132,7 @@ const SEED_COMMENTS = [
 
         console.log("🌐 Đang truy cập Facebook Reels...");
         await logToWeb(email, 'fb-cmt-reels', '🌐 Đang truy cập Facebook Reels để rải link...', 'info');
-        await page.goto('https://www.facebook.com/reels', { waitUntil: 'networkidle2' });
+        await page.goto('https://www.facebook.com/reels', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
         console.log("🎭 Đang xem Reels...");
         await delay(3000);
@@ -200,9 +202,12 @@ const SEED_COMMENTS = [
                         if (availableProducts.length > 0) {
                             pickedProduct = availableProducts[getRandomInt(0, availableProducts.length - 1)];
                             pickedProduct.fb_posted_temp = true;
-                            cmtText = (pickedProduct.suggested_comment && pickedProduct.suggested_comment.includes(pickedProduct.aff_link))
-                                ? pickedProduct.suggested_comment
-                                : (pickedProduct.suggested_comment ? `${pickedProduct.suggested_comment}\n${pickedProduct.aff_link}` : `${pickedProduct.title || 'Sản phẩm siêu hot'}\n${pickedProduct.aff_link}`);
+                            // Luôn tách caption và link thành hai đoạn riêng. Caption AI cũ
+                            // có thể đã chứa link liền chữ, nên loại link cũ trước khi ghép lại.
+                            const caption = String(pickedProduct.suggested_comment || pickedProduct.title || 'Sản phẩm siêu hot')
+                                .replaceAll(pickedProduct.aff_link || '', '')
+                                .trim();
+                            cmtText = `${caption}\n\n${pickedProduct.aff_link}`;
                             if (pickedProduct.tele_file_id) {
                                 localImg = await downloadImageFromTelegram(pickedProduct.tele_file_id);
                             }
@@ -273,12 +278,14 @@ const SEED_COMMENTS = [
                         if (isAffiliate) {
                             console.log(`⌨️ Đang gõ nội dung kèm link Shopee...`);
                             const lines = cmtText.split('\n');
-                            for (let line of lines) {
+                            for (const [index, line] of lines.entries()) {
                                 await page.keyboard.type(line, { delay: getRandomInt(20, 50) });
-                                await page.keyboard.down('Shift');
-                                await page.keyboard.press('Enter');
-                                await page.keyboard.up('Shift');
-                                await delay(200);
+                                if (index < lines.length - 1) {
+                                    await page.keyboard.down('Shift');
+                                    await page.keyboard.press('Enter');
+                                    await page.keyboard.up('Shift');
+                                    await delay(200);
+                                }
                             }
                         } else {
                             console.log(`⌨️ Đang gõ khen dạo: "${cmtText}"`);
