@@ -34,7 +34,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
         console.log(`✗ Tài khoản ${email} đã hết giới hạn đăng bài FB hôm nay. Dừng script.`);
         await logToWeb(email, 'fb-story', `Đã hết giới hạn đăng bài FB hôm nay. Dừng script.`, 'warn');
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB]</b>\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Đăng bài FB]</b>\nTừ chối chạy do đã hết giới hạn đăng bài hôm nay.\nTài khoản: ${email}`);
         }
         process.exit(0);
     }
@@ -218,32 +218,47 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
 
         // Tìm ô "Bạn đang nghĩ gì?"
         const postBoxSelectors = [
-            'div[aria-label="Bạn đang nghĩ gì?"]',
-            'div[aria-label="What\'s on your mind?"]',
-            'span:contains("Bạn đang nghĩ gì?")',
-            'div[role="button"]:has(span:contains("nghĩ gì"))'
+            'div[aria-label^="Bạn đang nghĩ gì"]',
+            'div[aria-label^="What\'s on your mind"]'
         ];
 
         let clicked = false;
         for (let sel of postBoxSelectors) {
             try {
+                // Thử click bằng Puppeteer
+                const box = await page.$(sel);
+                if (box) {
+                    await box.click();
+                    clicked = true;
+                    break;
+                }
+            } catch (e) {}
+        }
+        
+        if (!clicked) {
+            try {
                 // Thử dùng evaluate để click cho chuẩn
                 const clickedBox = await page.evaluate(() => {
-                    const box = document.querySelector('div[aria-label="Bạn đang nghĩ gì?"]') || document.querySelector('div[aria-label="What\'s on your mind?"]');
+                    const box = document.querySelector('div[aria-label^="Bạn đang nghĩ gì"]') || document.querySelector('div[aria-label^="What\'s on your mind"]');
                     if (box) {
                         box.click();
                         return true;
                     }
-                    const spans = Array.from(document.querySelectorAll('span')).filter(el => el.innerText.includes('nghĩ gì') || el.innerText.includes('mind?'));
+                    const spans = Array.from(document.querySelectorAll('span')).filter(el => {
+                        const txt = (el.innerText || "").toLowerCase();
+                        return txt.includes('nghĩ gì') || txt.includes('mind?');
+                    });
                     if (spans.length > 0) {
-                        spans[0].click();
+                        // Tìm thẻ cha là button hoặc role="button"
+                        let parent = spans[0].closest('div[role="button"]');
+                        if (parent) parent.click();
+                        else spans[0].click();
                         return true;
                     }
                     return false;
                 });
                 if (clickedBox) {
                     clicked = true;
-                    break;
                 }
             } catch (e) { }
         }
@@ -425,7 +440,7 @@ const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMess
     } catch (e) {
         console.error("✗ Lỗi trong quá trình đăng bài:", e.message);
         if (dbConfig && dbConfig.tele_chat_id) {
-            await sendTelegramMessage(dbConfig.tele_chat_id, `❌ <b>[Bot Đăng bài FB Lỗi]</b>\nLỗi: ${e.message}\nTài khoản: ${email}`);
+            await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Đăng bài FB Lỗi]</b>\nLỗi: ${e.message}\nTài khoản: ${email}`);
         }
     }
 
