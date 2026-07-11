@@ -15,37 +15,48 @@ function getRandomInt(min, max) {
 
 const { fetchBotConfig, logToWeb, checkQuota, updateUsageStats, sendTelegramMessage } = require('../supabase_helper');
 
-const normalizeText = (value) => String(value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi-VN');
+const normalizeText = (value) => String(value || '')
+    .toLocaleLowerCase('vi-VN')
+    .replace(/[?!.,:…]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 /** Click một action Facebook đang hiển thị; ưu tiên action nằm trong popup composer. */
 async function clickFacebookAction(page, labels, { contains = false, preferDialog = true } = {}) {
-    return page.evaluate(({ labels, contains, preferDialog }) => {
-        const wanted = labels.map(value => value.toLocaleLowerCase('vi-VN'));
+    const target = await page.evaluate(({ labels, contains, preferDialog }) => {
+        const wanted = labels.map(value => value.toLocaleLowerCase('vi-VN').replace(/[?!.,:…]/g, '').replace(/\s+/g, ' ').trim());
         const isVisible = (el) => {
             const rect = el.getBoundingClientRect();
             const style = window.getComputedStyle(el);
             return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
         };
-        const normalized = (value) => String(value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi-VN');
+        const normalized = (value) => String(value || '').toLocaleLowerCase('vi-VN').replace(/[?!.,:…]/g, '').replace(/\s+/g, ' ').trim();
         const matches = (value) => wanted.some(label => contains ? value.includes(label) : value === label);
         const roots = preferDialog
             ? [...document.querySelectorAll('[role="dialog"]'), document]
             : [document];
 
         for (const root of roots) {
-            const candidates = [...root.querySelectorAll('button, [role="button"]')];
+            // Composer trên Home hiện tại có thể là div không có role=button;
+            // lấy thêm element mang aria/placeholder và div, rồi ưu tiên text ngắn nhất.
+            const candidates = [...root.querySelectorAll('button, [role="button"], [aria-label], [placeholder], div')]
+                .sort((a, b) => (a.innerText || a.textContent || '').length - (b.innerText || b.textContent || '').length);
             for (const candidate of candidates) {
                 if (!isVisible(candidate) || candidate.getAttribute('aria-disabled') === 'true' || candidate.hasAttribute('disabled')) continue;
                 const values = [candidate.innerText, candidate.textContent, candidate.getAttribute('aria-label'), candidate.getAttribute('title')]
                     .map(normalized);
                 if (values.some(matches)) {
-                    candidate.click();
-                    return true;
+                    const rect = candidate.getBoundingClientRect();
+                    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
                 }
             }
         }
-        return false;
+        return null;
     }, { labels: labels.map(normalizeText), contains, preferDialog });
+
+    if (!target) return false;
+    await page.mouse.click(target.x, target.y);
+    return true;
 }
 
 (async () => {
@@ -57,6 +68,7 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
 
     // HÚT CONFIG TỪ SUPABASE TRƯỚC ĐỂ BIẾT TIER
     let dbConfig = null;
+    let completed = false;
     try {
         dbConfig = await fetchBotConfig(email);
     } catch (e) { }
@@ -263,7 +275,7 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
 
         let clicked = await clickFacebookAction(
             page,
-            ['Bạn đang nghĩ gì?', "What's on your mind?", 'Tạo bài viết', 'Create post'],
+            ['Bạn đang nghĩ gì', "What's on your mind", 'Tạo bài viết', 'Create post'],
             { contains: true, preferDialog: false }
         );
 
@@ -401,6 +413,7 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
         console.log("✓ Đã Share lên Story thành công!");
         await logToWeb(email, 'fb-story', '✓ Đã Share lên Story thành công!', 'success');
         await updateUsageStats(email, 'fb_posts_count', 1);
+        completed = true;
 
         // Cập nhật lại mảng dữ liệu (đã đánh dấu fb_posted) lên DB và file local
         const { supabase } = require('../supabase_helper');
@@ -428,6 +441,11 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
         if (fs.existsSync(p)) {
             fs.unlinkSync(p);
         }
+    }
+    if (!completed) {
+        await browser.close();
+        process.exitCode = 1;
+        return;
     }
     console.log("🎉 Hoàn tất chu trình Đăng & Share Shopee!");
     await logToWeb(email, 'fb-story', '🎉 Hoàn tất chu trình Đăng & Share Shopee!', 'success');
