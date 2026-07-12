@@ -137,33 +137,31 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
     // Lọc ra các sản phẩm chưa đăng
     let unpostedData = scrapedData.filter(item => !item.fb_posted);
 
-    // Nếu hết bài hoặc chỉ còn 1 bài (không đủ 2 bài để đăng), reset lại toàn bộ
-    if (unpostedData.length < 2) {
-        console.log("♻️ Đã đăng hết 1 vòng (hoặc không đủ 2 bài). Đang reset lại danh sách đăng từ đầu...");
+    // Nếu hết bài, reset lại toàn bộ
+    if (unpostedData.length === 0) {
+        console.log("♻️ Đã đăng hết 1 vòng. Đang reset lại danh sách đăng từ đầu...");
         scrapedData.forEach(item => item.fb_posted = false);
         unpostedData = scrapedData;
     }
 
-    // Chọn 2 sản phẩm ngẫu nhiên khác nhau từ danh sách chưa đăng
-    let p1Index = getRandomInt(0, unpostedData.length - 1);
-    let p2Index = getRandomInt(0, unpostedData.length - 1);
-    if (unpostedData.length > 1) {
-        while (p2Index === p1Index) {
-            p2Index = getRandomInt(0, unpostedData.length - 1);
-        }
+    // Chọn số lượng sản phẩm ngẫu nhiên: 1 hoặc 2 (như chồng yêu cầu)
+    let numProducts = getRandomInt(1, 2);
+    if (unpostedData.length < numProducts) {
+        numProducts = unpostedData.length;
     }
 
-    let product1 = unpostedData[p1Index];
-    let product2 = unpostedData[p2Index];
-
-    // Đánh dấu 2 sản phẩm này là đã đăng trong mảng gốc
-    let originalIdx1 = scrapedData.findIndex(item => item.aff_link === product1.aff_link);
-    let originalIdx2 = scrapedData.findIndex(item => item.aff_link === product2.aff_link);
-    if (originalIdx1 !== -1) scrapedData[originalIdx1].fb_posted = true;
-    if (originalIdx2 !== -1) scrapedData[originalIdx2].fb_posted = true;
-
-    console.log("🎯 Sản phẩm mục tiêu 1:", product1.title);
-    console.log("🎯 Sản phẩm mục tiêu 2:", product2.title);
+    let selectedProducts = [];
+    for (let i = 0; i < numProducts; i++) {
+        let pIndex = getRandomInt(0, unpostedData.length - 1);
+        let product = unpostedData[pIndex];
+        selectedProducts.push(product);
+        unpostedData.splice(pIndex, 1); // Xóa để tránh trùng trong cùng 1 lần đăng
+        
+        let originalIdx = scrapedData.findIndex(item => item.aff_link === product.aff_link);
+        if (originalIdx !== -1) scrapedData[originalIdx].fb_posted = true;
+        
+        console.log(`🎯 Sản phẩm mục tiêu ${i + 1}:`, product.title);
+    }
 
     // Tải ảnh về lưu tạm để upload
     const https = require('https');
@@ -179,29 +177,74 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
     }
 
     let imagePaths = [];
-    if (product1.image_url) {
-        const p1 = path.resolve(__dirname, `shopee_product1_${Date.now()}.png`);
-        await downloadImage(product1.image_url, p1);
-        imagePaths.push(p1);
-    }
-    if (product2.image_url) {
-        const p2 = path.resolve(__dirname, `shopee_product2_${Date.now()}.png`);
-        await downloadImage(product2.image_url, p2);
-        imagePaths.push(p2);
+    for (let i = 0; i < selectedProducts.length; i++) {
+        if (selectedProducts[i].image_url) {
+            const p = path.resolve(__dirname, `shopee_product${i+1}_${Date.now()}.png`);
+            await downloadImage(selectedProducts[i].image_url, p);
+            imagePaths.push(p);
+        }
     }
 
     console.log("📸 Đã tải ảnh xong:", imagePaths);
 
-    // Ghép Caption 2 sản phẩm
-    let caption1 = product1.suggested_comment && product1.suggested_comment.includes(product1.aff_link)
-        ? product1.suggested_comment
-        : (product1.suggested_comment ? `${product1.suggested_comment}\n🛒 Link: ${product1.aff_link}` : `${product1.title}\n🛒 Đặt hàng tại đây: ${product1.aff_link}`);
+    // Dùng Gemini API để Gen Caption
+    let finalCaption = '';
+    console.log("🧠 Đang dùng Gemini AI tạo Caption...");
+    await logToWeb(email, 'fb-story', '🧠 Đang dùng Gemini AI tạo Caption...', 'info');
+    const GEMINI_KEY_POOL = [
+        process.env.GEMINI_API_KEY,
+        process.env.GEMINI_API_KEY_2,
+        process.env.GEMINI_API_KEY_3,
+    ].filter(Boolean);
 
-    let caption2 = product2.suggested_comment && product2.suggested_comment.includes(product2.aff_link)
-        ? product2.suggested_comment
-        : (product2.suggested_comment ? `${product2.suggested_comment}\n🛒 Link: ${product2.aff_link}` : `${product2.title}\n🛒 Đặt hàng tại đây: ${product2.aff_link}`);
+    const userTier = dbConfig?.tier || 'free';
+    if (userTier !== 'free' && GEMINI_KEY_POOL.length > 0) {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        
+        let prompt = `Bạn là một chuyên gia viết content affiliate marketing trên Facebook.\n`;
+        prompt += `Viết một bài đăng (caption) thật ngắn gọn, thu hút, tự nhiên như người dùng thật đang review để giới thiệu ${selectedProducts.length} sản phẩm sau đây.\n`;
+        prompt += `Nội dung phải có các đoạn mô tả hấp dẫn, kèm theo icon phù hợp.\n`;
+        prompt += `BẮT BUỘC chèn ĐÚNG NGUYÊN VĂN Link Affiliate của mỗi sản phẩm vào vị trí kêu gọi hành động.\n`;
+        prompt += `Tuyệt đối không dùng markdown in đậm (**) hoặc in nghiêng (*) vì FB sẽ lỗi font.\n\n`;
+        
+        selectedProducts.forEach((p, i) => {
+            prompt += `Sản phẩm ${i + 1}:\n- Tên: ${p.title}\n- Gợi ý từ người bán: ${p.suggested_comment || 'Không có'}\n- Link Affiliate (PHẢI GIỮ NGUYÊN): ${p.aff_link}\n\n`;
+        });
+        
+        for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
+            try {
+                console.log(`🔑 Thử Gemini key #${i + 1}/${GEMINI_KEY_POOL.length}...`);
+                const genAI = new GoogleGenerativeAI(GEMINI_KEY_POOL[i]);
+                const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+                
+                const result = await model.generateContent(prompt);
+                finalCaption = result.response.text().replace(/\*/g, '');
+                console.log(`✓ Tạo caption bằng Key #${i + 1} thành công!`);
+                break; // Thành công thì thoát vòng lặp
+            } catch (e) {
+                const isQuotaError = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('RESOURCE_EXHAUSTED');
+                if (isQuotaError && i < GEMINI_KEY_POOL.length - 1) {
+                    console.warn(`⚠ Key #${i + 1} hết quota (429), chuyển sang key #${i + 2}...`);
+                    continue;
+                }
+                console.error(`✘ Lỗi tạo caption bằng Key #${i + 1}:`, e.message);
+                break;
+            }
+        }
+    }
 
-    let finalCaption = `✨ Gom lẹ 2 deal này cho bà nào cần nha:\n\n1️⃣ ${caption1}\n\n2️⃣ ${caption2}`;
+    if (!finalCaption) {
+        console.error("Lỗi tạo caption bằng Gemini hoặc hết Key, quay về cách cũ.");
+        if (selectedProducts.length === 1) {
+            let p = selectedProducts[0];
+            let c = p.suggested_comment && p.suggested_comment.includes(p.aff_link) ? p.suggested_comment : (p.suggested_comment ? `${p.suggested_comment}\n🛒 Link: ${p.aff_link}` : `${p.title}\n🛒 Đặt hàng tại đây: ${p.aff_link}`);
+            finalCaption = c;
+        } else {
+            let c1 = selectedProducts[0].suggested_comment ? `${selectedProducts[0].suggested_comment}\n🛒 Link: ${selectedProducts[0].aff_link}` : `${selectedProducts[0].title}\n🛒 Link: ${selectedProducts[0].aff_link}`;
+            let c2 = selectedProducts[1].suggested_comment ? `${selectedProducts[1].suggested_comment}\n🛒 Link: ${selectedProducts[1].aff_link}` : `${selectedProducts[1].title}\n🛒 Link: ${selectedProducts[1].aff_link}`;
+            finalCaption = `✨ Gom lẹ deal HOT cho bà nào cần nha:\n\n1️⃣ ${c1}\n\n2️⃣ ${c2}`;
+        }
+    }
 
     // Khởi tạo trình duyệt
     const browser = await puppeteer.launch({

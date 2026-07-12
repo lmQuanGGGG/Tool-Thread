@@ -182,7 +182,7 @@ async function generateBatchComments(titles) {
         try {
             console.log(`🔑 Thử Gemini key #${i + 1}/${GEMINI_KEY_POOL.length}...`);
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
             const result = await model.generateContent(prompt);
             let rawText = result.response.text().trim();
