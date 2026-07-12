@@ -36,6 +36,27 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Các bot Facebook cùng dùng một session/cookie. Worker đã có lock để xếp
+    // hàng an toàn; chặn thêm ở API để UI không tạo một workflow chờ thứ hai.
+    const facebookSessionBots = new Set(['reels', 'fb', 'fb_story', 'shopee', 'fb_comment']);
+    if (facebookSessionBots.has(botType)) {
+      const { data: activeLock, error: lockError } = await supabaseAdmin
+        .from('fb_session_locks')
+        .select('expires_at')
+        .eq('email', email)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+      if (lockError) {
+        return NextResponse.json({ error: `Không kiểm tra được Facebook session lock: ${lockError.message}` }, { status: 500 });
+      }
+      if (activeLock) {
+        return NextResponse.json({
+          error: 'Bot Facebook đang chạy cho tài khoản này. Vui lòng đợi hoàn tất rồi thử lại.'
+        }, { status: 429 });
+      }
+    }
+
     let workflowId = 'reels_worker.yml';
     let inputs: any = { email };
 
