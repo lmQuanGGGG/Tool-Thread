@@ -44,7 +44,6 @@ jobs:
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         TELE_BOT_TOKEN: ${{ secrets.TELE_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        MAX_SCROLLS: "15"
       run: |
         echo "🔥 Đang chạy Bot Cào Profile Threads: ${{ github.event.inputs.target_url }}"
         xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 11_threads_profile_scraper.js
