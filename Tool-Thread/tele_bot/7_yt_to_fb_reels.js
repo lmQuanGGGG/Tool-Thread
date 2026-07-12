@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer-extra');
@@ -14,8 +14,7 @@ puppeteer.use(StealthPlugin());
 const OUTPUT_DIR = path.resolve(__dirname, 'reels_videos');
 const HISTORY_FILE = path.resolve(__dirname, 'reels_history.json');
 
-const localYtDlp = path.resolve(__dirname, 'bin', 'yt-dlp');
-// Ép dùng yt-dlp của hệ thống (bản mới nhất) thay vì bản cũ trong thư mục bin
+// yt-dlp chỉ dùng để quét danh sách video của từng kênh.
 const YTDLP_CMD = "yt-dlp";
 
 function delay(time) {
@@ -46,53 +45,125 @@ if (fs.existsSync(HISTORY_FILE)) {
     } catch (e) { }
 }
 
+function isDirectVideoUrl(url) {
+    try {
+        const host = new URL(url).hostname.toLowerCase();
+        const pathName = new URL(url).pathname.toLowerCase();
+        return host === 'v.douyin.com'
+            || (host.endsWith('douyin.com') && (pathName.includes('/video/') || pathName.includes('/share/video/')))
+            || (host.endsWith('tiktok.com') && pathName.includes('/video/'))
+            || (host.includes('youtube.com') && (pathName === '/watch' || pathName.includes('/shorts/')))
+            || host === 'youtu.be';
+    } catch (_) {
+        return false;
+    }
+}
+
 async function fetchLatestVideos(channels) {
     let allVideos = [];
     for (let channel of channels) {
         console.log("🔍 Đang quét danh sách Videos từ:", channel);
         try {
-            if (channel.includes('tiktok.com')) {
-                const usernameMatch = channel.match(/@([\w.-]+)/);
-                if (usernameMatch && usernameMatch[1]) {
-                    const username = usernameMatch[1];
-                    const res = await axios.get(`https://www.tikwm.com/api/user/posts?unique_id=${username}&count=50`);
-                    if (res.data && res.data.data && res.data.data.videos) {
-                        for (let vid of res.data.data.videos) {
-                            allVideos.push({
-                                id: vid.video_id,
-                                title: vid.title,
-                                url: `https://www.tiktok.com/@${username}/video/${vid.video_id}`,
-                                playUrl: vid.play,
-                                isTikTok: true
-                            });
-                        }
-                    }
-                }
-            } else {
-                const cmd = `${YTDLP_CMD} --flat-playlist --dump-json --playlist-end 50 --extractor-args "youtube:player_client=android" "${channel}"`;
-                const output = execSync(cmd, { encoding: 'utf8' });
+            const directVideo = isDirectVideoUrl(channel);
+            const args = directVideo
+                ? ['--no-playlist', '--dump-single-json', channel]
+                : [
+                    '--flat-playlist', '--dump-json', '--playlist-end', '50',
+                    '--extractor-args', 'youtube:player_client=android', channel
+                ];
+            const output = execFileSync(YTDLP_CMD, args, {
+                encoding: 'utf8', maxBuffer: 20 * 1024 * 1024
+            });
 
-                const lines = output.trim().split('\n');
-                for (let line of lines) {
-                    if (!line) continue;
-                    try {
-                        let info = JSON.parse(line);
-                        if (info.id) {
-                            allVideos.push({
-                                id: info.id,
-                                title: info.title,
-                                url: info.url || info.webpage_url || channel,
-                                isTikTok: false
-                            });
-                        }
-                    } catch (e) { }
-                }
+            for (const line of output.trim().split('\n')) {
+                if (!line) continue;
+                try {
+                    const info = JSON.parse(line);
+                    if (info.id) {
+                        // extractor + id tránh trùng lịch sử giữa các nền tảng.
+                        allVideos.push({
+                            id: `${info.extractor_key || info.extractor || 'video'}:${info.id}`,
+                            sourceId: info.id,
+                            title: info.title || info.id,
+                            // Với v.douyin.com, yt-dlp trả về URL đã resolve để GenDownload tải đúng video.
+                            url: info.webpage_url || info.original_url || info.url || channel
+                        });
+                    }
+                } catch (_) { }
             }
         } catch (err) {
             console.error("✗ Lỗi quét kênh:", err.message);
         }
     }
     return allVideos;
+}
+
+async function downloadFile(url, filePath) {
+    const response = await axios({ url, method: 'GET', responseType: 'stream', timeout: 300000 });
+    const writer = fs.createWriteStream(filePath);
+    response.data.pipe(writer);
+    await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+        response.data.on('error', reject);
+    });
+}
+
+function hasAudio(format) {
+    return format.has_audio === true || format.hasAudio === true || format.audio === true
+        || Boolean(format.audio_url || format.audioUrl)
+        || (typeof format.acodec === 'string' && format.acodec !== 'none')
+        || /audio\//i.test(format.mime_type || format.mimeType || '');
+}
+
+function isAudioOnly(format) {
+    return format.type === 'audio' || format.vcodec === 'none' || /audio/i.test(format.label || '');
+}
+
+async function downloadVideoWithAudio(video, outputDir) {
+    // GenDownload vẫn là API extractor/tải chính: hỗ trợ mọi nguồn mà API cung cấp.
+    const { data } = await axios.post('https://gendownload.com/api/extract', { url: video.url }, {
+        timeout: 60000,
+        headers: { 'Content-Type': 'application/json' }
+    });
+    const formats = data?.formats || [];
+    if (!formats.length) throw new Error('API GenDownload không trả về format nào.');
+
+    const videoFormats = formats.filter((format) => format.url && !isAudioOnly(format));
+    const bestVideo = videoFormats.find(hasAudio)
+        || videoFormats.find((format) => format.label === '1080p')
+        || videoFormats.find((format) => format.label === '720p')
+        || videoFormats[0];
+    if (!bestVideo) throw new Error('API GenDownload không trả về video hợp lệ.');
+
+    const safeId = video.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const outputPath = path.join(outputDir, `${safeId}.mp4`);
+    await downloadFile(bestVideo.url, outputPath);
+
+    // Nếu video stream không chứa tiếng, dùng audio stream API trả về để ghép lại.
+    const audioStream = () => execFileSync('ffprobe', [
+        '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_type',
+        '-of', 'default=noprint_wrappers=1:nokey=1', outputPath
+    ], { encoding: 'utf8' }).trim();
+    if (audioStream() !== 'audio') {
+        const audioFormat = formats.find((format) => format.url && isAudioOnly(format));
+        if (!audioFormat) {
+            throw new Error('GenDownload chỉ trả về video không tiếng cho URL này.');
+        }
+        const audioPath = path.join(outputDir, `${safeId}.audio`);
+        const mergedPath = path.join(outputDir, `${safeId}.merged.mp4`);
+        await downloadFile(audioFormat.url, audioPath);
+        execFileSync('ffmpeg', [
+            '-y', '-i', outputPath, '-i', audioPath, '-c:v', 'copy', '-c:a', 'aac',
+            '-map', '0:v:0', '-map', '1:a:0', '-shortest', mergedPath
+        ], { stdio: 'pipe' });
+        fs.renameSync(mergedPath, outputPath);
+        fs.unlinkSync(audioPath);
+    }
+    if (audioStream() !== 'audio') {
+        throw new Error('File sau khi xử lý vẫn không có audio stream.');
+    }
+    return outputPath;
 }
 
 (async () => {
@@ -257,70 +328,13 @@ async function fetchLatestVideos(channels) {
     // 2. Tải video chất lượng cao nhất (Best Quality)
     console.log(`\n⬇️ Đang tải video: ${videoToProcess.title}`);
     await logToWeb(email, 'yt-reels', `Đã tìm thấy video mới: ${videoToProcess.title}. Đang tải...`, 'info');
-    const outputPath = path.join(OUTPUT_DIR, `${videoToProcess.id}.mp4`);
+    let outputPath;
 
     try {
-        const videoUrl = videoToProcess.url.includes('/video/') ? videoToProcess.url : (videoToProcess.isTikTok ? `https://www.tiktok.com/@user/video/${videoToProcess.id}` : `https://www.youtube.com/watch?v=${videoToProcess.id}`);
-
-        console.log(`\n➡️ Gọi API gendownload.com để lấy link 1080p cho video: ${videoUrl}`);
-        await logToWeb(email, 'yt-reels', `Đang gọi API GenDownload lấy video 1080p cho đa nền tảng...`, 'info');
-        const apiCmd = `curl -s -X POST https://gendownload.com/api/extract -H "Content-Type: application/json" -d '{"url":"${videoUrl}"}'`;
-        const apiResponse = execSync(apiCmd, { encoding: 'utf-8' });
-        const jsonResp = JSON.parse(apiResponse);
-
-        if (!jsonResp.formats || jsonResp.formats.length === 0) {
-            throw new Error("API gendownload không trả về formats nào.");
-        }
-
-        // Ưu tiên lấy format video có độ phân giải cao nhất (1080p, 720p, ...)
-        let bestFormat = jsonResp.formats.find(f => f.label === '1080p' && f.type === 'video');
-        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.label === '720p' && f.type === 'video');
-        if (!bestFormat) bestFormat = jsonResp.formats.find(f => f.type === 'video');
-
-        if (!bestFormat) {
-            throw new Error("Không tìm thấy format video hợp lệ từ API.");
-        }
-
-        console.log(`➡️ Tìm thấy chất lượng ${bestFormat.label}, đang tải xuống...`);
-
-        const axios = require('axios');
-        const response = await axios({
-            url: bestFormat.url,
-            method: 'GET',
-            responseType: 'stream',
-            timeout: 300000 // 5 minutes timeout
-        });
-
-        const totalLength = parseInt(response.headers['content-length'], 10);
-        let downloadedLength = 0;
-        let lastReportedProgress = 0; // For percentage
-        let lastReportedMB = 0; // For MB if no totalLength
-
-        const writer = fs.createWriteStream(outputPath);
-        response.data.on('data', (chunk) => {
-            downloadedLength += chunk.length;
-            if (totalLength) {
-                const percent = Math.floor((downloadedLength / totalLength) * 100);
-                if (percent >= lastReportedProgress + 10) {
-                    console.log(`⏳ Đang tải: ${percent}%...`);
-                    lastReportedProgress = percent;
-                }
-            } else {
-                const downloadedMB = Math.floor(downloadedLength / (1024 * 1024));
-                if (downloadedMB >= lastReportedMB + 5) { // Report every 5MB
-                    console.log(`⏳ Đang tải... (đã tải được ${downloadedMB} MB)`);
-                    lastReportedMB = downloadedMB;
-                }
-            }
-        });
-
-        response.data.pipe(writer);
-
-        await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-        });
-        console.log(`✓ Tải video ${bestFormat.label} hoàn tất!`);
+        console.log(`\n➡️ Gọi GenDownload để tải video: ${videoToProcess.url}`);
+        await logToWeb(email, 'yt-reels', 'Đang tải bằng GenDownload và kiểm tra/ghép audio nếu cần...', 'info');
+        outputPath = await downloadVideoWithAudio(videoToProcess, OUTPUT_DIR);
+        console.log('✓ Tải và kiểm tra audio hoàn tất!');
     } catch (err) {
         console.error("✗ Lỗi tải video:", err.message);
         process.exit(1);
