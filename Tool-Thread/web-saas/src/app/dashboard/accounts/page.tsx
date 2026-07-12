@@ -696,6 +696,10 @@ export default function AccountsPage() {
                         {triggeringType === "reels" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
                         FB Reels
                       </button>
+                      <button onClick={() => handleTrigger("fb_comment")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-3.5 w-full rounded-[16px]`}>
+                        {triggeringType === "fb_comment" ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                        Rải link Reels người khác
+                      </button>
                     </div>
                   </div>
                 </div>

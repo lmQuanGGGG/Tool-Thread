@@ -5,6 +5,21 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+function cleanStoryCaption(rawCaption) {
+    let caption = String(rawCaption || '').replace(/\*/g, '').trim();
+    const firstOption = caption.match(/(?:^|\n|:)\s*(?:lựa chọn|option)\s*1\s*(?:\([^)]*\))?\s*:\s*/i);
+
+    if (firstOption && firstOption.index !== undefined) {
+        caption = caption.slice(firstOption.index + firstOption[0].length);
+    } else {
+        caption = caption.replace(/^\s*(?:dưới đây|sau đây)[^\n:]*:\s*/i, '');
+    }
+
+    const nextOption = caption.search(/(?:\n|:|\s)\s*(?:✨\s*)?(?:lựa chọn|option)\s*[2-9]\s*(?:\([^)]*\))?\s*:\s*/i);
+    if (nextOption >= 0) caption = caption.slice(0, nextOption);
+    return caption.trim();
+}
+
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
@@ -62,6 +77,7 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
 (async () => {
     const pm2ProcessName = 'fb-story-farmer';
     const manualFlagPath = path.resolve(__dirname, '..', `${pm2ProcessName}.manual`);
+    const runMode = process.env.RUN_MODE;
     const isGithubAction = process.env.GITHUB_ACTIONS === 'true';
 
     const email = process.env.USER_EMAIL || 'admin@autofarm.com';
@@ -87,8 +103,11 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
     const isPromax = dbConfig?.tier === 'promax';
     await logToWeb(email, 'fb-story', `Khởi động tool FB Story... Tier: ${dbConfig?.tier}`, 'info');
 
-    if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction || process.argv.includes('--manual')) {
-        let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
+    const skipWarmup = isGithubAction || fs.existsSync(manualFlagPath) || isPromax || process.argv.includes('--manual');
+    if (skipWarmup) {
+        let msg = isGithubAction
+            ? (runMode === 'auto' ? '🤖 Lệnh tự động từ Dispatcher' : '⚡ Lệnh chạy tay từ Web')
+            : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
         await logToWeb(email, 'fb-story', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
         if (fs.existsSync(manualFlagPath)) fs.unlinkSync(manualFlagPath);
@@ -202,10 +221,11 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
         const { GoogleGenerativeAI } = require('@google/generative-ai');
         
         let prompt = `Bạn là một chuyên gia viết content affiliate marketing trên Facebook.\n`;
-        prompt += `Viết caption ĐỂ ĐĂNG FACEBOOK STORY cực kỳ ngắn gọn (TỐI ĐA 2-4 CÂU), đi thẳng vào vấn đề, tự nhiên như người dùng thật đang khen để giới thiệu ${selectedProducts.length} sản phẩm sau.\n`;
+        prompt += `Viết MỘT caption ĐỂ ĐĂNG FACEBOOK STORY cực kỳ ngắn gọn (TỐI ĐA 2-4 CÂU), đi thẳng vào vấn đề, tự nhiên như người dùng thật đang khen để giới thiệu ${selectedProducts.length} sản phẩm sau.\n`;
         prompt += `Không viết dông dài, không cần mở bài lằng nhằng. Kèm 1-2 icon cho sinh động.\n`;
         prompt += `BẮT BUỘC chèn ĐÚNG NGUYÊN VĂN Link Affiliate của mỗi sản phẩm vào vị trí kêu gọi hành động.\n`;
         prompt += `Tuyệt đối không dùng markdown in đậm (**) hoặc in nghiêng (*) vì FB sẽ lỗi font.\n\n`;
+        prompt += `CHỈ trả về nguyên văn một caption sẽ đăng. Không lời dẫn, không giải thích, không tiêu đề, không "Dưới đây là", không đánh số và không đưa nhiều lựa chọn.\n\n`;
         
         selectedProducts.forEach((p, i) => {
             prompt += `Sản phẩm ${i + 1}:\n- Tên: ${p.title}\n- Gợi ý từ người bán: ${p.suggested_comment || 'Không có'}\n- Link Affiliate (PHẢI GIỮ NGUYÊN): ${p.aff_link}\n\n`;
@@ -218,17 +238,17 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
                 const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
                 
                 const result = await model.generateContent(prompt);
-                finalCaption = result.response.text().replace(/\*/g, '');
+                finalCaption = cleanStoryCaption(result.response.text());
                 console.log(`✓ Tạo caption bằng Key #${i + 1} thành công!`);
                 break; // Thành công thì thoát vòng lặp
             } catch (e) {
                 const isQuotaError = e.message?.includes('429') || e.message?.includes('quota') || e.message?.includes('RESOURCE_EXHAUSTED');
-                if (isQuotaError && i < GEMINI_KEY_POOL.length - 1) {
-                    console.warn(`⚠ Key #${i + 1} hết quota (429), chuyển sang key #${i + 2}...`);
+                if (i < GEMINI_KEY_POOL.length - 1) {
+                    const reason = isQuotaError ? 'hết quota (429)' : 'gặp lỗi';
+                    console.warn(`⚠ Key #${i + 1} ${reason}, chuyển sang key #${i + 2}...`);
                     continue;
                 }
                 console.error(`✘ Lỗi tạo caption bằng Key #${i + 1}:`, e.message);
-                break;
             }
         }
     }

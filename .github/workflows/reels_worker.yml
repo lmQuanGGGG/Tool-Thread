@@ -7,8 +7,18 @@ on:
         description: 'Email khách hàng cần chạy Bot (Dành cho tài khoản Free bấm tay)'
         required: true
         default: 'admin@autofarm.com'
+      run_mode:
+        description: 'Nguồn kích hoạt: auto hoặc manual'
+        required: false
+        default: 'manual'
 permissions:
   contents: write # Cho phép Github Actions push commit tệp reels_history.json lại
+
+# Reels và Shopee Post dùng chung cookie Facebook của một tài khoản. Không cho
+# hai workflow này chạy đồng thời để job xếp hàng luôn đọc được cookie mới nhất.
+concurrency:
+  group: fb-publish-session-${{ github.event.inputs.email }}
+  cancel-in-progress: false
 
 jobs:
   setup:
@@ -73,18 +83,35 @@ jobs:
       run: |
         cd "Tool-Thread"/tele_bot && npm install && npm install @supabase/supabase-js puppeteer-extra puppeteer-extra-plugin-stealth axios form-data dotenv
 
+    - name: Khóa Facebook session của tài khoản
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js acquire "${{ matrix.email }}" "${{ github.run_id }}-${{ github.job }}"
+
     - name: Chạy Script Tải & Đăng Reels với Xvfb
       env:
         USER_EMAIL: ${{ matrix.email }}
+        RUN_MODE: ${{ github.event.inputs.run_mode || 'manual' }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         # Dự phòng
         FB_COOKIE_REELS: ${{ secrets.FB_COOKIE_REELS }}
         SHOPEE_AFF_LINK: ${{ secrets.SHOPEE_AFF_LINK }}
         YT_COOKIES: ${{ secrets.YT_COOKIES }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
       run: |
         echo "🔥 Đang chạy Bot cho khách hàng: ${{ matrix.email }}"
         cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node 7_yt_to_fb_reels.js
+
+    - name: Nhả khóa Facebook session
+      if: always()
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js release "${{ matrix.email }}" "${{ github.run_id }}-${{ github.job }}"
 
     - name: Lưu trữ lịch sử (Tự động Commit)
       if: success()

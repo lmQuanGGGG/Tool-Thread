@@ -11,6 +11,14 @@ const SPECIAL_REELS_EMAIL = 'lmquang.devops@gmail.com';
 const STANDARD_SLOTS = [8, 11, 13, 16, 19];
 const SPECIAL_REELS_EXTRA_SLOTS = [10, 15, 21];
 const FB_POST_SLOTS = [11, 14, 16, 20, 22];
+const DISPATCHER_HOURS = [...new Set([...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS, ...FB_POST_SLOTS, 23])];
+const AUTO_SCHEDULES = {
+    free: { reels: [11, 19], fbGroups: [19], fbReels: [19], threadsPost: [8, 19], fbPost: [19] },
+    lite: { reels: [8, 11, 19], fbGroups: [11, 19], fbReels: [11, 19], threadsPost: [8, 13, 19], fbPost: [8, 11, 19] },
+    plus: { reels: [8, 13, 16, 19], fbGroups: [13, 19], fbReels: [8, 11, 13, 16], threadsPost: [13, 19], fbPost: FB_POST_SLOTS },
+    pro: { reels: [8, 11, 13, 16, 19, 21], fbGroups: [8, 11, 13, 19], fbReels: [8, 11, 13, 16, 19, 21], threadsPost: [8, 11, 13, 19], fbPost: FB_POST_SLOTS },
+    promax: { reels: [8, 10, 11, 13, 15, 16, 19, 21], fbGroups: [8, 11, 13, 16, 19, 21], fbReels: [8, 10, 11, 13, 15, 16, 19, 21], threadsPost: [8, 10, 11, 13, 15, 16, 19, 21], fbPost: FB_POST_SLOTS },
+};
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO) {
     console.error("Missing env vars!");
@@ -19,11 +27,15 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-async function dispatchWorkflow(workflowId, email) {
+function getVnDate() {
+    return new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+async function dispatchWorkflow(workflowId, email, slot) {
     try {
         await axios.post(
             `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
-            { ref: 'main', inputs: { email: email } },
+            { ref: 'main', inputs: { email: email, run_mode: 'auto' } },
             {
                 headers: {
                     'Authorization': `Bearer ${GITHUB_TOKEN}`,
@@ -31,10 +43,42 @@ async function dispatchWorkflow(workflowId, email) {
                 }
             }
         );
+        await supabase.from('bot_logs').insert({
+            email,
+            bot_type: `auto-dispatch:${workflowId}`,
+            message: `slot:${getVnDate()}:${slot}`,
+            level: 'info',
+        });
         console.log(`✓ Dispatched ${workflowId} for ${email}`);
+        return true;
     } catch (e) {
         console.error(`✗ Failed ${workflowId} for ${email}:`, e.response?.data?.message || e.message);
+        return false;
     }
+}
+
+// Mỗi workflow/khách chỉ chạy một phiên ở mỗi lần dispatcher. Nếu một khung
+// bị lỡ, slot chưa có marker sẽ được lấy trước ở lần kế tiếp thay vì bắn dồn.
+async function dispatchNextPendingSlot(workflowId, email, slots, vnHour) {
+    const today = getVnDate();
+    const { data, error } = await supabase.from('bot_logs')
+        .select('message')
+        .eq('email', email)
+        .eq('bot_type', `auto-dispatch:${workflowId}`)
+        .like('message', `slot:${today}:%`);
+
+    if (error) {
+        console.error(`✗ Cannot read catch-up queue for ${workflowId}:`, error.message);
+        return false;
+    }
+
+    const completed = new Set((data || []).map(row => Number(String(row.message).split(':').pop())));
+    const pending = slots.filter(slot => slot <= vnHour && !completed.has(slot));
+    if (!pending.length) return false;
+
+    const slot = pending[0];
+    console.log(`${slot < vnHour ? '↩️ Catch-up' : '⏰ Scheduled'} ${workflowId} for ${email}: slot ${slot}h`);
+    return dispatchWorkflow(workflowId, email, slot);
 }
 
 async function run() {
@@ -43,7 +87,7 @@ async function run() {
 
     // Chỉ chạy tại các khung bot đã định. Cron chạy lệch phút 17 để tránh
     // hàng đợi GitHub Actions vào đầu giờ, nhưng vẫn giữ đúng giờ Việt Nam.
-    if (![...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS, ...FB_POST_SLOTS].includes(vnHour)) {
+    if (!DISPATCHER_HOURS.includes(vnHour)) {
         console.log("Not a scheduled hour. Exiting.");
         return;
     }
@@ -64,106 +108,18 @@ async function run() {
 
         if (!hasFb && !hasThreads) continue;
 
-        const isFree = p.tier === 'free';
-        const isLite = p.tier === 'lite';
-        const isPlus = p.tier === 'plus';
-        const isPro = p.tier === 'pro';
-        const isProMax = p.tier === 'promax';
+        const schedules = AUTO_SCHEDULES[p.tier];
         const auto = (key) => isAutoBotEnabled(autoSettings, p.email, key);
 
-        if (!isFree && !isLite && !isPlus && !isPro && !isProMax) continue;
+        if (!schedules) continue;
 
-        // Bỏ logic SPECIAL_REELS_EMAIL vì giờ đã có ProMax
-        
-        // Free: theo bảng gói — 2 Reels, 1 Shopee Post/Story, 1 phiên rải link Reels.
-        if (isFree) {
-            if (hasFb && auto('reels') && [11, 19].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && [19].includes(vnHour)) {
-                if (auto('fb_comment')) {
-                    await dispatchWorkflow('fb_worker.yml', p.email);
-                    await dispatchWorkflow('fb_comment_worker.yml', p.email);
-                }
-            }
-            if (hasThreads && auto('threads_post') && [8, 19].includes(vnHour)) {
-                await dispatchWorkflow('threads_post_worker.yml', p.email);
-            }
+        if (hasFb && auto('reels')) await dispatchNextPendingSlot('reels_worker.yml', p.email, schedules.reels, vnHour);
+        if (hasFb && auto('fb_comment')) {
+            await dispatchNextPendingSlot('fb_worker.yml', p.email, schedules.fbGroups, vnHour);
+            await dispatchNextPendingSlot('fb_comment_worker.yml', p.email, schedules.fbReels, vnHour);
         }
-
-        // Lite: theo bảng gói — 3 Reels, 3 Shopee Post/Story, 2 phiên rải link Reels.
-        if (isLite) {
-            if (hasFb && auto('reels') && [8, 11, 19].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && [11, 19].includes(vnHour)) {
-                if (auto('fb_comment')) {
-                    await dispatchWorkflow('fb_worker.yml', p.email);
-                    await dispatchWorkflow('fb_comment_worker.yml', p.email);
-                }
-            }
-            if (hasThreads && auto('threads_post') && [8, 13, 19].includes(vnHour)) {
-                await dispatchWorkflow('threads_post_worker.yml', p.email);
-            }
-        }
-
-        // Plus Logic: 4 phiên/ngày (8h, 13h, 16h, 19h)
-        if (isPlus) {
-            if (hasFb && auto('reels') && [8, 13, 16, 19].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [13, 19].includes(vnHour)) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [8, 11, 13, 16].includes(vnHour)) {
-                await dispatchWorkflow('fb_comment_worker.yml', p.email);
-            }
-            if (hasThreads && auto('threads_post') && [13, 19].includes(vnHour)) {
-                await dispatchWorkflow('threads_post_worker.yml', p.email);
-            }
-        }
-
-        // Pro Logic: 6 phiên/ngày (8h, 11h, 13h, 16h, 19h, 21h)
-        if (isPro) {
-            if (hasFb && auto('reels') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [8, 11, 13, 19].includes(vnHour)) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('fb_comment_worker.yml', p.email);
-            }
-            if (hasThreads && auto('threads_post') && [8, 11, 13, 19].includes(vnHour)) {
-                await dispatchWorkflow('threads_post_worker.yml', p.email);
-            }
-        }
-        
-        // ProMax Logic: 8 phiên/ngày (8h, 10h, 11h, 13h, 15h, 16h, 19h, 21h)
-        if (isProMax) {
-            if (hasFb && auto('reels') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [8, 11, 13, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('fb_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_comment') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('fb_comment_worker.yml', p.email);
-            }
-            if (hasThreads && auto('threads_post') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
-                await dispatchWorkflow('threads_post_worker.yml', p.email);
-            }
-        }
-
-        // Shopee Post/Story dùng một lịch riêng để tránh trùng với các phiên
-        // Reel/comment. Trước đây phần này chạy bằng cron riêng, dễ bị GitHub
-        // bỏ lỡ và không truyền email cho worker.
-        const fbPostSlots = isFree ? [19]
-            : isLite ? [8, 11, 19]
-            : FB_POST_SLOTS;
-        if (hasFb && auto('fb_post') && fbPostSlots.includes(vnHour)) {
-            await dispatchWorkflow('shopee_worker.yml', p.email);
-        }
+        if (hasThreads && auto('threads_post')) await dispatchNextPendingSlot('threads_post_worker.yml', p.email, schedules.threadsPost, vnHour);
+        if (hasFb && auto('fb_post')) await dispatchNextPendingSlot('shopee_worker.yml', p.email, schedules.fbPost, vnHour);
         
         await new Promise(r => setTimeout(r, 2000));
     }

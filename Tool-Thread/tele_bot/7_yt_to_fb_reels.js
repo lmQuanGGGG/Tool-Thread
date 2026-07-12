@@ -22,6 +22,19 @@ function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
+function cleanSingleGeminiText(rawText) {
+    let text = String(rawText || '').replace(/\*/g, '').trim();
+    text = text.replace(/^\s*(?:dưới đây|sau đây)[^\n:]*:\s*/i, '');
+    const firstOption = text.match(/(?:^|\n|:)\s*(?:lựa chọn|option)\s*1\s*(?:\([^)]*\))?\s*:\s*/i);
+    if (firstOption && firstOption.index !== undefined) {
+        text = text.slice(firstOption.index + firstOption[0].length);
+    }
+    const nextOption = text.search(/(?:\n|:|\s)\s*(?:✨\s*)?(?:lựa chọn|option)\s*[2-9]\s*(?:\([^)]*\))?\s*:\s*/i);
+    if (nextOption >= 0) text = text.slice(0, nextOption);
+    if (text.startsWith('"') && text.endsWith('"')) text = text.slice(1, -1);
+    return text.trim();
+}
+
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
@@ -112,6 +125,35 @@ async function fetchLatestVideos(channels) {
         return clicked;
     };
 
+    // Facebook đôi khi giữ comment trong ô nhập hoặc nuốt phím Enter. Chỉ coi là
+    // gửi thành công khi ô nhập đã rỗng và nội dung vừa gửi xuất hiện trong trang.
+    const submitCommentAndVerify = async (page, commentText) => {
+        await page.keyboard.press('Enter');
+
+        try {
+            await page.waitForFunction((text) => {
+                const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+                const expected = normalize(text);
+                const boxes = Array.from(document.querySelectorAll('div[role="textbox"][contenteditable="true"]'));
+                const visibleBox = boxes.find((box) => {
+                    const rect = box.getBoundingClientRect();
+                    return rect.width > 0 && rect.height > 0;
+                });
+
+                // Comment vẫn nằm trong editor nghĩa là Enter chưa submit được.
+                if (visibleBox && normalize(visibleBox.innerText || visibleBox.textContent)) return false;
+
+                return Array.from(document.querySelectorAll('div, span')).some((element) => {
+                    const value = normalize(element.innerText || element.textContent);
+                    return value === expected || (expected.length > 30 && value.includes(expected));
+                });
+            }, { timeout: 15000 }, commentText);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    };
+
     let dbConfig = null;
     const email = process.env.USER_EMAIL || 'admin@autofarm.com';
 
@@ -147,10 +189,14 @@ async function fetchLatestVideos(channels) {
 
     const pm2ProcessName = 'fb-reels-farmer';
     const manualFlagPath = path.resolve(__dirname, `${pm2ProcessName}.manual`);
+    const runMode = process.env.RUN_MODE;
     const isGithubAction = process.env.GITHUB_ACTIONS === 'true';
+    const skipWarmup = isGithubAction || fs.existsSync(manualFlagPath) || isPromax;
 
-    if (fs.existsSync(manualFlagPath) || isPromax || isGithubAction) {
-        let msg = isGithubAction ? '⚡ Lệnh chạy tay từ Web' : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
+    if (skipWarmup) {
+        let msg = isGithubAction
+            ? (runMode === 'auto' ? '🤖 Lệnh tự động từ Dispatcher' : '⚡ Lệnh chạy tay từ Web')
+            : (fs.existsSync(manualFlagPath) ? '⚡ Lệnh chạy tay' : '💎 Đặc quyền Promax');
         console.log(`${msg}! Bỏ qua bước ngâm nick...`);
         await logToWeb(email, 'yt-reels', `${msg}! Bỏ qua bước ngâm nick...`, 'info');
         if (fs.existsSync(manualFlagPath)) fs.unlinkSync(manualFlagPath);
@@ -431,7 +477,7 @@ async function fetchLatestVideos(channels) {
                     prompt += `👉 [1 câu mồi giới thiệu món đồ hot trend gây tò mò] [LINK]\n\n`;
                 }
                 prompt += `[1 câu giật gân tóm tắt phim dựa trên tiêu đề: "${videoToProcess.title}"]\n\n`;
-                prompt += `Không dùng markdown in đậm/nghiêng. Trả về trực tiếp kết quả. ${affLink ? 'Tuyệt đối giữ nguyên chữ [LINK] để tool tự thay thế.' : ''}\n`;
+                prompt += `Không dùng markdown in đậm/nghiêng. CHỈ trả về nguyên văn một caption để đăng; không lời dẫn, không giải thích, không đánh số, không nhiều lựa chọn. ${affLink ? 'Tuyệt đối giữ nguyên chữ [LINK] để tool tự thay thế.' : ''}\n`;
 
                 let success = false;
                 for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
@@ -441,10 +487,7 @@ async function fetchLatestVideos(channels) {
                         const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
                         
                         const result = await model.generateContent(prompt);
-                        let finalCaption = result.response.text().replace(/\*/g, '').trim();
-                        if (finalCaption.startsWith('"') && finalCaption.endsWith('"')) {
-                            finalCaption = finalCaption.slice(1, -1);
-                        }
+                        let finalCaption = cleanSingleGeminiText(result.response.text());
                         
                         if (affLink) {
                             if (finalCaption.includes('[LINK]')) {
@@ -463,10 +506,14 @@ async function fetchLatestVideos(channels) {
                 }
                 if (!success) {
                     // Fallback nếu API lỗi hết
+                    await logToWeb(email, 'yt-reels', 'Gemini không tạo được caption; dùng tiêu đề video làm caption dự phòng.', 'warn');
                     caption = affLink ? `👉 Link mua hàng ở đây nha: ${affLink}\n\n${videoToProcess.title}` : videoToProcess.title;
                 }
             } else {
                 // Gói free hoặc không có key
+                if (userTier !== 'free') {
+                    await logToWeb(email, 'yt-reels', 'Không có Gemini API key trong môi trường chạy; dùng tiêu đề video làm caption dự phòng.', 'warn');
+                }
                 caption = affLink ? `👉 Link mua hàng ở đây nha: ${affLink}\n\n${videoToProcess.title}` : videoToProcess.title;
             }
 
@@ -576,20 +623,20 @@ async function fetchLatestVideos(channels) {
             await page.goto('https://www.facebook.com/me/reels_tab', { waitUntil: 'networkidle2', timeout: 60000 });
             await delay(5000);
 
-            // Bấm vào Reel đầu tiên (mới nhất) trong tab Reels
-            const clickedReel = await page.evaluate(() => {
+            // Mở trực tiếp Reel đầu tiên (mới nhất) thay vì click mù trong modal.
+            const reelUrl = await page.evaluate(() => {
                 const reels = Array.from(document.querySelectorAll('a[href*="/reel/"]'));
                 if (reels.length > 0) {
-                    reels[0].click();
-                    return true;
+                    return reels[0].href;
                 }
-                return false;
+                return null;
             });
 
-            if (!clickedReel) {
+            if (!reelUrl) {
                 console.log("⚠️ Không tìm thấy Reel nào trong tab Reels để comment.");
                 await logToWeb(email, 'yt-reels', `Không tìm thấy video Reel nào trong trang cá nhân để auto-comment.`, 'warn');
             } else {
+                await page.goto(reelUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
                 await delay(5000); // Đợi Reel mở lên (dạng modal popup hoặc trang mới)
 
                 const clickedFirstCommentBtn = await page.evaluate(() => {
@@ -634,15 +681,14 @@ async function fetchLatestVideos(channels) {
                             let prompt = `Bạn là người săn sale Shopee.\n`;
                             prompt += `Hãy viết 1 câu bình luận siêu ngắn gọn, khen một món đồ cực hot, cuối câu để nguyên chữ [LINK]\n`;
                             prompt += `Ví dụ: "Món này xinh xỉu luôn mấy bà: [LINK]"\n`;
-                            prompt += `Tuyệt đối không dùng markdown. BẮT BUỘC có chữ [LINK].\n`;
+                            prompt += `Tuyệt đối không dùng markdown. BẮT BUỘC có chữ [LINK]. CHỈ trả về đúng một câu bình luận, không lời dẫn, không đánh số và không nhiều lựa chọn.\n`;
 
                             for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
                                 try {
                                     const genAI = new GoogleGenerativeAI(GEMINI_KEY_POOL[i]);
                                     const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" }); // fallback model name if 3.1 isn't real, but user claimed it works
                                     const result = await model.generateContent(prompt);
-                                    let gCap = result.response.text().replace(/\*/g, '').trim();
-                                    if (gCap.startsWith('"') && gCap.endsWith('"')) gCap = gCap.slice(1, -1);
+                                    let gCap = cleanSingleGeminiText(result.response.text());
                                     if (gCap.includes('[LINK]')) {
                                         cmtText = gCap.replace('[LINK]', currentLink);
                                     } else {
@@ -682,9 +728,15 @@ async function fetchLatestVideos(channels) {
                             }
 
                             await delay(1000);
-                            await page.keyboard.press('Enter');
-                            console.log(`✓ Đã gửi cmt thứ ${cmtIdx + 1}`);
-                            await logToWeb(email, 'yt-reels', `Đã bắn Comment rải link ${cmtIdx + 1}/${numComments}...`, 'info');
+                            const submitted = await submitCommentAndVerify(page, cmtText);
+                            if (!submitted) {
+                                console.log(`⚠️ Không xác minh được cmt thứ ${cmtIdx + 1}; không ghi nhận thành công.`);
+                                await logToWeb(email, 'yt-reels', `Không xác minh được Comment ${cmtIdx + 1}/${numComments} trên Facebook; không ghi nhận thành công.`, 'warn');
+                                break;
+                            }
+
+                            console.log(`✓ Đã xác minh cmt thứ ${cmtIdx + 1}`);
+                            await logToWeb(email, 'yt-reels', `Đã xác minh Comment rải link ${cmtIdx + 1}/${numComments} trên Reel.`, 'success');
                             await delay(Math.floor(Math.random() * (10000 - 5000 + 1)) + 5000);
                         } else {
                             break;

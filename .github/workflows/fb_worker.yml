@@ -32,6 +32,12 @@ jobs:
       run: |
         cd "Tool-Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth @supabase/supabase-js
 
+    - name: Khóa Facebook session của tài khoản
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js acquire "${{ github.event.inputs.email }}" "${{ github.run_id }}-${{ github.job }}"
+
     - name: Run FB Bot with Xvfb
       env:
         FB_COOKIE: ${{ secrets.FB_COOKIE }}
@@ -41,3 +47,10 @@ jobs:
       run: |
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
         cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/1_fb_puppeteer.js
+
+    - name: Nhả khóa Facebook session
+      if: always()
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js release "${{ github.event.inputs.email }}" "${{ github.run_id }}-${{ github.job }}"

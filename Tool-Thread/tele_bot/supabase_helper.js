@@ -4,7 +4,6 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Ngoại lệ quota theo từng tài khoản, dùng khi cần điều chỉnh mà không làm đổi gói chung.
 const USER_QUOTA_OVERRIDES = {
-  'lmquang.devops@gmail.com': { reels_per_day: 8 },
 };
 
 const supabaseUrl = process.env.SUPABASE_URL;

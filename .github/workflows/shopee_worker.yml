@@ -7,9 +7,18 @@ on:
         description: 'Email khách hàng (dashboard tự truyền)'
         required: false
         default: 'lmquang.devops@gmail.com'
+      run_mode:
+        description: 'Nguồn kích hoạt: auto hoặc manual'
+        required: false
+        default: 'manual'
 
 permissions:
   contents: write
+
+# Dùng cùng lock với Reels để tránh hai job ghi đè cookie Facebook của nhau.
+concurrency:
+  group: fb-publish-session-${{ github.event.inputs.email }}
+  cancel-in-progress: false
 
 jobs:
   setup:
@@ -61,13 +70,30 @@ jobs:
       run: |
         cd "Tool-Thread"/tele_bot && npm install && npm install puppeteer-extra puppeteer-extra-plugin-stealth
 
+    - name: Khóa Facebook session của tài khoản
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js acquire "${{ matrix.email }}" "${{ github.run_id }}-${{ github.job }}"
+
     - name: Run FB Shopee Post Story Bot with Xvfb
       env:
         USER_EMAIL: ${{ matrix.email }}
+        RUN_MODE: ${{ github.event.inputs.run_mode || 'manual' }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         FB_COOKIE: ${{ secrets.FB_COOKIE }} # Fallback nếu Supabase không có cookie
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+        GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
       run: |
         echo "🔥 Đang chạy Shopee Post cho khách hàng: ${{ matrix.email }}"
         # Xvfb giả lập màn hình để lách thuật toán Headless của FB
         cd "Tool-Thread"/tele_bot && xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" node fb_bot/4_fb_shopee_post_story.js
+
+    - name: Nhả khóa Facebook session
+      if: always()
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      run: cd "Tool-Thread"/tele_bot && node fb_session_lock.js release "${{ matrix.email }}" "${{ github.run_id }}-${{ github.job }}"
