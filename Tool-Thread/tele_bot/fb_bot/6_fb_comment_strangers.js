@@ -257,7 +257,23 @@ const SEED_COMMENTS = [
                     if (uploadBoxInfo) {
                         // Click vào ô nhập trước
                         await page.mouse.click(uploadBoxInfo.boxX, uploadBoxInfo.boxY);
-                        await delay(1000);
+                        // Facebook thường render editor chậm sau click; nếu gõ ngay có thể
+                        // rơi mất ký tự đầu. Focus trực tiếp và chờ editor sẵn sàng.
+                        const editorFocused = await page.evaluate(() => {
+                            const boxes = Array.from(document.querySelectorAll('div[role="textbox"][aria-label="Viết bình luận"], div[role="textbox"][aria-label="Leave a comment"], div[role="textbox"][contenteditable="true"]'));
+                            const box = boxes.find((item) => {
+                                const rect = item.getBoundingClientRect();
+                                return rect.width > 0 && rect.height > 0;
+                            });
+                            if (!box) return false;
+                            box.focus();
+                            return document.activeElement === box;
+                        });
+                        if (!editorFocused) {
+                            console.log('⚠ Không focus được ô comment; bỏ qua Reel này để tránh mất chữ.');
+                            continue;
+                        }
+                        await delay(1200);
 
                         // Đính kèm ảnh (chỉ chạy nếu là Affiliate và có ảnh)
                         if (isAffiliate && localImg && uploadBoxInfo.attachBtn) {

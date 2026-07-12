@@ -125,29 +125,61 @@ async function fetchLatestVideos(channels) {
         return clicked;
     };
 
-    // Facebook đôi khi giữ comment trong ô nhập hoặc nuốt phím Enter. Chỉ coi là
-    // gửi thành công khi ô nhập đã rỗng và nội dung vừa gửi xuất hiện trong trang.
+    // Facebook có thể nuốt Enter trong editor. Click nút gửi rồi tải lại Reel để
+    // chỉ công nhận comment khi dữ liệu đã được Facebook lưu lại thật sự.
     const submitCommentAndVerify = async (page, commentText) => {
-        await page.keyboard.press('Enter');
+        const clickedSubmit = await page.evaluate(() => {
+            const boxes = Array.from(document.querySelectorAll('div[role="textbox"][contenteditable="true"]'));
+            const box = boxes.find((item) => {
+                const rect = item.getBoundingClientRect();
+                return rect.width > 0 && rect.height > 0;
+            });
+            if (!box) return false;
+
+            let parent = box.parentElement;
+            for (let level = 0; parent && level < 7; level += 1, parent = parent.parentElement) {
+                const button = Array.from(parent.querySelectorAll('div[role="button"], button, span[role="button"]')).find((item) => {
+                    const label = (item.getAttribute('aria-label') || item.innerText || '').trim().toLowerCase();
+                    const disabled = item.getAttribute('aria-disabled') === 'true' || item.disabled;
+                    return !disabled && [
+                        'gửi', 'send', 'đăng bình luận', 'post comment',
+                        'bình luận', 'comment', 'đăng', 'post'
+                    ].includes(label);
+                });
+                if (button) {
+                    button.click();
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // Chỉ dùng Enter làm dự phòng nếu UI không có nút gửi rõ ràng.
+        if (!clickedSubmit) await page.keyboard.press('Enter');
+        await delay(4000);
 
         try {
-            await page.waitForFunction((text) => {
-                const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
-                const expected = normalize(text);
-                const boxes = Array.from(document.querySelectorAll('div[role="textbox"][contenteditable="true"]'));
-                const visibleBox = boxes.find((box) => {
-                    const rect = box.getBoundingClientRect();
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
+            await delay(3000);
+            await page.evaluate(() => {
+                const buttons = Array.from(document.querySelectorAll('div[role="button"][aria-label="Bình luận"], div[role="button"][aria-label="Leave a comment"]'));
+                const button = buttons.find((item) => {
+                    const rect = item.getBoundingClientRect();
                     return rect.width > 0 && rect.height > 0;
                 });
+                if (button) button.click();
+            });
+            await delay(2000);
 
-                // Comment vẫn nằm trong editor nghĩa là Enter chưa submit được.
-                if (visibleBox && normalize(visibleBox.innerText || visibleBox.textContent)) return false;
-
-                return Array.from(document.querySelectorAll('div, span')).some((element) => {
+            await page.waitForFunction((text) => {
+                const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim();
+                const signature = normalize(text.replace(/https?:\/\/\S+/gi, '')).slice(0, 24);
+                if (signature.length < 8) return false;
+                return Array.from(document.querySelectorAll('[role="article"], div, span')).some((element) => {
                     const value = normalize(element.innerText || element.textContent);
-                    return value === expected || (expected.length > 30 && value.includes(expected));
+                    return value.includes(signature);
                 });
-            }, { timeout: 15000 }, commentText);
+            }, { timeout: 20000 }, commentText);
             return true;
         } catch (_) {
             return false;
