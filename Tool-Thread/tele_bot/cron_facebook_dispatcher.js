@@ -10,6 +10,7 @@ const GITHUB_REPO = process.env.GITHUB_REPO;
 const SPECIAL_REELS_EMAIL = 'lmquang.devops@gmail.com';
 const STANDARD_SLOTS = [8, 11, 13, 16, 19];
 const SPECIAL_REELS_EXTRA_SLOTS = [10, 15, 21];
+const FB_POST_SLOTS = [11, 14, 16, 20, 22];
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO) {
     console.error("Missing env vars!");
@@ -40,8 +41,9 @@ async function run() {
     const vnHour = (new Date().getUTCHours() + 7) % 24;
     console.log(`Current VN Hour: ${vnHour}h`);
 
-    // Các gói thường chạy ở 5 khung giờ. Tài khoản đặc biệt có thêm 3 khung Reel.
-    if (![...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS].includes(vnHour)) {
+    // Chỉ chạy tại các khung bot đã định. Cron chạy lệch phút 17 để tránh
+    // hàng đợi GitHub Actions vào đầu giờ, nhưng vẫn giữ đúng giờ Việt Nam.
+    if (![...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS, ...FB_POST_SLOTS].includes(vnHour)) {
         console.log("Not a scheduled hour. Exiting.");
         return;
     }
@@ -83,7 +85,6 @@ async function run() {
                     await dispatchWorkflow('fb_worker.yml', p.email);
                     await dispatchWorkflow('fb_comment_worker.yml', p.email);
                 }
-                if (auto('fb_post')) await dispatchWorkflow('shopee_worker.yml', p.email);
             }
             if (hasThreads && auto('threads_post') && [8, 19].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
@@ -94,9 +95,6 @@ async function run() {
         if (isLite) {
             if (hasFb && auto('reels') && [8, 11, 19].includes(vnHour)) {
                 await dispatchWorkflow('reels_worker.yml', p.email);
-            }
-            if (hasFb && auto('fb_post') && [8, 11, 19].includes(vnHour)) {
-                await dispatchWorkflow('shopee_worker.yml', p.email);
             }
             if (hasFb && [11, 19].includes(vnHour)) {
                 if (auto('fb_comment')) {
@@ -155,6 +153,16 @@ async function run() {
             if (hasThreads && auto('threads_post') && [8, 10, 11, 13, 15, 16, 19, 21].includes(vnHour)) {
                 await dispatchWorkflow('threads_post_worker.yml', p.email);
             }
+        }
+
+        // Shopee Post/Story dùng một lịch riêng để tránh trùng với các phiên
+        // Reel/comment. Trước đây phần này chạy bằng cron riêng, dễ bị GitHub
+        // bỏ lỡ và không truyền email cho worker.
+        const fbPostSlots = isFree ? [19]
+            : isLite ? [8, 11, 19]
+            : FB_POST_SLOTS;
+        if (hasFb && auto('fb_post') && fbPostSlots.includes(vnHour)) {
+            await dispatchWorkflow('shopee_worker.yml', p.email);
         }
         
         await new Promise(r => setTimeout(r, 2000));

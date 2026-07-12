@@ -1,8 +1,6 @@
 name: FB Shopee Post Story Bot
 
 on:
-  schedule:
-    - cron: '15 4,7,9,13,15 * * *' # Chạy mỗi ngày lúc 11:15, 14:15, 16:15, 20:15, 22:15 VN
   workflow_dispatch:
     inputs:
       email:
