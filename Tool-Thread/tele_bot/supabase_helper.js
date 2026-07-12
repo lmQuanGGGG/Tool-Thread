@@ -178,7 +178,7 @@ async function checkQuota(email, type = 'reels_posted') {
         limit = 3; 
     }
     if (limit === undefined && type === 'fb_comments_count') {
-        limit = profile.tier === 'promax' ? -1 : profile.tier === 'pro' ? 6 : profile.tier === 'plus' ? 4 : profile.tier === 'lite' ? 2 : 1;
+        limit = profile.tier === 'promax' ? -1 : profile.tier === 'pro' ? 12 : profile.tier === 'plus' ? 4 : profile.tier === 'lite' ? 2 : 1;
     }
     if (limit === -1) return true; // unlimited
 
