@@ -414,11 +414,63 @@ async function fetchLatestVideos(channels) {
             await textBox.click();
             await delay(1000);
 
+            const userTier = dbConfig?.tier || 'free';
+            const GEMINI_KEY_POOL = [
+                process.env.GEMINI_API_KEY,
+                process.env.GEMINI_API_KEY_2,
+                process.env.GEMINI_API_KEY_3,
+            ].filter(Boolean);
+
             let caption = "";
-            if (affLink) {
-                caption += `👉 Link mua hàng ở đây nha: ${affLink}\n`;
+
+            if (userTier !== 'free' && GEMINI_KEY_POOL.length > 0) {
+                const { GoogleGenerativeAI } = require('@google/generative-ai');
+                let prompt = `Bạn là một chuyên gia sáng tạo nội dung viral trên Facebook Reels.\n`;
+                prompt += `Hãy viết 1 caption thật ngắn gọn (tối đa 2-3 câu) theo ĐÚNG CẤU TRÚC SAU:\n`;
+                if (affLink) {
+                    prompt += `👉 [1 câu mồi giới thiệu món đồ hot trend gây tò mò] [LINK]\n\n`;
+                }
+                prompt += `[1 câu giật gân tóm tắt phim dựa trên tiêu đề: "${videoToProcess.title}"]\n\n`;
+                prompt += `Không dùng markdown in đậm/nghiêng. Trả về trực tiếp kết quả. ${affLink ? 'Tuyệt đối giữ nguyên chữ [LINK] để tool tự thay thế.' : ''}\n`;
+
+                let success = false;
+                for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
+                    try {
+                        console.log(`🔑 Thử Gemini key #${i + 1}/${GEMINI_KEY_POOL.length} để viết Cap Reels...`);
+                        const genAI = new GoogleGenerativeAI(GEMINI_KEY_POOL[i]);
+                        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+                        
+                        const result = await model.generateContent(prompt);
+                        let finalCaption = result.response.text().replace(/\*/g, '').trim();
+                        if (finalCaption.startsWith('"') && finalCaption.endsWith('"')) {
+                            finalCaption = finalCaption.slice(1, -1);
+                        }
+                        
+                        if (affLink) {
+                            if (finalCaption.includes('[LINK]')) {
+                                caption = finalCaption.replace('[LINK]', affLink);
+                            } else {
+                                caption = `👉 Link mua hàng ở đây nha: ${affLink}\n\n${finalCaption}`;
+                            }
+                        } else {
+                            caption = finalCaption;
+                        }
+                        success = true;
+                        break;
+                    } catch (e) {
+                        console.log(`⚠️ Key #${i + 1} lỗi: ${e.message}`);
+                    }
+                }
+                if (!success) {
+                    // Fallback nếu API lỗi hết
+                    caption = affLink ? `👉 Link mua hàng ở đây nha: ${affLink}\n\n${videoToProcess.title}` : videoToProcess.title;
+                }
+            } else {
+                // Gói free hoặc không có key
+                caption = affLink ? `👉 Link mua hàng ở đây nha: ${affLink}\n\n${videoToProcess.title}` : videoToProcess.title;
             }
-            caption += `${videoToProcess.title}\n#phimhay #reviewphim #giaitri #reels`;
+
+            caption += `\n\n#phimhay #reviewphim #giaitri #reels`;
 
             const lines = caption.split('\n');
             for (let line of lines) {

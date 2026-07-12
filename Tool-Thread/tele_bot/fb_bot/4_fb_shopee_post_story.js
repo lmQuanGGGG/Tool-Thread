@@ -202,8 +202,8 @@ async function clickFacebookAction(page, labels, { contains = false, preferDialo
         const { GoogleGenerativeAI } = require('@google/generative-ai');
         
         let prompt = `Bạn là một chuyên gia viết content affiliate marketing trên Facebook.\n`;
-        prompt += `Viết một bài đăng (caption) thật ngắn gọn, thu hút, tự nhiên như người dùng thật đang review để giới thiệu ${selectedProducts.length} sản phẩm sau đây.\n`;
-        prompt += `Nội dung phải có các đoạn mô tả hấp dẫn, kèm theo icon phù hợp.\n`;
+        prompt += `Viết caption ĐỂ ĐĂNG FACEBOOK STORY cực kỳ ngắn gọn (TỐI ĐA 2-4 CÂU), đi thẳng vào vấn đề, tự nhiên như người dùng thật đang khen để giới thiệu ${selectedProducts.length} sản phẩm sau.\n`;
+        prompt += `Không viết dông dài, không cần mở bài lằng nhằng. Kèm 1-2 icon cho sinh động.\n`;
         prompt += `BẮT BUỘC chèn ĐÚNG NGUYÊN VĂN Link Affiliate của mỗi sản phẩm vào vị trí kêu gọi hành động.\n`;
         prompt += `Tuyệt đối không dùng markdown in đậm (**) hoặc in nghiêng (*) vì FB sẽ lỗi font.\n\n`;
         

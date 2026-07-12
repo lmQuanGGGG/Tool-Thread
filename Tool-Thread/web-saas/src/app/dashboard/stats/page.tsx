@@ -264,43 +264,61 @@ export default function StatsPage() {
 
   useEffect(() => {
     if (!userId || !userEmail) return;
-    const { start, end } = getPeriodDates(period);
-    const startUTC = new Date(new Date(start + "T00:00:00Z").getTime() - 7 * 3600 * 1000).toISOString();
-    const endUTC = new Date(new Date(end + "T23:59:59.999Z").getTime() - 7 * 3600 * 1000).toISOString();
-    setLoading(true);
 
-    Promise.all([
-      supabase
-        .from("usage_stats")
-        .select("date, reels_posted, fb_comments_count, threads_commented, fb_posts_count, threads_posts_count, crawls_count")
-        .eq("user_id", userId)
-        .gte("date", start)
-        .lte("date", end)
-        .order("date", { ascending: true }),
-      supabase
-        .from("bot_logs")
-        .select("level, message, bot_type, created_at")
-        .eq("email", userEmail)
-        .gte("created_at", startUTC)
-        .lte("created_at", endUTC)
-        .order("created_at", { ascending: false })
-        .limit(5000),
-      supabase
-        .from("crawl_data")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("posted", false),
-      supabase
-        .from("crawl_data")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-    ]).then(([statsRes, logsRes, crawlUnpostedRes, crawlTotalRes]) => {
-      setRows(statsRes.data || []);
-      setLogs(logsRes.data || []);
-      setRemainingCrawledData(crawlUnpostedRes.count || 0);
-      setTotalCrawledData(crawlTotalRes.count || 0);
-      setLoading(false);
-    });
+    const fetchData = async (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      const { start, end } = getPeriodDates(period);
+      const startUTC = new Date(new Date(start + "T00:00:00Z").getTime() - 7 * 3600 * 1000).toISOString();
+      const endUTC = new Date(new Date(end + "T23:59:59.999Z").getTime() - 7 * 3600 * 1000).toISOString();
+
+      try {
+        const [statsRes, logsRes, crawlUnpostedRes, crawlTotalRes] = await Promise.all([
+          supabase
+            .from("usage_stats")
+            .select("date, reels_posted, fb_comments_count, threads_commented, fb_posts_count, threads_posts_count, crawls_count")
+            .eq("user_id", userId)
+            .gte("date", start)
+            .lte("date", end)
+            .order("date", { ascending: true }),
+          supabase
+            .from("bot_logs")
+            .select("level, message, bot_type, created_at")
+            .eq("email", userEmail)
+            .gte("created_at", startUTC)
+            .lte("created_at", endUTC)
+            .order("created_at", { ascending: false })
+            .limit(5000),
+          supabase
+            .from("crawl_data")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("posted", false),
+          supabase
+            .from("crawl_data")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+        ]);
+
+        setRows(statsRes.data || []);
+        setLogs(logsRes.data || []);
+        setRemainingCrawledData(crawlUnpostedRes.count || 0);
+        setTotalCrawledData(crawlTotalRes.count || 0);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    };
+
+    // Lần đầu tải thì hiện loading
+    fetchData(true);
+
+    // Auto-refresh mỗi 10 giây (cập nhật realtime ngầm)
+    const intervalId = setInterval(() => {
+      fetchData(false);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [userId, userEmail, period]);
 
   const { start, end, groupBy } = useMemo(() => getPeriodDates(period), [period]);
