@@ -9,6 +9,26 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const TELE_BOT_TOKEN = process.env.TELE_BOT_TOKEN;
 
+function getShopeeCookieHeader() {
+    const configured = process.env.SHOPEE_COOKIE;
+    if (!configured) return '';
+    try {
+        const cookies = JSON.parse(configured);
+        if (Array.isArray(cookies)) return cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
+    } catch (_) {
+        // GitHub Secret có thể là cookie string thô, không nhất thiết là JSON.
+    }
+    return configured;
+}
+
+const SHOPEE_COOKIE = getShopeeCookieHeader();
+const SHOPEE_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://shopee.vn/',
+    'X-Requested-With': 'XMLHttpRequest',
+    ...(SHOPEE_COOKIE ? { Cookie: SHOPEE_COOKIE } : {})
+};
+
 // Pool API key xoay vòng: thêm key mới vào đây hoặc qua biến môi trường GEMINI_API_KEY_2, _3...
 const GEMINI_KEY_POOL = [
     process.env.GEMINI_API_KEY,
@@ -40,6 +60,26 @@ function getVideoUrl(videoInfo) {
     return videoInfo.video_url || videoInfo.url || videoInfo.play_url || videoInfo.playUrl || null;
 }
 
+async function resolveShopeeVideo(videoInfo) {
+    const directUrl = getVideoUrl(videoInfo);
+    if (directUrl) return directUrl;
+
+    const details = Array.isArray(videoInfo) ? videoInfo : [videoInfo];
+    const videoId = details.find(video => video?.video_id || video?.videoId)?.video_id
+        || details.find(video => video?.video_id || video?.videoId)?.videoId;
+    if (!videoId) return null;
+
+    try {
+        const response = await axios.get(`https://shopee.vn/api/v4/video/get?video_id=${videoId}`, {
+            timeout: 10000,
+            headers: SHOPEE_HEADERS
+        });
+        return getVideoUrl(response.data?.data?.video || response.data?.data);
+    } catch (_) {
+        return null;
+    }
+}
+
 async function getShopeeProductData(shortUrl) {
     try {
         console.log(`\n⏳ Đang cào link: ${shortUrl}`);
@@ -63,17 +103,13 @@ async function getShopeeProductData(shortUrl) {
             try {
                 const api = await axios.get(`https://shopee.vn/api/v4/item/get?itemid=${ids.itemId}&shopid=${ids.shopId}`, {
                     timeout: 10000,
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
-                        'Referer': 'https://shopee.vn/',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: SHOPEE_HEADERS
                 });
                 const item = api.data?.data?.item || api.data?.data;
                 const images = (item?.images || []).slice(0, 4).map(imageId => ({
                     type: 'image', url: productMediaUrl(imageId)
                 }));
-                const videoUrl = getVideoUrl(item?.video_info_list || item?.video_info || item?.video);
+                const videoUrl = await resolveShopeeVideo(item?.video_info_list || item?.video_info || item?.video);
                 const media = videoUrl ? [...images, { type: 'video', url: videoUrl }] : images;
                 if (media.length) {
                     return {
