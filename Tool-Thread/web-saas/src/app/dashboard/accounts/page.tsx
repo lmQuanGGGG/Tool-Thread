@@ -2,7 +2,7 @@
 
 import {
   Cookie, Link as LinkIcon, MessageCircle,
-  Zap, Loader2, Bot, Play, Terminal, Trash2, Info, FileText, ChevronLeft, ChevronRight, Image as ImageIcon, Video
+  Zap, Loader2, Bot, Play, Terminal, Trash2, Info, FileText, ChevronLeft, ChevronRight, Image as ImageIcon, Video, X, Check
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, type ElementType } from "react";
 import { supabase } from "../../../utils/supabase";
@@ -91,6 +91,8 @@ export default function AccountsPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<string>("free");
   const [userCredits, setUserCredits] = useState<number>(0);
+  const [telegramGuideOpen, setTelegramGuideOpen] = useState(false);
+  const [telegramGuideSeen, setTelegramGuideSeen] = useState(false);
   const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "", target_channels: "" });
   const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
   const [globalLogs, setGlobalLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Hệ thống sẵn sàng." }]);
@@ -114,6 +116,11 @@ export default function AccountsPage() {
 
   const scrollThreadsPoster = (direction: "left" | "right") => {
     scrollLoopCarousel(threadsPosterCarouselRef.current, direction, 360);
+  };
+
+  const dismissTelegramGuide = () => {
+    setTelegramGuideSeen(true);
+    setTelegramGuideOpen(false);
   };
 
   const scrollLoopCarousel = (el: HTMLDivElement | null, direction: "left" | "right", step: number) => {
@@ -584,13 +591,7 @@ export default function AccountsPage() {
                       tone="emerald"
                     />
                   </div>
-                  <input type="text" value={formData.tele_chat_id} onChange={(e) => {
-                    if (userTier === "free" || userTier === "lite") {
-                      showToast("Gói Free và Lite không hỗ trợ nhận thông báo. Vui lòng nâng cấp lên gói Plus hoặc cao hơn.");
-                      return;
-                    }
-                    setFormData({ ...formData, tele_chat_id: e.target.value })
-                  }} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
+                  <input type="text" value={formData.tele_chat_id} onClick={() => { if (!telegramGuideSeen) setTelegramGuideOpen(true); }} onChange={(e) => setFormData({ ...formData, tele_chat_id: e.target.value })} onBlur={handleSave} placeholder="Chat ID — nhắn @userinfobot để lấy" className={inputClass} />
                   <div className="mt-5 rounded-2xl bg-emerald-50/50 px-5 py-4 text-[13px] text-emerald-700 leading-relaxed border-none shadow-none">
                     Bot sẽ gửi thông báo realtime khi đăng bài thành công, lỗi cookie hoặc hoàn tất crawl định kỳ.
                   </div>
@@ -919,6 +920,45 @@ export default function AccountsPage() {
           </div>
         )}
       </main>
+
+      {telegramGuideOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="telegram-guide-title">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={dismissTelegramGuide} />
+          <div className="relative w-full max-w-[420px] overflow-hidden rounded-[24px] p-[2px] shadow-2xl">
+            <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_70%,#10b981_100%)]" />
+            <div className="relative rounded-[22px] bg-white p-7">
+              <button onClick={dismissTelegramGuide} aria-label="Đóng hướng dẫn" className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+                <X className="h-4 w-4" />
+              </button>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[18px] border border-sky-100 bg-sky-50 text-sky-500 shadow-[inset_0_2px_10px_rgba(14,165,233,0.12)]">
+                <MessageCircle className="h-8 w-8" />
+              </div>
+              <h2 id="telegram-guide-title" className="text-center text-xl font-extrabold tracking-tight text-gray-900">Lấy Telegram Chat ID</h2>
+              <p className="mt-2 text-center text-[14px] leading-relaxed text-gray-500">Chỉ mất khoảng 30 giây để bật thông báo bot.</p>
+              <div className="mt-6 space-y-3">
+                {[
+                  ["1", "Mở Telegram và tìm @userinfobot."],
+                  ["2", "Nhấn Start để bot gửi thông tin tài khoản của bạn."],
+                  ["3", "Sao chép dòng Id (chỉ gồm các chữ số) và dán vào ô Chat ID."],
+                  ["4", "Nhắn /start cho bot AutoFarm để bot có thể gửi thông báo cho bạn."],
+                ].map(([number, text]) => (
+                  <div key={number} className="flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-[13px] leading-relaxed text-gray-600">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">{number}</span>
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-700">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Không gửi mật khẩu, mã OTP hoặc token Telegram cho bất kỳ ai.</span>
+              </div>
+              <button onClick={dismissTelegramGuide} className="mt-6 flex w-full items-center justify-center gap-2 rounded-[14px] bg-gray-900 py-3.5 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-all hover:bg-gray-800 active:scale-[0.98]">
+                <Check className="h-4 w-4" /> Đã hiểu, nhập Chat ID
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

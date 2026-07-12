@@ -57,11 +57,11 @@ function parseCookieString(cookieStr, domain = '.facebook.com') {
  */
 async function getTierLimits(tier = 'free') {
   const defaults = {
-    free:   { auto_run: false, reels_per_day: 2,  threads_per_day: 10,  fb_post_per_day: 1,  crawl_per_day: 1,  max_links: 4  },
-    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 3,  crawl_per_day: 2,  max_links: 8  },
-    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 80,  fb_post_per_day: 5,  crawl_per_day: 3,  max_links: 20 },
-    pro:    { auto_run: true,  reels_per_day: 12, threads_per_day: 160, fb_post_per_day: 10, crawl_per_day: 4,  max_links: 100 },
-    promax: { auto_run: true,  reels_per_day: -1, threads_per_day: -1,  fb_post_per_day: -1, crawl_per_day: -1,  max_links: -1 },
+    free:   { auto_run: false, reels_per_day: 2,  threads_per_day: 10,  fb_post_per_day: 1,  crawl_per_day: 1,  max_links: 4,   telegram_notify: true },
+    lite:   { auto_run: false, reels_per_day: 3,  threads_per_day: 30,  fb_post_per_day: 3,  crawl_per_day: 2,  max_links: 8,   telegram_notify: true },
+    plus:   { auto_run: true,  reels_per_day: 6,  threads_per_day: 80,  fb_post_per_day: 5,  crawl_per_day: 3,  max_links: 20,  telegram_notify: true },
+    pro:    { auto_run: true,  reels_per_day: 12, threads_per_day: 160, fb_post_per_day: 10, crawl_per_day: 4,  max_links: 100, telegram_notify: true },
+    promax: { auto_run: true,  reels_per_day: -1, threads_per_day: -1,  fb_post_per_day: -1, crawl_per_day: -1,  max_links: -1,  telegram_notify: true },
   };
 
   if (!supabase) return defaults[tier] || defaults.free;
@@ -134,8 +134,14 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
       .map(l => l.trim())
       .filter(Boolean);
 
+    const tierLimits = await getTierLimits(data.tier);
+    const telegramNotifyEnabled = tierLimits.telegram_notify !== false;
+
     return {
       ...data,
+      // Không trả chat ID cho gói không có Telegram Notify, để mọi bot dùng
+      // fetchBotConfig tự động tuân theo quyền hạn của gói.
+      tele_chat_id: telegramNotifyEnabled ? data.tele_chat_id : '',
       affiliate_links_arr: affiliateArr,
       // Puppeteer-ready cookie arrays
       fb_cookies_arr:      parseCookieString(data.fb_cookie, '.facebook.com'),
@@ -243,7 +249,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
     console.log(`📊 Updated stats: ${type} +${count} cho user ${userId}`);
 
     // Check limit to send completion notification
-    const { data: profileWithTele } = await supabase.from('profiles').select('telegram_id, tier, email').eq('id', userId).maybeSingle();
+    const { data: profileWithTele } = await supabase.from('profiles').select('tele_chat_id, tier, email').eq('id', userId).maybeSingle();
     if (profileWithTele) {
       const limits = await getTierLimits(profileWithTele.tier);
       const limitKey = type === 'reels_posted' ? 'reels_per_day'
@@ -262,7 +268,8 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
         const oldUsed = existing ? (existing[type] || 0) : 0;
         const newUsed = oldUsed + count;
         if (oldUsed < limit && newUsed >= limit) {
-          if (profileWithTele.telegram_id) {
+          if (limits.telegram_notify
+              && profileWithTele.tele_chat_id) {
              const typeName = type === 'reels_posted' ? 'Đăng FB Reels' 
                             : type === 'threads_commented' ? 'Auto Cmt Threads'
                             : type === 'threads_posts_count' ? 'Đăng bài Threads'
@@ -270,7 +277,7 @@ async function updateUsageStats(userIdOrEmail, type = 'reels_posted', count = 1)
                             : type === 'fb_comments_count' ? 'Auto Cmt mồi FB'
                             : 'FB Post';
              const msg = `🎉 <b>CHÚC MỪNG SẾP!</b>\n\nSếp đã hoàn thành mục tiêu <b>${typeName}</b> ngày hôm nay (Đã chạy: ${newUsed}/${limit}).\n\nLụm lúa thôi! 🚀🤑`;
-             await sendTelegramMessage(profileWithTele.telegram_id, msg);
+             await sendTelegramMessage(profileWithTele.tele_chat_id, msg);
           }
         }
       }

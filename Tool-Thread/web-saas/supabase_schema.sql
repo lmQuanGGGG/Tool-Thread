@@ -93,7 +93,7 @@ create table public.tier_limits (
 
 -- Nhập dữ liệu giới hạn mặc định cho 5 gói
 insert into public.tier_limits (tier, auto_run, reels_per_day, threads_per_day, fb_story_per_day, max_links, telegram_notify, price_vnd) values
-  ('free',    false,  1,   10,  0,   4,  false,  0),
+  ('free',    false,  1,   10,  0,   4,  true,   0),
   ('lite',    false,  2,   30,  1,   8,  true,   99000),
   ('plus',    true,   4,   80,  2,   20, true,   199000),
   ('pro',     true,   6,   150, 5,   100, true,   399000),
