@@ -36,21 +36,22 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Các bot Facebook cùng dùng một session/cookie. Worker đã có lock để xếp
-    // hàng an toàn; chặn thêm ở API để UI không tạo một workflow chờ thứ hai.
+    // Các bot Facebook cùng dùng một session/cookie. Dùng RPC acquire atomic
+    // thay vì SELECT check để triệt tiêu race condition giữa check và dispatch.
+    // TTL 180s đủ để workflow start và acquire lock riêng, ngắn hơn TTL chính (7200s).
     const facebookSessionBots = new Set(['reels', 'fb', 'fb_story', 'shopee', 'fb_comment']);
     if (facebookSessionBots.has(botType)) {
-      const { data: activeLock, error: lockError } = await supabaseAdmin
-        .from('fb_session_locks')
-        .select('expires_at')
-        .eq('email', email)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
+      const holder = `api-${Date.now()}-${botType}`;
+      const { data: acquired, error: lockError } = await supabaseAdmin.rpc('acquire_fb_session_lock', {
+        p_email: email,
+        p_holder: holder,
+        p_ttl_seconds: 180,
+      });
 
       if (lockError) {
         return NextResponse.json({ error: `Không kiểm tra được Facebook session lock: ${lockError.message}` }, { status: 500 });
       }
-      if (activeLock) {
+      if (!acquired) {
         return NextResponse.json({
           error: 'Bot Facebook đang chạy cho tài khoản này. Vui lòng đợi hoàn tất rồi thử lại.'
         }, { status: 429 });

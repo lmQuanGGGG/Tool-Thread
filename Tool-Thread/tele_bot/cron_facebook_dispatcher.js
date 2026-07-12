@@ -27,8 +27,31 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// Workflows FB dùng chung cookie/session, cần serialize
+const FB_SESSION_WORKFLOWS = new Set([
+    'reels_worker.yml', 'fb_worker.yml', 'fb_comment_worker.yml',
+    'fb_story_worker.yml', 'shopee_worker.yml',
+]);
+
 function getVnDate() {
     return new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** Kiểm tra xem email có đang bị lock session FB hay không */
+async function isFbSessionLocked(email) {
+    const { data, error } = await supabase
+        .from('fb_session_locks')
+        .select('expires_at')
+        .eq('email', email)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+    if (error) {
+        // Lỗi query → coi như locked để an toàn, không dispatch bừa
+        console.error(`✗ Lỗi check session lock cho ${email}:`, error.message);
+        return true;
+    }
+    return !!data;
 }
 
 async function dispatchWorkflow(workflowId, email, slot) {
@@ -113,14 +136,37 @@ async function run() {
 
         if (!schedules) continue;
 
-        if (hasFb && auto('reels')) await dispatchNextPendingSlot('reels_worker.yml', p.email, schedules.reels, vnHour);
-        if (hasFb && auto('fb_comment')) {
-            await dispatchNextPendingSlot('fb_worker.yml', p.email, schedules.fbGroups, vnHour);
-            await dispatchNextPendingSlot('fb_comment_worker.yml', p.email, schedules.fbReels, vnHour);
+        // Check session lock trước khi dispatch bất kỳ workflow FB nào.
+        // Chỉ dispatch TỐI ĐA 1 workflow FB mỗi lần cho mỗi email để
+        // serialize, tránh nhiều bot mở cùng cookie cùng lúc.
+        let fbDispatched = false;
+        if (hasFb && !fbDispatched) {
+            const locked = await isFbSessionLocked(p.email);
+            if (locked) {
+                console.log(`🔒 FB session đang bị lock cho ${p.email}, bỏ qua tất cả workflow FB.`);
+            } else {
+                // Ưu tiên theo thứ tự: reels → fb_post → fb_comment → fb_group
+                const fbQueue = [];
+                if (auto('reels')) fbQueue.push({ wf: 'reels_worker.yml', slots: schedules.reels });
+                if (auto('fb_post')) fbQueue.push({ wf: 'shopee_worker.yml', slots: schedules.fbPost });
+                if (auto('fb_comment')) {
+                    fbQueue.push({ wf: 'fb_comment_worker.yml', slots: schedules.fbReels });
+                    fbQueue.push({ wf: 'fb_worker.yml', slots: schedules.fbGroups });
+                }
+
+                for (const job of fbQueue) {
+                    if (fbDispatched) break;
+                    const dispatched = await dispatchNextPendingSlot(job.wf, p.email, job.slots, vnHour);
+                    if (dispatched) fbDispatched = true;
+                }
+            }
         }
-        if (hasThreads && auto('threads_post')) await dispatchNextPendingSlot('threads_post_worker.yml', p.email, schedules.threadsPost, vnHour);
-        if (hasFb && auto('fb_post')) await dispatchNextPendingSlot('shopee_worker.yml', p.email, schedules.fbPost, vnHour);
-        
+
+        // Threads không dùng FB cookie → dispatch độc lập, không bị ảnh hưởng
+        if (hasThreads && auto('threads_post')) {
+            await dispatchNextPendingSlot('threads_post_worker.yml', p.email, schedules.threadsPost, vnHour);
+        }
+
         await new Promise(r => setTimeout(r, 2000));
     }
     console.log("Done facebook dispatcher.");
