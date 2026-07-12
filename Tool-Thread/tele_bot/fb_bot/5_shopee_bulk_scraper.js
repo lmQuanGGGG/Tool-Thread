@@ -20,23 +20,77 @@ const USER_EMAIL = process.env.USER_EMAIL || 'admin@autofarm.com';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-async function getShopeeOGData(shortUrl) {
+function productMediaUrl(imageId) {
+    return imageId?.startsWith('http')
+        ? imageId
+        : `https://down-vn.img.susercontent.com/file/${imageId}`;
+}
+
+function extractShopeeIds(url) {
+    const productMatch = url.match(/\/product\/(\d+)\/(\d+)/);
+    const slugMatch = url.match(/-i\.(\d+)\.(\d+)/);
+    const pathMatch = url.match(/\/(\d+)\/(\d+)(?:[/?]|$)/);
+    const match = productMatch || slugMatch || pathMatch;
+    return match ? { shopId: match[1], itemId: match[2] } : null;
+}
+
+function getVideoUrl(videoInfo) {
+    if (!videoInfo) return null;
+    if (Array.isArray(videoInfo)) return videoInfo.map(getVideoUrl).find(Boolean) || null;
+    return videoInfo.video_url || videoInfo.url || videoInfo.play_url || videoInfo.playUrl || null;
+}
+
+async function getShopeeProductData(shortUrl) {
     try {
         console.log(`\n⏳ Đang cào link: ${shortUrl}`);
-        // Tuyệt chiêu MMO: Giả dạng Facebook Bot
+        // Share page luôn có ảnh OG để làm phương án dự phòng.
         const response = await axios.get(shortUrl, {
             headers: {
                 'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'
-            },
+            }, maxRedirects: 10,
             timeout: 10000
         });
         const html = response.data;
+        const finalUrl = response.request?.res?.responseUrl || shortUrl;
         const titleMatch = html.match(/<meta property="og:title" content="([^"]+)"/);
-        let imageMatch = html.match(/<meta property="og:square_image" content="(.*?)"/i) || html.match(/<meta property="og:image" content="(.*?)"/i);
+        const imageMatch = html.match(/<meta property="og:square_image" content="(.*?)"/i) || html.match(/<meta property="og:image" content="(.*?)"/i);
+        const fallbackImage = imageMatch?.[1] || null;
+        const ids = extractShopeeIds(finalUrl);
 
-        if (titleMatch && imageMatch) {
-            let title = titleMatch[1].replace(' | Shopee Việt Nam', '').trim();
-            return { title, imageUrl: imageMatch[1] };
+        // API sản phẩm trả đủ mảng ảnh và video. Một số IP bị Shopee chặn;
+        // khi đó vẫn dùng ảnh OG bên dưới thay vì làm hỏng cả link.
+        if (ids) {
+            try {
+                const api = await axios.get(`https://shopee.vn/api/v4/item/get?itemid=${ids.itemId}&shopid=${ids.shopId}`, {
+                    timeout: 10000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+                        'Referer': 'https://shopee.vn/',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const item = api.data?.data?.item || api.data?.data;
+                const images = (item?.images || []).slice(0, 4).map(imageId => ({
+                    type: 'image', url: productMediaUrl(imageId)
+                }));
+                const videoUrl = getVideoUrl(item?.video_info_list || item?.video_info || item?.video);
+                const media = videoUrl ? [...images, { type: 'video', url: videoUrl }] : images;
+                if (media.length) {
+                    return {
+                        title: item?.name || titleMatch?.[1]?.replace(' | Shopee Việt Nam', '').trim() || 'Sản phẩm Shopee',
+                        media
+                    };
+                }
+            } catch (apiError) {
+                console.warn(`⚠ Không lấy được media đầy đủ từ Shopee API: ${apiError.response?.status || apiError.message}`);
+            }
+        }
+
+        if (titleMatch && fallbackImage) {
+            return {
+                title: titleMatch[1].replace(' | Shopee Việt Nam', '').trim(),
+                media: [{ type: 'image', url: fallbackImage }]
+            };
         }
     } catch (e) {
         console.error("Lỗi cào data Shopee:", e.message);
@@ -44,19 +98,22 @@ async function getShopeeOGData(shortUrl) {
     return null;
 }
 
-async function uploadToTelegram(imageUrl, chatId) {
-    const tempFile = path.join(__dirname, `temp_shopee_${Date.now()}.png`);
+async function uploadToTelegram(mediaUrl, mediaType, chatId) {
+    const extension = mediaType === 'video' ? 'mp4' : 'jpg';
+    const tempFile = path.join(__dirname, `temp_shopee_${Date.now()}_${Math.random().toString(36).slice(2)}.${extension}`);
     try {
         // Tải ảnh bằng curl để vượt anti-bot
-        execSync(`curl -s -o "${tempFile}" "${imageUrl}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Referer: https://shopee.vn/"`);
+        execSync(`curl -s -o "${tempFile}" "${mediaUrl}" -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Referer: https://shopee.vn/"`);
         if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size < 100) return null;
 
         const form = new FormData();
         if (!chatId) chatId = process.env.TELE_CHAT_ID || '-5396355060';
         form.append('chat_id', chatId);
-        form.append('photo', fs.createReadStream(tempFile));
+        const field = mediaType === 'video' ? 'video' : 'photo';
+        form.append(field, fs.createReadStream(tempFile));
 
-        const teleRes = await axios.post(`https://api.telegram.org/bot${TELE_BOT_TOKEN}/sendPhoto`, form, {
+        const endpoint = mediaType === 'video' ? 'sendVideo' : 'sendPhoto';
+        const teleRes = await axios.post(`https://api.telegram.org/bot${TELE_BOT_TOKEN}/${endpoint}`, form, {
             headers: form.getHeaders()
         });
 
@@ -64,7 +121,7 @@ async function uploadToTelegram(imageUrl, chatId) {
 
         // Trả về file_id lớn nhất (chất lượng tốt nhất)
         const photoArr = teleRes.data.result.photo;
-        return photoArr[photoArr.length - 1].file_id;
+        return teleRes.data.result.video?.file_id || photoArr?.[photoArr.length - 1]?.file_id || null;
     } catch (e) {
         if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         console.error("Lỗi upload Telegram:", e.message);
@@ -152,19 +209,25 @@ async function generateBatchComments(titles) {
                 }
             }
 
-            const shopeeData = await getShopeeOGData(link);
+            const shopeeData = await getShopeeProductData(link);
             if (shopeeData) {
                 console.log(`✓ Lấy thành công: ${shopeeData.title}`);
                 const storageChat = process.env.TELE_STORAGE_CHAT || '-5396355060';
-                const file_id = await uploadToTelegram(shopeeData.imageUrl, storageChat);
-                if (file_id) {
-                    console.log(`☁️ Đã lưu S3 Telegram File ID: ${file_id}`);
-                    await logToWeb(USER_EMAIL, 'upload_images', `✓ Đã upload ảnh Shopee lên Telegram: ${shopeeData.title}`, 'success');
+                const uploadedMedia = [];
+                for (const media of shopeeData.media.slice(0, 5)) {
+                    const fileId = await uploadToTelegram(media.url, media.type, storageChat);
+                    if (fileId) uploadedMedia.push({ ...media, tele_file_id: fileId });
+                }
+                const cover = uploadedMedia.find(media => media.type === 'image') || uploadedMedia[0];
+                if (cover) {
+                    console.log(`☁️ Đã lưu ${uploadedMedia.length} media lên Telegram`);
+                    await logToWeb(USER_EMAIL, 'upload_images', `✓ Đã upload ${uploadedMedia.length} media Shopee lên Cloud: ${shopeeData.title}`, 'success');
                     itemsToProcess.push({
                         aff_link: link,
                         title: shopeeData.title,
-                        image_url: shopeeData.imageUrl,
-                        tele_file_id: file_id,
+                        image_url: cover.url,
+                        tele_file_id: cover.tele_file_id,
+                        media: uploadedMedia,
                         suggested_comment: "" // Sẽ sinh ở Bước 2
                     });
                     isModified = true;
