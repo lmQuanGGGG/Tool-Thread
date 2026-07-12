@@ -74,10 +74,20 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
       }
 
       if (creditUsed > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || ""}`,
+        };
         await fetch("/api/credits/deduct", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ amount: creditUsed, type: "crawl", description: `Crawl ${saved} bài từ ${file.name}` }),
+        });
+        await fetch("/api/usage/increment", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ key: "crawls_count" }),
         });
         setCredits((prev: number) => prev - creditUsed);
       }

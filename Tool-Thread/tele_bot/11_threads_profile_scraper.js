@@ -396,6 +396,7 @@ async function run() {
                     if (file_id) {
                         image_file_ids.push(file_id);
                         console.log(`   ✓ Tải thành công media [${j+1}] -> File_ID: ${file_id}`);
+                        await logToWeb(email, 'upload_images', `✓ Đã upload media Threads cho post ${post.post_id}`, 'success');
                     } else {
                         console.log(`   ✗ Lỗi tải media [${j+1}]!`);
                     }

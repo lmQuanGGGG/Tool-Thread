@@ -10,6 +10,7 @@ async function processPendingImages() {
   }
 
   try {
+    const emailsByUserId = new Map();
     // 1. Tìm các bài viết chưa có image_file_ids nhưng có image_urls
     const { data: posts, error } = await supabase
       .from('crawl_data')
@@ -44,6 +45,16 @@ async function processPendingImages() {
       const fileIds = results.map(r => r.file_id).filter(Boolean); // Bỏ các file lỗi (null)
 
       if (fileIds.length > 0) {
+        let email = emailsByUserId.get(post.user_id);
+        if (email === undefined) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', post.user_id)
+            .maybeSingle();
+          email = profile?.email || null;
+          emailsByUserId.set(post.user_id, email);
+        }
         // 3. Trừ Credit (ví dụ: 1 credit cho 1 file)
         const cost = fileIds.length;
         const { error: rpcError } = await supabase.rpc('adjust_credits', {
@@ -69,6 +80,9 @@ async function processPendingImages() {
           console.error(`✗ Lỗi update file_ids cho bài ${post.post_id}:`, updateErr.message);
         } else {
           console.log(`✓ Hoàn tất bài ${post.post_id} | Đã lưu ${fileIds.length} file_ids | Tiêu hao ${cost} credits`);
+          if (email) {
+            await logToWeb(email, 'upload_images', `✓ Đã upload ${fileIds.length} media lên Telegram cho post ${post.post_id}`, 'success');
+          }
         }
       } else {
         console.warn(`!!! Bài ${post.post_id} không tải được ảnh nào!`);
