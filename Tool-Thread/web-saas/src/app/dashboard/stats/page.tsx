@@ -17,7 +17,7 @@ const BOTS = [
   { key: "threads_posts_count", label: "Đăng Threads",     color: "#ec4899", icon: Send },
   { key: "parse_links",         label: "Quét Link Shopee", color: "#8b5cf6", icon: Code },
   { key: "crawls_count",        label: "Crawl Threads",    color: "#0ea5e9", icon: Bot },
-  { key: "upload_images",       label: "Upload Ảnh Tele",  color: "#06b6d4", icon: UploadCloud },
+  { key: "upload_images",       label: "Upload Ảnh Cloud", color: "#06b6d4", icon: UploadCloud },
 ] as const;
 
 const PERIODS: { label: string; value: Period }[] = [
