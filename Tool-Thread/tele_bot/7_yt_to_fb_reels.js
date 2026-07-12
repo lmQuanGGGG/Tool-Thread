@@ -563,6 +563,122 @@ async function fetchLatestVideos(channels) {
         postedIds.push(videoToProcess.id);
         fs.writeFileSync(HISTORY_FILE, JSON.stringify(postedIds, null, 2));
 
+        // BƯỚC 6: AUTO-COMMENT RẢI LINK CHO GÓI PLUS / PRO
+        const userTier = dbConfig?.tier || 'free';
+        let numComments = 0;
+        if (userTier === 'plus') numComments = 2;
+        else if (userTier === 'pro' || userTier === 'promax') numComments = 3;
+
+        if (numComments > 0) {
+            console.log(`💬 Kích hoạt Auto-comment cho gói ${userTier.toUpperCase()} (${numComments} links)...`);
+            await logToWeb(email, 'yt-reels', `Chuyển sang tường nhà để Auto-comment ${numComments} links Affiliate...`, 'info');
+
+            await page.goto('https://www.facebook.com/me', { waitUntil: 'networkidle2', timeout: 60000 });
+            await delay(5000);
+
+            const clickedFirstCommentBtn = await page.evaluate(() => {
+                const cmtBtns = Array.from(document.querySelectorAll('div[role="button"][aria-label="Bình luận"], div[role="button"][aria-label="Leave a comment"]'));
+                const visibleCmtBtn = cmtBtns.find(el => {
+                    const rect = el.getBoundingClientRect();
+                    return rect.width > 0 && rect.height > 0 && rect.top >= 0;
+                });
+                if (visibleCmtBtn) {
+                    visibleCmtBtn.click();
+                    return true;
+                }
+                return false;
+            });
+
+            if (clickedFirstCommentBtn) {
+                console.log("💬 Đã mở bảng Bình luận của Reel vừa đăng.");
+                await delay(3000);
+
+                const supabaseLinks = dbConfig?.affiliate_links_arr || [];
+                let localProducts = [];
+                try {
+                    localProducts = JSON.parse(fs.readFileSync('./data_products.json', 'utf8')).map(p => p.link);
+                } catch (e) {}
+                
+                let linkPool = supabaseLinks.length > 0 ? supabaseLinks : localProducts;
+                linkPool = linkPool.sort(() => 0.5 - Math.random());
+                const linksToPost = linkPool.slice(0, numComments);
+
+                const { GoogleGenerativeAI } = require('@google/generative-ai');
+                const GEMINI_KEY_POOL = [
+                    process.env.GEMINI_API_KEY,
+                    process.env.GEMINI_API_KEY_2,
+                    process.env.GEMINI_API_KEY_3,
+                ].filter(Boolean);
+
+                for (let cmtIdx = 0; cmtIdx < linksToPost.length; cmtIdx++) {
+                    const currentLink = linksToPost[cmtIdx];
+                    let cmtText = `👉 Món đồ này siêu hot luôn nha: ${currentLink}`;
+
+                    if (GEMINI_KEY_POOL.length > 0) {
+                        let prompt = `Bạn là người săn sale Shopee.\n`;
+                        prompt += `Hãy viết 1 câu bình luận siêu ngắn gọn, khen một món đồ cực hot, cuối câu để nguyên chữ [LINK]\n`;
+                        prompt += `Ví dụ: "Món này xinh xỉu luôn mấy bà: [LINK]"\n`;
+                        prompt += `Tuyệt đối không dùng markdown. BẮT BUỘC có chữ [LINK].\n`;
+
+                        for (let i = 0; i < GEMINI_KEY_POOL.length; i++) {
+                            try {
+                                const genAI = new GoogleGenerativeAI(GEMINI_KEY_POOL[i]);
+                                const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
+                                const result = await model.generateContent(prompt);
+                                let gCap = result.response.text().replace(/\*/g, '').trim();
+                                if (gCap.startsWith('"') && gCap.endsWith('"')) gCap = gCap.slice(1, -1);
+                                if (gCap.includes('[LINK]')) {
+                                    cmtText = gCap.replace('[LINK]', currentLink);
+                                } else {
+                                    cmtText = `${gCap} 👉 ${currentLink}`;
+                                }
+                                break;
+                            } catch (e) {}
+                        }
+                    }
+
+                    const uploadBoxInfo = await page.evaluate(() => {
+                        const boxes = Array.from(document.querySelectorAll('div[role="textbox"][aria-label="Viết bình luận"], div[role="textbox"][aria-label="Leave a comment"], div[role="textbox"][contenteditable="true"]'));
+                        const visibleBox = boxes.find(el => {
+                            const rect = el.getBoundingClientRect();
+                            return rect.width > 0 && rect.height > 0;
+                        });
+                        if (visibleBox) {
+                            const boxRect = visibleBox.getBoundingClientRect();
+                            return { boxX: boxRect.x + boxRect.width / 2, boxY: boxRect.y + boxRect.height / 2 };
+                        }
+                        return null;
+                    });
+
+                    if (uploadBoxInfo) {
+                        await page.mouse.click(uploadBoxInfo.boxX, uploadBoxInfo.boxY);
+                        await delay(1000);
+                        
+                        const lines = cmtText.split('\n');
+                        for (const [index, line] of lines.entries()) {
+                            await page.keyboard.type(line, { delay: 50 });
+                            if (index < lines.length - 1) {
+                                await page.keyboard.down('Shift');
+                                await page.keyboard.press('Enter');
+                                await page.keyboard.up('Shift');
+                                await delay(200);
+                            }
+                        }
+
+                        await delay(1000);
+                        await page.keyboard.press('Enter');
+                        console.log(`✓ Đã gửi cmt thứ ${cmtIdx + 1}`);
+                        await logToWeb(email, 'yt-reels', `Đã bắn Comment rải link ${cmtIdx + 1}/${numComments}...`, 'info');
+                        await delay(Math.floor(Math.random() * (10000 - 5000 + 1)) + 5000);
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                console.log("!!! Không tìm thấy nút Bình luận trên trang cá nhân.");
+            }
+        }
+
     } catch (err) {
         console.error("✗ Lỗi khi đăng Reels:", err.message);
         await logToWeb(email, 'yt-reels', `Lỗi khi đăng Reels: ${err.message}`, 'error');
