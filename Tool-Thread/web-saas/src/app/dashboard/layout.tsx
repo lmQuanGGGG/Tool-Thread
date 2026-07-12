@@ -60,7 +60,7 @@ function normalizeLimits(l: any, tier: string) {
   return {
     ...(l || {}),
     reels_per_day: toCount(l?.reels_per_day),
-    fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 6 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
+    fb_comments_per_day: tier === 'promax' ? -1 : tier === 'pro' ? 12 : tier === 'plus' ? 4 : tier === 'lite' ? 2 : 1,
     threads_per_day: toCount(l?.threads_per_day),
     fb_story_per_day: toCount(l?.fb_story_per_day ?? l?.fb_post_per_day),
     threads_post_per_day: toCount(l?.threads_post_per_day ?? l?.reels_per_day),
