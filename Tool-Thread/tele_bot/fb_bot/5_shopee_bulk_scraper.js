@@ -23,8 +23,10 @@ function getShopeeCookieHeader() {
 
 const SHOPEE_COOKIE = getShopeeCookieHeader();
 const SHOPEE_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Referer': 'https://shopee.vn/',
+    // Shopee cho Facebook crawler đi qua trang share; giữ cùng fingerprint
+    // cho cả request chi tiết để tránh bị route sang trang verify traffic.
+    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+    'Referer': 'https://www.facebook.com/',
     'X-Requested-With': 'XMLHttpRequest',
     ...(SHOPEE_COOKIE ? { Cookie: SHOPEE_COOKIE } : {})
 };
