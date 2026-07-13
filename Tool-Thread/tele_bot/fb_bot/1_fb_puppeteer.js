@@ -122,6 +122,7 @@ async function downloadImageFromTelegram(file_id) {
 
     const browser = await puppeteer.launch({
         headless: "new", // Ẩn trình duyệt khi chạy PM2
+        protocolTimeout: 120000,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -176,8 +177,10 @@ async function downloadImageFromTelegram(file_id) {
 
     for (let target of targets) {
         console.log(`\n🎯 Di chuyển đến mục tiêu: ${target}`);
-        await page.goto(target, { waitUntil: 'networkidle2' });
-        await delay(getRandomInt(5000, 8000));
+        // Facebook giữ kết nối nền liên tục; chờ networkidle khiến group chậm
+        // và dễ treo protocol. DOM đã tải là đủ để tìm bài/comment.
+        await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 90000 });
+        await delay(getRandomInt(2500, 4000));
 
         try {
             await page.evaluate(() => {
@@ -187,11 +190,8 @@ async function downloadImageFromTelegram(file_id) {
             await delay(2000);
         } catch (e) { }
 
-        console.log("Cuộn trang nhiều lần để vượt qua 5 bài viết đầu tiên...");
-        for (let s = 0; s < 5; s++) {
-            await page.evaluate(() => window.scrollBy(0, 1200));
-            await delay(2500);
-        }
+        console.log("🔍 Quét ngay các bài đang hiển thị, không cuộn ngâm 5 lần...");
+        await delay(1000);
 
         try {
             console.log("👀 Đang quét các bài viết...");
@@ -219,8 +219,9 @@ async function downloadImageFromTelegram(file_id) {
 
             console.log(`[INFO] Tìm thấy ${validCmtBtns.length} bài viết có thể comment.`);
 
-            // Bỏ qua 5 bài đầu tiên, bắt đầu từ bài thứ 6 (index 5)
-            let startIndex = validCmtBtns.length > 5 ? 5 : 0;
+            // Ưu tiên bài đang hiển thị đầu tiên để chạy nhanh và không phụ
+            // thuộc vào thao tác scroll vốn hay làm Facebook thay DOM.
+            let startIndex = 0;
             // Comment đúng 5 bài
             let postsToComment = 5;
             let commentedCount = 0;
