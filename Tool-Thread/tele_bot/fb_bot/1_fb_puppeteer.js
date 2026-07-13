@@ -79,6 +79,13 @@ async function downloadImageFromTelegram(file_id) {
         console.log(`[INFO] Danh sách có ${targets.length} Group/Page; chỉ dùng ${MAX_GROUP_TARGETS} mục đầu theo quyền lợi gói.`);
         targets = targets.slice(0, MAX_GROUP_TARGETS);
     }
+    // Account chưa nhập affiliate link thì chỉ chạy 3 group đầu để không chiếm
+    // quá lâu slot của những tác vụ tự động khác. Khi đã nhập link, dùng đủ list.
+    const hasAccountAffiliateLink = (dbConfig?.affiliate_links_arr || []).some(Boolean);
+    if (!hasAccountAffiliateLink && targets.length > 3) {
+        targets = targets.slice(0, 3);
+        console.log('[INFO] Account chưa nhập link affiliate: chỉ chạy 3 Group/Page đầu.');
+    }
     console.log(`[INFO] Dùng ${targets.length} Group/Page comment từ ${dbConfig?.fb_targets_arr?.length ? 'cấu hình account' : 'danh sách mặc định'}.`);
 
     // Đọc data từ data_products.json (tệp đã chứa link ảnh và comment mẫu)
