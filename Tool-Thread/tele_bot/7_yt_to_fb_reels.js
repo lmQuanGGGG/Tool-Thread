@@ -103,7 +103,18 @@ async function fetchLatestVideos(channels) {
 }
 
 async function downloadFile(url, filePath) {
-    const response = await axios({ url, method: 'GET', responseType: 'stream', timeout: 300000 });
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream',
+        timeout: 300000,
+        headers: {
+            // GenDownload's stream endpoint is intended for browser clients;
+            // use a normal browser-like request when it proxies the source.
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            'Accept': 'video/*,application/octet-stream;q=0.9,*/*;q=0.8',
+        },
+    });
     const writer = fs.createWriteStream(filePath);
     response.data.pipe(writer);
     await new Promise((resolve, reject) => {
@@ -111,6 +122,29 @@ async function downloadFile(url, filePath) {
         writer.on('error', reject);
         response.data.on('error', reject);
     });
+}
+
+function removeFileQuietly(filePath) {
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+function assertPlayableMedia(filePath, label) {
+    const size = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
+    if (size < 1024) {
+        throw new Error(`${label} rỗng hoặc quá nhỏ (${size} bytes).`);
+    }
+
+    try {
+        const probe = JSON.parse(execFileSync('ffprobe', [
+            '-v', 'error', '-show_entries', 'format=format_name,duration', '-of', 'json', filePath,
+        ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+        const duration = Number(probe?.format?.duration || 0);
+        if (!Number.isFinite(duration) || duration < 1) {
+            throw new Error(`duration không hợp lệ (${duration || 0}s)`);
+        }
+    } catch (_) {
+        throw new Error(`${label} không phải file media hợp lệ hoặc không có nội dung.`);
+    }
 }
 
 function hasAudio(format) {
@@ -124,8 +158,9 @@ function isAudioOnly(format) {
     return format.type === 'audio' || format.vcodec === 'none' || /audio/i.test(format.label || '');
 }
 
-async function downloadVideoWithAudio(video, outputDir) {
-    // GenDownload vẫn là API extractor/tải chính: hỗ trợ mọi nguồn mà API cung cấp.
+async function downloadVideoFromGenDownload(video, outputPath) {
+    const outputDir = path.dirname(outputPath);
+    const safeId = path.basename(outputPath, '.mp4');
     const { data } = await axios.post('https://gendownload.com/api/extract', { url: video.url }, {
         timeout: 60000,
         headers: { 'Content-Type': 'application/json' }
@@ -140,9 +175,8 @@ async function downloadVideoWithAudio(video, outputDir) {
         || videoFormats[0];
     if (!bestVideo) throw new Error('API GenDownload không trả về video hợp lệ.');
 
-    const safeId = video.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const outputPath = path.join(outputDir, `${safeId}.mp4`);
     await downloadFile(bestVideo.url, outputPath);
+    assertPlayableMedia(outputPath, 'Video GenDownload');
 
     // Nếu video stream không chứa tiếng, dùng audio stream API trả về để ghép lại.
     const audioStream = () => execFileSync('ffprobe', [
@@ -157,6 +191,7 @@ async function downloadVideoWithAudio(video, outputDir) {
         const audioPath = path.join(outputDir, `${safeId}.audio`);
         const mergedPath = path.join(outputDir, `${safeId}.merged.mp4`);
         await downloadFile(audioFormat.url, audioPath);
+        assertPlayableMedia(audioPath, 'Audio GenDownload');
         execFileSync('ffmpeg', [
             '-y', '-i', outputPath, '-i', audioPath, '-c:v', 'copy', '-c:a', 'aac',
             '-map', '0:v:0', '-map', '1:a:0', '-shortest', mergedPath
@@ -168,6 +203,79 @@ async function downloadVideoWithAudio(video, outputDir) {
         throw new Error('File sau khi xử lý vẫn không có audio stream.');
     }
     return outputPath;
+}
+
+function isYouTubeUrl(url) {
+    try {
+        const host = new URL(url).hostname.toLowerCase();
+        return host.includes('youtube.com') || host === 'youtu.be';
+    } catch (_) {
+        return false;
+    }
+}
+
+async function downloadVideoWithYtDlpFallback(video, outputPath) {
+    const dir = path.dirname(outputPath);
+    const base = path.basename(outputPath, '.mp4');
+    const template = path.join(dir, `${base}.fallback.%(ext)s`);
+    for (const name of fs.readdirSync(dir)) {
+        if (name.startsWith(`${base}.fallback.`)) removeFileQuietly(path.join(dir, name));
+    }
+
+    execFileSync(YTDLP_CMD, [
+        '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android',
+        '--merge-output-format', 'mp4', '--remux-video', 'mp4',
+        '-f', 'bv*+ba/b', '-o', template, video.url,
+    ], { stdio: 'pipe', timeout: 300000 });
+
+    const fallbackFiles = fs.readdirSync(dir)
+        .filter((name) => name.startsWith(`${base}.fallback.`) && !name.endsWith('.part'))
+        .map((name) => path.join(dir, name))
+        .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+    if (!fallbackFiles.length) throw new Error('yt-dlp không tạo file fallback.');
+
+    assertPlayableMedia(fallbackFiles[0], 'Video fallback yt-dlp');
+    removeFileQuietly(outputPath);
+    fs.renameSync(fallbackFiles[0], outputPath);
+    const audio = execFileSync('ffprobe', [
+        '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_type',
+        '-of', 'default=noprint_wrappers=1:nokey=1', outputPath,
+    ], { encoding: 'utf8' }).trim();
+    if (audio !== 'audio') throw new Error('yt-dlp fallback tải video không có audio.');
+    return outputPath;
+}
+
+async function downloadVideoWithAudio(video, outputDir) {
+    // GenDownload là nguồn chính. Mỗi lần thử phải bóc token stream mới vì URL
+    // tạm có thể hết hạn hoặc upstream trả body rỗng cho runner GitHub.
+    const safeId = video.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const outputPath = path.join(outputDir, `${safeId}.mp4`);
+    const errors = [];
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        removeFileQuietly(outputPath);
+        try {
+            await downloadVideoFromGenDownload(video, outputPath);
+            return outputPath;
+        } catch (err) {
+            errors.push(`lần ${attempt}: ${err.message}`);
+            removeFileQuietly(outputPath);
+            console.warn(`⚠ GenDownload tải lỗi (${attempt}/3): ${err.message}`);
+            if (attempt < 3) await delay(attempt * 3000);
+        }
+    }
+
+    // YouTube có extractor riêng trên runner; chỉ dùng làm phương án dự phòng
+    // khi stream API GenDownload thất bại hoàn toàn.
+    if (isYouTubeUrl(video.url)) {
+        console.warn('↪ GenDownload không trả file hợp lệ, chuyển sang yt-dlp fallback cho YouTube...');
+        try {
+            return await downloadVideoWithYtDlpFallback(video, outputPath);
+        } catch (err) {
+            errors.push(`yt-dlp fallback: ${err.message}`);
+            removeFileQuietly(outputPath);
+        }
+    }
+    throw new Error(`Không tải được video sau các lần thử: ${errors.join(' | ')}`);
 }
 
 (async () => {
