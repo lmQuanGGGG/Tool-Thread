@@ -101,17 +101,24 @@ async function downloadImageFromTelegram(file_id) {
     }
     console.log(`[INFO] Dùng ${targets.length} Group/Page comment từ ${dbConfig?.fb_targets_arr?.length ? 'cấu hình account' : 'danh sách mặc định'}.`);
 
-    // Đọc data từ data_products.json (tệp đã chứa link ảnh và comment mẫu)
+    // Ưu tiên sản phẩm/caption Gemini đã lưu riêng theo account. Danh sách file
+    // chung chỉ là fallback cho account cũ chưa đồng bộ link Shopee.
     const productsPath = path.resolve(__dirname, '../data_products.json');
-    let products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
+    const accountProducts = Array.isArray(dbConfig?.parsed_affiliate_links)
+        ? dbConfig.parsed_affiliate_links
+        : [];
+    let products = accountProducts.length > 0
+        ? accountProducts
+        : JSON.parse(fs.readFileSync(productsPath, 'utf8'));
 
-    // Lọc ra các sản phẩm CÓ ẢNH (để đảm bảo cmt cho real)
-    let validProducts = products.filter(p => p.tele_file_id && p.suggested_comment);
+    // Lọc ra sản phẩm có ảnh, link và caption Gemini để comment có đủ nội dung.
+    let validProducts = products.filter(p => p.tele_file_id && p.suggested_comment && (p.aff_link || p.link));
 
     if (validProducts.length === 0) {
-        console.error("✗ Không có sản phẩm nào có đủ ảnh và cmt mẫu trong data_products.json!");
+        console.error("✗ Không có sản phẩm nào có đủ ảnh, link và caption Gemini!");
         process.exit(1);
     }
+    console.log(`[INFO] Dùng ${validProducts.length} caption ${accountProducts.length > 0 ? 'Gemini đã lưu theo account' : 'từ dữ liệu fallback chung'}.`);
 
     const browser = await puppeteer.launch({
         headless: "new", // Ẩn trình duyệt khi chạy PM2
