@@ -24,6 +24,12 @@ async function sendTelegramNotify(chatId, message) {
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+function vietnamDayStartIso() {
+  const vietnamNow = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const date = vietnamNow.toISOString().slice(0, 10);
+  return new Date(`${date}T00:00:00+07:00`).toISOString();
+}
+
 async function downloadImageFromUrl(url) {
   try {
     const response = await axios({ url, method: 'GET', responseType: 'stream' });
@@ -84,18 +90,73 @@ async function runSinglePost() {
     process.exit(0);
   }
 
-  // Nếu không truyền postId (chạy tự động từ dispatcher), tìm bài chưa đăng cũ nhất
+  // Nếu không truyền postId (chạy tự động từ dispatcher), lấy đúng một bài drama
+  // ngẫu nhiên mỗi ngày (giờ Việt Nam). Các lượt còn lại lấy kho thường theo thứ tự.
   if (!postId || postId.trim() === '') {
     const { data: userProfile } = await supabase.from('profiles').select('id').eq('email', email).single();
     if (userProfile) {
-      const { data: pendingPost } = await supabase
+      const todayStart = vietnamDayStartIso();
+      const { data: dramaPostedToday, error: dramaPostedError } = await supabase
         .from('crawl_data')
         .select('id')
         .eq('user_id', userProfile.id)
-        .eq('posted', false)
-        .order('created_at', { ascending: true })
+        .eq('posted', true)
+        .like('post_id', 'drama-%')
+        .gte('posted_at', todayStart)
         .limit(1)
         .maybeSingle();
+
+      if (dramaPostedError) {
+        throw new Error(`Không thể kiểm tra bài drama hôm nay: ${dramaPostedError.message}`);
+      }
+
+      let pendingPost = null;
+      if (!dramaPostedToday) {
+        const { count: dramaCount, error: dramaCountError } = await supabase
+          .from('crawl_data')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userProfile.id)
+          .eq('posted', false)
+          .like('post_id', 'drama-%');
+
+        if (dramaCountError) {
+          throw new Error(`Không thể đếm kho drama: ${dramaCountError.message}`);
+        }
+
+        if (dramaCount > 0) {
+          const randomOffset = Math.floor(Math.random() * dramaCount);
+          const { data, error: randomDramaError } = await supabase
+            .from('crawl_data')
+            .select('id')
+            .eq('user_id', userProfile.id)
+            .eq('posted', false)
+            .like('post_id', 'drama-%')
+            .order('id', { ascending: true })
+            .range(randomOffset, randomOffset)
+            .maybeSingle();
+          if (randomDramaError) {
+            throw new Error(`Không thể chọn bài drama ngẫu nhiên: ${randomDramaError.message}`);
+          }
+          pendingPost = data;
+          if (pendingPost) console.log(`🎲 Chọn ngẫu nhiên 1 bài drama cho hôm nay (offset ${randomOffset}).`);
+        }
+      }
+
+      if (!pendingPost) {
+        const { data, error: normalPostError } = await supabase
+          .from('crawl_data')
+          .select('id')
+          .eq('user_id', userProfile.id)
+          .eq('posted', false)
+          .not('post_id', 'like', 'drama-%')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (normalPostError) {
+          throw new Error(`Không thể chọn bài từ kho thường: ${normalPostError.message}`);
+        }
+        pendingPost = data;
+      }
 
       if (pendingPost) {
         postId = pendingPost.id;
