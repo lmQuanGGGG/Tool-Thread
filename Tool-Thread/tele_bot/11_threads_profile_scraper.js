@@ -418,6 +418,17 @@ async function run() {
                     text_content: post.content,
                     image_urls: image_urls,
                     image_file_ids: image_file_ids,
+                    source_published_at: post.timestamp
+                        ? new Date(post.timestamp * 1000).toISOString()
+                        : null,
+                    source_likes: post.stats?.likes || 0,
+                    source_replies: post.stats?.replies || 0,
+                    source_reposts: post.stats?.reposts || 0,
+                    source_quotes: post.stats?.quotes || 0,
+                    source_engagement: (post.stats?.likes || 0)
+                        + (post.stats?.replies || 0)
+                        + (post.stats?.reposts || 0)
+                        + (post.stats?.quotes || 0),
                     posted: false
                 }, { onConflict: 'user_id,post_id' });
 

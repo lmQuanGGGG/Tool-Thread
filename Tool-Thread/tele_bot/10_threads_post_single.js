@@ -142,15 +142,33 @@ async function runSinglePost() {
       }
 
       if (!pendingPost) {
-        const { data, error: normalPostError } = await supabase
+        let { data, error: normalPostError } = await supabase
           .from('crawl_data')
           .select('id')
           .eq('user_id', userProfile.id)
           .eq('posted', false)
           .not('post_id', 'like', 'drama-%')
+          .order('source_engagement', { ascending: false, nullsFirst: false })
+          .order('source_published_at', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: true })
           .limit(1)
           .maybeSingle();
+        // Existing installations can deploy code before the SQL migration is
+        // run. Keep the old queue working until source metric columns exist.
+        if (normalPostError && /source_engagement|source_published_at/i.test(normalPostError.message || '')) {
+          console.warn('⚠ Chưa có cột thống kê tương tác; tạm dùng thứ tự kho cũ. Hãy chạy update_crawl_data_source_metrics.sql.');
+          const fallback = await supabase
+            .from('crawl_data')
+            .select('id')
+            .eq('user_id', userProfile.id)
+            .eq('posted', false)
+            .not('post_id', 'like', 'drama-%')
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          data = fallback.data;
+          normalPostError = fallback.error;
+        }
         if (normalPostError) {
           throw new Error(`Không thể chọn bài từ kho thường: ${normalPostError.message}`);
         }

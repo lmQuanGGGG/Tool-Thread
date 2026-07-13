@@ -64,6 +64,12 @@ export default function ThreadsCrawler({ userId, tier, credits, onCrawlSuccess, 
           text_content: post.content?.text || "",
           image_urls: post.content?.media?.map((m: any) => m.url) || [],
           image_file_ids: [],
+          source_published_at: post.timestamp ? new Date(post.timestamp * 1000).toISOString() : null,
+          source_likes: post.stats?.likes || 0,
+          source_replies: post.stats?.replies || 0,
+          source_reposts: post.stats?.reposts || 0,
+          source_quotes: post.stats?.quotes || 0,
+          source_engagement: (post.stats?.likes || 0) + (post.stats?.replies || 0) + (post.stats?.reposts || 0) + (post.stats?.quotes || 0),
           posted: false,
         }, { onConflict: "user_id,post_id" } as any);
 
