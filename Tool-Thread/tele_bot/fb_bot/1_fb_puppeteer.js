@@ -72,6 +72,13 @@ async function downloadImageFromTelegram(file_id) {
     // Ưu tiên danh sách Group/Page riêng của account trong Supabase. Nếu chưa
     // cấu hình trên web thì dùng list mặc định chung để tương thích dữ liệu cũ.
     const MAX_GROUP_TARGETS = 17;
+    const GROUPS_PER_RUN_BY_TIER = {
+        free: 3,
+        lite: 4,
+        plus: 5,
+        pro: 6,
+        promax: 6,
+    };
     let targets = dbConfig?.fb_targets_arr?.length
         ? dbConfig.fb_targets_arr
         : JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fb_targets.json'), 'utf8'));
@@ -79,8 +86,14 @@ async function downloadImageFromTelegram(file_id) {
         console.log(`[INFO] Danh sách có ${targets.length} Group/Page; chỉ dùng ${MAX_GROUP_TARGETS} mục đầu theo quyền lợi gói.`);
         targets = targets.slice(0, MAX_GROUP_TARGETS);
     }
-    // Account chưa nhập affiliate link thì chỉ chạy 3 group đầu để không chiếm
-    // quá lâu slot của những tác vụ tự động khác. Khi đã nhập link, dùng đủ list.
+    const userTier = dbConfig?.tier || 'free';
+    const tierGroupLimit = GROUPS_PER_RUN_BY_TIER[userTier] || GROUPS_PER_RUN_BY_TIER.free;
+    if (targets.length > tierGroupLimit) {
+        targets = targets.slice(0, tierGroupLimit);
+        console.log(`[INFO] Gói ${userTier.toUpperCase()}: giới hạn ${tierGroupLimit} Group/Page mỗi phiên.`);
+    }
+    // Account chưa nhập affiliate link thì chỉ chạy tối đa 3 group đầu để không
+    // chiếm quá lâu slot của các tác vụ khác. Có link vẫn tuân theo giới hạn gói.
     const hasAccountAffiliateLink = (dbConfig?.affiliate_links_arr || []).some(Boolean);
     if (!hasAccountAffiliateLink && targets.length > 3) {
         targets = targets.slice(0, 3);
