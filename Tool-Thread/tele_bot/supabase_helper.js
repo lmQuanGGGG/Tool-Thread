@@ -31,6 +31,9 @@ function parseCookieString(cookieStr, domain = '.facebook.com') {
     if (Array.isArray(parsed)) {
       return parsed.map(c => {
         if (c.sameSite === 'no_restriction') c.sameSite = 'None';
+        // `unspecified` là format của extension Chrome, không phải giá trị
+        // Puppeteer/CDP nhận khi set cookie. Bỏ field để Chrome tự áp dụng.
+        if (c.sameSite === 'unspecified') delete c.sameSite;
         delete c.storeId; delete c.id; delete c.hostOnly; delete c.session;
         return c;
       });

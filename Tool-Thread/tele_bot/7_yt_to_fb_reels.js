@@ -7,7 +7,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 // TÍCH HỢP ĐƯỜNG ỐNG SUPABASE
-const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota, sendTelegramMessage } = require('./supabase_helper');
+const { fetchBotConfig, updateUsageStats, logToWeb, checkQuota, sendTelegramMessage, parseCookieString, supabase } = require('./supabase_helper');
 
 puppeteer.use(StealthPlugin());
 
@@ -92,7 +92,11 @@ async function fetchLatestVideos(channels) {
                 } catch (_) { }
             }
         } catch (err) {
-            console.error("✗ Lỗi quét kênh:", err.message);
+            if (/douyin\.com/i.test(channel) && /Unsupported URL/i.test(err.message)) {
+                console.error('✗ Link Douyin này đã redirect sang profile/trang chủ, không phải video công khai; bỏ qua nguồn này.');
+            } else {
+                console.error("✗ Lỗi quét kênh:", err.message);
+            }
         }
     }
     return allVideos;
@@ -257,7 +261,37 @@ async function downloadVideoWithAudio(video, outputDir) {
         }
     };
 
+    const getFacebookCookies = (config) => {
+        const savedCookies = config?.fb_cookie_reels_arr || config?.fb_cookies_arr || [];
+        if (savedCookies.length > 0) return savedCookies;
+        return parseCookieString(process.env.FB_COOKIE, '.facebook.com');
+    };
+
+    const saveFacebookCookies = async (page, config) => {
+        if (!config?.id || !supabase) return;
+        const currentCookies = await page.cookies('https://www.facebook.com');
+        const hasSession = currentCookies.some((cookie) => cookie.name === 'c_user')
+            && currentCookies.some((cookie) => cookie.name === 'xs');
+        if (!hasSession) throw new Error('Facebook không trả về c_user/xs sau khi nạp session.');
+
+        // Lưu nguyên format Puppeteer/CDP trả về. Không đổi sameSite sang format
+        // extension vì lần chạy sau Puppeteer không inject được `unspecified`.
+        const { error } = await supabase
+            .from('profiles')
+            .update({ fb_cookie: JSON.stringify(currentCookies) })
+            .eq('id', config.id);
+        if (error) throw error;
+    };
+
+    const isFacebookLoginOrCheckpoint = async (page) => {
+        const url = page.url();
+        if (/\/(login|checkpoint)\b/i.test(url)) return true;
+        return Boolean(await page.$('input[name="email"], input[name="pass"]'));
+    };
+
     let dbConfig = null;
+    let browser = null;
+    let page = null;
     const email = process.env.USER_EMAIL || 'admin@autofarm.com';
 
     try {
@@ -287,6 +321,15 @@ async function downloadVideoWithAudio(video, outputDir) {
         ];
     }
 
+    // Không quét/tải video nếu account chưa có cookie Facebook hợp lệ.
+    const cookies = getFacebookCookies(dbConfig);
+    if (cookies.length === 0) {
+        console.error('✗ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config.');
+        await logToWeb(email, 'yt-reels', 'Dừng trước khi tải video: chưa có FB Cookie.', 'error');
+        process.exitCode = 1;
+        return;
+    }
+
     const isPromax = dbConfig?.tier === 'promax';
     await logToWeb(email, 'yt-reels', `Khởi động tool FB Reels... Channels: ${channels.length}`, 'info');
 
@@ -307,6 +350,32 @@ async function downloadVideoWithAudio(video, outputDir) {
         const randomMinutes = Math.floor(Math.random() * 25) + 1;
         console.log(`⏱ HỆ THỐNG BOT TỰ ĐỘNG: Đang ngâm nick (delay ngẫu nhiên) ${randomMinutes} phút trước khi bắt đầu...`);
         await delay(randomMinutes * 60 * 1000); // Đổi ra mili-giây
+    }
+
+    // Nạp và xác nhận session trước khi tải để không phí lượt download khi cookie chết.
+    try {
+        browser = await puppeteer.launch({
+            headless: false,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--window-size=1280,800']
+        });
+        page = await browser.newPage();
+        await page.setViewport({ width: 1280, height: 800 });
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.goto('https://www.facebook.com/login', { waitUntil: 'domcontentloaded' });
+        await page.setCookie(...cookies);
+        await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
+
+        if (await isFacebookLoginOrCheckpoint(page)) {
+            throw new Error('Cookie không hợp lệ hoặc Facebook yêu cầu xác minh; đã bị chuyển về màn hình login/checkpoint.');
+        }
+        await saveFacebookCookies(page, dbConfig);
+        console.log(`🍪 Đã xác nhận ${cookies.length} cookies Facebook trước khi tải video.`);
+    } catch (error) {
+        console.error(`✗ Không thể xác nhận Facebook session: ${error.message}`);
+        await logToWeb(email, 'yt-reels', `Dừng trước khi tải video: ${error.message}`, 'error');
+        if (browser) await browser.close();
+        process.exitCode = 1;
+        return;
     }
 
     console.log("🚀 KHỞI ĐỘNG TOOL: QUÉT VIDEO SANG FB REELS...");
@@ -349,44 +418,7 @@ async function downloadVideoWithAudio(video, outputDir) {
 
     // Bỏ qua FFMPEG theo yêu cầu của sếp, giữ nguyên video gốc để chất lượng cao nhất và up nhanh hơn.
 
-    // 3. Đăng lên Facebook Reels
-    // Lấy cookie
-    let cookies = dbConfig?.fb_cookie_reels_arr || dbConfig?.fb_cookies_arr || [];
-
-    if ((!cookies || cookies.length === 0) && process.env.FB_COOKIE) {
-        try {
-            cookies = JSON.parse(process.env.FB_COOKIE);
-            console.log("!!! Lấy FB_COOKIE từ biến môi trường (.env) do Supabase không có.");
-        } catch (e) {
-            console.error("✗ Lỗi parse FB_COOKIE từ .env:", e.message);
-        }
-    }
-
-    if (!cookies || cookies.length === 0) {
-        console.error("✗ Lỗi: Chưa có FB Cookie! Hãy nhập cookie trên trang Bots & Config hoặc set biến môi trường FB_COOKIE.");
-        process.exit(1);
-    }
-    console.log(`🍪 Đã load ${cookies.length} cookies cho Facebook.`);
-
-    const browser = await puppeteer.launch({
-        headless: false, // Hiển thị màn hình cho Sếp xem
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-notifications',
-            '--window-size=1280,800'
-        ]
-    });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
-    console.log("🌐 Truy cập trang Facebook (Giao diện Máy Tính)...");
-    await page.goto('https://www.facebook.com/login', { waitUntil: 'domcontentloaded' });
-    await page.setCookie(...cookies);
-
-    console.log("🌐 Đang truy cập Trang Chủ Facebook (để nhận diện Cookie)...");
-    await page.goto('https://www.facebook.com', { waitUntil: 'networkidle2' });
+    // 3. Đăng lên Facebook Reels (session đã được xác nhận trước khi tải).
 
     // === THÊM HÀNH VI NGƯỜI THẬT ===
     console.log("🎭 Đang giả lập hành vi người dùng (scroll, lướt feed)...");
@@ -802,45 +834,21 @@ async function downloadVideoWithAudio(video, outputDir) {
             await sendTelegramMessage(dbConfig.tele_chat_id, `✘<b>[Bot Up Reels Lỗi]</b>\nLỗi: ${err.message}\nTài khoản: ${email}`);
         }
         await page.screenshot({ path: `debug_reels_err_${Date.now()}.png` });
-        process.exit(1); // Cố tình văng lỗi để Github Actions đỏ lòm cho dễ track
+        // Để finally lưu session/cookie vừa được Facebook refresh rồi mới báo job lỗi.
+        process.exitCode = 1;
     } finally {
         // === AUTO REFRESH COOKIE ===
         try {
             console.log("🍪 Đang trích xuất Cookie FB mới để gia hạn...");
-            const currentCookies = await page.cookies();
-
-            const updatedCookies = currentCookies.map(c => ({
-                domain: c.domain,
-                expirationDate: c.expires,
-                hostOnly: !c.domain.startsWith('.'),
-                httpOnly: c.httpOnly,
-                name: c.name,
-                path: c.path,
-                sameSite: c.sameSite === 'None' ? 'no_restriction' : 'unspecified',
-                secure: c.secure,
-                session: c.session,
-                storeId: '0',
-                value: c.value
-            }));
-
-            const { supabase } = require('./supabase_helper');
-            if (dbConfig && dbConfig.id && supabase) {
-                const { error: cookieUpdateErr } = await supabase
-                    .from('profiles')
-                    .update({ fb_cookie: JSON.stringify(updatedCookies) })
-                    .eq('id', dbConfig.id);
-
-                if (!cookieUpdateErr) {
-                    console.log("✓ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
-                    await logToWeb(email, 'yt-reels', `✓ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
-                }
-            }
+            await saveFacebookCookies(page, dbConfig);
+            console.log("✓ Đã lấy Cookie FB mới thành công và cập nhật lên DB!");
+            await logToWeb(email, 'yt-reels', `✓ Đã lưu Cookie FB mới vào DB (Gia hạn thành công)!`, 'success');
         } catch (cookieErr) {
             console.error("Lỗi trích xuất Cookie FB:", cookieErr);
         }
         // === END AUTO REFRESH ===
 
         if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-        await browser.close();
+        if (browser) await browser.close();
     }
 })();
