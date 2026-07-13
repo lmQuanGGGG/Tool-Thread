@@ -74,10 +74,10 @@ async function downloadImageFromTelegram(file_id) {
     const MAX_GROUP_TARGETS = 17;
     const GROUPS_PER_RUN_BY_TIER = {
         free: 3,
-        lite: 4,
-        plus: 5,
-        pro: 6,
-        promax: 6,
+        lite: 3,
+        plus: 3,
+        pro: 3,
+        promax: 3,
     };
     let targets = dbConfig?.fb_targets_arr?.length
         ? dbConfig.fb_targets_arr
