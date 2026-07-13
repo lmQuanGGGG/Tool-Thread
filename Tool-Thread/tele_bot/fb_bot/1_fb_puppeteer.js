@@ -92,12 +92,12 @@ async function downloadImageFromTelegram(file_id) {
         targets = targets.slice(0, tierGroupLimit);
         console.log(`[INFO] Gói ${userTier.toUpperCase()}: giới hạn ${tierGroupLimit} Group/Page mỗi phiên.`);
     }
-    // Account chưa nhập affiliate link thì chỉ chạy tối đa 3 group đầu để không
-    // chiếm quá lâu slot của các tác vụ khác. Có link vẫn tuân theo giới hạn gói.
-    const hasAccountAffiliateLink = (dbConfig?.affiliate_links_arr || []).some(Boolean);
-    if (!hasAccountAffiliateLink && targets.length > 3) {
+    // Chưa có danh sách Group/Page riêng trên web thì chỉ dùng 3 group mặc
+    // định đầu để không chiếm quá lâu slot của các tác vụ khác.
+    const hasCustomGroupTargets = (dbConfig?.fb_targets_arr || []).length > 0;
+    if (!hasCustomGroupTargets && targets.length > 3) {
         targets = targets.slice(0, 3);
-        console.log('[INFO] Account chưa nhập link affiliate: chỉ chạy 3 Group/Page đầu.');
+        console.log('[INFO] Account chưa nhập link Group/Page: chỉ chạy 3 Group/Page mặc định đầu.');
     }
     console.log(`[INFO] Dùng ${targets.length} Group/Page comment từ ${dbConfig?.fb_targets_arr?.length ? 'cấu hình account' : 'danh sách mặc định'}.`);
 
