@@ -8,6 +8,7 @@ const path = require('path');
 const axios = require('axios');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+const DAILY_DRAMA_POSTS = 2;
 
 async function sendTelegramNotify(chatId, message) {
   if (!TELEGRAM_BOT_TOKEN || !chatId) return;
@@ -90,28 +91,26 @@ async function runSinglePost() {
     process.exit(0);
   }
 
-  // Nếu không truyền postId (chạy tự động từ dispatcher), lấy đúng một bài drama
+  // Nếu không truyền postId (chạy tự động từ dispatcher), lấy tối đa hai bài drama
   // ngẫu nhiên mỗi ngày (giờ Việt Nam). Các lượt còn lại lấy kho thường theo thứ tự.
   if (!postId || postId.trim() === '') {
     const { data: userProfile } = await supabase.from('profiles').select('id').eq('email', email).single();
     if (userProfile) {
       const todayStart = vietnamDayStartIso();
-      const { data: dramaPostedToday, error: dramaPostedError } = await supabase
+      const { count: dramaPostedToday, error: dramaPostedError } = await supabase
         .from('crawl_data')
-        .select('id')
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', userProfile.id)
         .eq('posted', true)
         .like('post_id', 'drama-%')
-        .gte('posted_at', todayStart)
-        .limit(1)
-        .maybeSingle();
+        .gte('posted_at', todayStart);
 
       if (dramaPostedError) {
         throw new Error(`Không thể kiểm tra bài drama hôm nay: ${dramaPostedError.message}`);
       }
 
       let pendingPost = null;
-      if (!dramaPostedToday) {
+      if ((dramaPostedToday || 0) < DAILY_DRAMA_POSTS) {
         const { count: dramaCount, error: dramaCountError } = await supabase
           .from('crawl_data')
           .select('id', { count: 'exact', head: true })
@@ -138,7 +137,7 @@ async function runSinglePost() {
             throw new Error(`Không thể chọn bài drama ngẫu nhiên: ${randomDramaError.message}`);
           }
           pendingPost = data;
-          if (pendingPost) console.log(`🎲 Chọn ngẫu nhiên 1 bài drama cho hôm nay (offset ${randomOffset}).`);
+          if (pendingPost) console.log(`🎲 Chọn ngẫu nhiên bài drama thứ ${(dramaPostedToday || 0) + 1}/${DAILY_DRAMA_POSTS} hôm nay (offset ${randomOffset}).`);
         }
       }
 
