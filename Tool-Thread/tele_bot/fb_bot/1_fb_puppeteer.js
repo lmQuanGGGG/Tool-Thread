@@ -388,8 +388,14 @@ async function downloadImageFromTelegram(file_id) {
     }
     
     try {
-        const currentCookies = await page.cookies();
-        if (currentCookies && currentCookies.length > 0 && supabase) {
+        const currentCookies = await page.cookies('https://www.facebook.com');
+        const hasValidSession = currentCookies.some(cookie => cookie.name === 'c_user')
+            && currentCookies.some(cookie => cookie.name === 'xs');
+        if (!hasValidSession) {
+            // Never overwrite a known-good DB session with anonymous cookies
+            // such as datr/fr after Facebook logs the browser out/checkpoints it.
+            console.warn('⚠ Cookie hiện tại thiếu c_user/xs; giữ nguyên cookie Facebook đang lưu trên DB.');
+        } else if (supabase) {
             const email = dbConfig?.email || process.env.USER_EMAIL;
             if (email) {
                 await supabase.from('profiles').update({ fb_cookie: JSON.stringify(currentCookies) }).eq('email', email);
