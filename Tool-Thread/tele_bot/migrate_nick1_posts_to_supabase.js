@@ -59,6 +59,13 @@ async function main() {
         .map(media => typeof media === 'string' ? media : media?.url)
         .filter(Boolean),
       image_file_ids: (post.content?.media || []).map(media => media.file_id).filter(Boolean),
+      source_published_at: post.timestamp ? new Date(post.timestamp * 1000).toISOString() : null,
+      source_likes: post.stats?.likes || 0,
+      source_replies: post.stats?.replies || 0,
+      source_reposts: post.stats?.reposts || 0,
+      source_quotes: post.stats?.quotes || 0,
+      source_engagement: (post.stats?.likes || 0) + (post.stats?.replies || 0)
+        + (post.stats?.reposts || 0) + (post.stats?.quotes || 0),
       posted: false,
     }));
 

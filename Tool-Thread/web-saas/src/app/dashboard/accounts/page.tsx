@@ -194,7 +194,10 @@ export default function AccountsPage() {
   const fetchThreadsPosts = useCallback(async (uid: string, limit = threadsVisibleCount) => {
     const { count } = await supabase.from('crawl_data').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('posted', false);
     setThreadsTotalCount(count || 0);
-    const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', uid).eq('posted', false).order('created_at', { ascending: false }).limit(limit);
+    const { data: cData } = await supabase.from('crawl_data').select('*').eq('user_id', uid).eq('posted', false)
+      .order('source_engagement', { ascending: false, nullsFirst: false })
+      .order('source_published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false }).limit(limit);
     if (cData) setThreadsPosts(cData);
   }, [threadsVisibleCount]);
 
@@ -343,7 +346,11 @@ export default function AccountsPage() {
             setThreadsPosts(prev => prev.filter(p => p.id !== postedId));
             setThreadsTotalCount(prev => Math.max(0, prev - 1));
           }
-          supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false).order('created_at', { ascending: false }).limit(20).then(({ data }) => { if (data) setThreadsPosts(data); });
+          supabase.from('crawl_data').select('*').eq('user_id', userId).eq('posted', false)
+            .order('source_engagement', { ascending: false, nullsFirst: false })
+            .order('source_published_at', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false }).limit(20)
+            .then(({ data }) => { if (data) setThreadsPosts(data); });
         }
       } else if (newLog.bot_type === 'parse_links') {
         setGlobalLogs(prev => [...prev, { time: timeStr, level, msg: `${prefix}${newLog.message}` }]);
