@@ -8,17 +8,20 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const SPECIAL_REELS_EMAIL = 'lmquang.devops@gmail.com';
-const STANDARD_SLOTS = [8, 11, 13, 16, 19];
-const SPECIAL_REELS_EXTRA_SLOTS = [10, 15, 21];
-const FB_POST_SLOTS = [11, 14, 16, 20, 22];
-const DISPATCHER_HOURS = [...new Set([...STANDARD_SLOTS, ...SPECIAL_REELS_EXTRA_SLOTS, ...FB_POST_SLOTS, 23])];
 const AUTO_SCHEDULES = {
-    free: { reels: [11, 19], fbGroups: [19], fbReels: [19], threadsPost: [8, 19], fbPost: [19] },
-    lite: { reels: [8, 11, 19], fbGroups: [11, 19], fbReels: [11, 19], threadsPost: [8, 13, 19], fbPost: [8, 11, 19] },
-    plus: { reels: [8, 13, 16, 19], fbGroups: [13, 19], fbReels: [8, 11, 13, 16], threadsPost: [13, 19], fbPost: FB_POST_SLOTS },
-    pro: { reels: [8, 11, 13, 16, 19, 21], fbGroups: [8, 11, 13, 19], fbReels: [8, 11, 13, 16, 19, 21], threadsPost: [8, 11, 13, 19], fbPost: FB_POST_SLOTS },
-    promax: { reels: [8, 10, 11, 13, 15, 16, 19, 21], fbGroups: [8, 11, 13, 16, 19, 21], fbReels: [8, 10, 11, 13, 15, 16, 19, 21], threadsPost: [8, 10, 11, 13, 15, 16, 19, 21], fbPost: FB_POST_SLOTS },
+    // Lúc giờ trùng Reels/FB Post, dispatcher chạy phút 17 rồi 47: Reels được
+    // dispatch trước, FB Post lấy lượt sau khi Reels đã có marker trong ngày.
+    free:   { reels: [11, 19], fbReels: [16], fbGroups: [18], threadsPost: [8, 19], fbPost: [11] },
+    lite:   { reels: [8, 11, 19], fbReels: [10, 16], fbGroups: [13, 18], threadsPost: [8, 13, 19], fbPost: [8, 11, 19] },
+    plus:   { reels: [8, 13, 16, 19], fbReels: [10, 12, 15, 18], fbGroups: [9, 11], threadsPost: [13, 19], fbPost: [8, 13, 16] },
+    pro:    { reels: [8, 11, 13, 16, 19, 21], fbReels: [9, 10, 12, 15, 17, 18], fbGroups: [7, 14, 20, 22], threadsPost: [8, 11, 13, 19], fbPost: [8, 11, 13, 16, 19] },
+    promax: { reels: [8, 10, 11, 13, 15, 16, 19, 21], fbReels: [9, 12, 14, 17, 18, 20, 22, 23], fbGroups: [7, 9, 12, 14, 17, 18], threadsPost: [8, 10, 11, 13, 15, 16, 19, 21], fbPost: [8, 10, 11, 13, 15] },
 };
+const DISPATCHER_HOURS = [...new Set(Object.values(AUTO_SCHEDULES)
+    .flatMap((schedule) => [
+        ...schedule.reels, ...schedule.fbReels, ...schedule.fbGroups,
+        ...schedule.fbPost, ...schedule.threadsPost
+    ]))];
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !GITHUB_TOKEN || !GITHUB_REPO) {
     console.error("Missing env vars!");
