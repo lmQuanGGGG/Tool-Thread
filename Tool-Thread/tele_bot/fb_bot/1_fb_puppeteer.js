@@ -46,17 +46,10 @@ async function downloadImageFromTelegram(file_id) {
 }
 
 (async () => {
-    const pm2ProcessName = 'fb-puppeteer-farmer';
-    const manualFlagPath = path.resolve(__dirname, '..', `${pm2ProcessName}.manual`);
-
-    if (fs.existsSync(manualFlagPath)) {
-        console.log(`⚡ Phát hiện lệnh chạy tay từ Sếp (Telegram)! Bỏ qua bước ngâm nick...`);
-        fs.unlinkSync(manualFlagPath);
-    } else {
-        const randomMinutes = Math.floor(Math.random() * 25) + 1;
-        console.log(`⏱ HỆ THỐNG BOT TỰ ĐỘNG: Đang ngâm nick (delay ngẫu nhiên) ${randomMinutes} phút trước khi bắt đầu...`);
-        await delay(randomMinutes * 60 * 1000);
-    }
+    // Group/Page comment jobs must begin at their scheduled slot. Keep only
+    // the short in-browser pauses below; do not apply the old 1–25 minute
+    // account warm-up delay to automatic runs.
+    console.log('⚡ Bot comment Group/Page bắt đầu ngay, không ngâm nick.');
     // HÚT CONFIG TỪ SUPABASE
     const dbConfig = await fetchBotConfig();
     let fbCookieStr = dbConfig?.fb_cookie || process.env.FB_COOKIE;
