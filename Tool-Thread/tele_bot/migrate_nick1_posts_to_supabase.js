@@ -6,8 +6,15 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const TARGET_EMAIL = 'lmquang.devops@gmail.com';
-const sourcePath = path.resolve(__dirname, 'data_ready_to_post.json');
-const statePath = path.resolve(__dirname, 'account_state_1.json');
+// `node migrate_nick1_posts_to_supabase.js drama` imports the processed
+// drama set. Keep the old source as the default for the legacy Nick 1 import.
+const MODE = process.argv[2] === 'drama' ? 'drama' : 'nick1';
+const sourcePath = path.resolve(
+  __dirname,
+  MODE === 'drama' ? 'drama_ready_to_post.json' : 'data_ready_to_post.json'
+);
+const statePath = MODE === 'drama' ? null : path.resolve(__dirname, 'account_state_1.json');
+const postIdPrefix = MODE === 'drama' ? 'drama' : 'nick1';
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -25,7 +32,7 @@ function chunk(items, size) {
 
 async function main() {
   const posts = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
-  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  const state = statePath ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : { posts_done: [] };
   const previouslyPosted = new Set(state.posts_done || []);
 
   const { data: profile, error: profileError } = await supabase
@@ -45,7 +52,7 @@ async function main() {
     .filter(post => !previouslyPosted.has(post.post_id))
     .map(post => ({
       user_id: profile.id,
-      post_id: `nick1-${post.post_id}`,
+      post_id: `${postIdPrefix}-${post.post_id}`,
       source_url: post.post_url || null,
       text_content: post.content?.text || '',
       image_urls: (post.content?.media || [])
@@ -56,12 +63,18 @@ async function main() {
     }));
 
   const recordIds = records.map(record => record.post_id);
-  const { data: existing, error: existingError } = await supabase
-    .from('crawl_data')
-    .select('post_id')
-    .eq('user_id', profile.id)
-    .in('post_id', recordIds);
-  if (existingError) throw new Error(`Không thể kiểm tra bài trùng: ${existingError.message}`);
+  // A large `.in()` list becomes an overlong GET URL. Check each batch so
+  // big imports (such as the drama archive) remain idempotent.
+  const existing = [];
+  for (const ids of chunk(recordIds, 100)) {
+    const { data, error: existingError } = await supabase
+      .from('crawl_data')
+      .select('post_id')
+      .eq('user_id', profile.id)
+      .in('post_id', ids);
+    if (existingError) throw new Error(`Không thể kiểm tra bài trùng: ${existingError.message}`);
+    existing.push(...(data || []));
+  }
 
   const existingIds = new Set((existing || []).map(record => record.post_id));
   const newRecords = records.filter(record => !existingIds.has(record.post_id));
@@ -72,6 +85,7 @@ async function main() {
 
   console.log(JSON.stringify({
     email: TARGET_EMAIL,
+    mode: MODE,
     tier: 'pro',
     source_posts: posts.length,
     skipped_previously_posted: previouslyPosted.size,
