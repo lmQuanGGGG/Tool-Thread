@@ -13,6 +13,7 @@ puppeteer.use(StealthPlugin());
 
 const OUTPUT_DIR = path.resolve(__dirname, 'reels_videos');
 const HISTORY_FILE = path.resolve(__dirname, 'reels_history.json');
+const MAX_VIDEO_DOWNLOAD_ATTEMPTS = 10;
 
 // yt-dlp chỉ dùng để quét danh sách video của từng kênh.
 const YTDLP_CMD = "yt-dlp";
@@ -246,22 +247,18 @@ async function downloadVideoWithYtDlpFallback(video, outputPath) {
 }
 
 async function downloadVideoWithAudio(video, outputDir) {
-    // GenDownload là nguồn chính. Mỗi lần thử phải bóc token stream mới vì URL
-    // tạm có thể hết hạn hoặc upstream trả body rỗng cho runner GitHub.
+    // Mỗi video chỉ thử tải một lần ở đây. Khi lỗi, caller phải đổi sang URL
+    // video khác thay vì lặp lại cùng một nguồn.
     const safeId = video.id.replace(/[^a-zA-Z0-9_-]/g, '_');
     const outputPath = path.join(outputDir, `${safeId}.mp4`);
     const errors = [];
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    removeFileQuietly(outputPath);
+    try {
+        await downloadVideoFromGenDownload(video, outputPath);
+        return outputPath;
+    } catch (err) {
+        errors.push(`GenDownload: ${err.message}`);
         removeFileQuietly(outputPath);
-        try {
-            await downloadVideoFromGenDownload(video, outputPath);
-            return outputPath;
-        } catch (err) {
-            errors.push(`lần ${attempt}: ${err.message}`);
-            removeFileQuietly(outputPath);
-            console.warn(`⚠ GenDownload tải lỗi (${attempt}/3): ${err.message}`);
-            if (attempt < 3) await delay(attempt * 3000);
-        }
     }
 
     // YouTube có extractor riêng trên runner; chỉ dùng làm phương án dự phòng
@@ -275,7 +272,7 @@ async function downloadVideoWithAudio(video, outputDir) {
             removeFileQuietly(outputPath);
         }
     }
-    throw new Error(`Không tải được video sau các lần thử: ${errors.join(' | ')}`);
+    throw new Error(`Không tải được video: ${errors.join(' | ')}`);
 }
 
 (async () => {
@@ -499,28 +496,57 @@ async function downloadVideoWithAudio(video, outputDir) {
         process.exit(0);
     }
 
-    // Chọn NGẪU NHIÊN 1 video trong danh sách CHƯA TỪNG ĐĂNG
-    const videoToProcess = unpostedVideos[Math.floor(Math.random() * unpostedVideos.length)];
-
-    // 2. Tải video chất lượng cao nhất (Best Quality)
-    console.log(`\n⬇️ Đang tải video: ${videoToProcess.title}`);
-    await logToWeb(email, 'yt-reels', `Đã tìm thấy video mới: ${videoToProcess.title}. Đang tải...`, 'info');
+    // 2. Tải video. Mỗi lần lỗi phải chuyển sang một URL video khác; không bao
+    // giờ upload khi chưa có file hợp lệ. Dừng hẳn sau tối đa 10 URL thất bại.
+    const failedVideoIds = new Set();
+    let videoToProcess;
     let outputPath;
+    let lastDownloadError;
 
-    try {
-        console.log(`\n➡️ Gọi GenDownload để tải video: ${videoToProcess.url}`);
-        await logToWeb(email, 'yt-reels', 'Đang tải bằng GenDownload và kiểm tra/ghép audio nếu cần...', 'info');
-        outputPath = await downloadVideoWithAudio(videoToProcess, OUTPUT_DIR);
-        console.log('✓ Tải và kiểm tra audio hoàn tất!');
-    } catch (err) {
-        console.error("✗ Lỗi tải video:", err.message);
+    for (let attempt = 1; attempt <= MAX_VIDEO_DOWNLOAD_ATTEMPTS; attempt++) {
+        const candidates = unpostedVideos.filter((video) => !failedVideoIds.has(video.id));
+        if (!candidates.length) {
+            console.warn('⚠ Không còn URL video mới để thử tải.');
+            break;
+        }
+
+        videoToProcess = candidates[Math.floor(Math.random() * candidates.length)];
+        failedVideoIds.add(videoToProcess.id);
+        console.log(`\n⬇️ Tải video (${attempt}/${MAX_VIDEO_DOWNLOAD_ATTEMPTS}): ${videoToProcess.title}`);
+        await logToWeb(email, 'yt-reels', `Lần tải ${attempt}/${MAX_VIDEO_DOWNLOAD_ATTEMPTS}: ${videoToProcess.title}`, 'info');
+
+        try {
+            console.log(`➡️ Gọi GenDownload để tải video: ${videoToProcess.url}`);
+            await logToWeb(email, 'yt-reels', 'Đang tải bằng GenDownload và kiểm tra/ghép audio nếu cần...', 'info');
+            outputPath = await downloadVideoWithAudio(videoToProcess, OUTPUT_DIR);
+            assertPlayableMedia(outputPath, 'Video đã tải');
+            console.log('✓ Tải và kiểm tra audio hoàn tất!');
+            break;
+        } catch (err) {
+            lastDownloadError = err;
+            const failedOutputPath = path.join(
+                OUTPUT_DIR,
+                `${videoToProcess.id.replace(/[^a-zA-Z0-9_-]/g, '_')}.mp4`
+            );
+            removeFileQuietly(failedOutputPath);
+            console.warn(`⚠ Tải lỗi (${attempt}/${MAX_VIDEO_DOWNLOAD_ATTEMPTS}): ${err.message}`);
+            await logToWeb(
+                email,
+                'yt-reels',
+                `Tải lỗi lần ${attempt}/${MAX_VIDEO_DOWNLOAD_ATTEMPTS}; đổi sang link video mới. ${err.message}`,
+                'warn'
+            );
+            if (attempt < MAX_VIDEO_DOWNLOAD_ATTEMPTS) await delay(3000);
+        }
+    }
+
+    if (!outputPath || !fs.existsSync(outputPath)) {
+        const message = `Không tải được video hợp lệ sau tối đa ${MAX_VIDEO_DOWNLOAD_ATTEMPTS} link mới.${lastDownloadError ? ` Lỗi cuối: ${lastDownloadError.message}` : ''}`;
+        console.error(`✗ ${message}`);
+        await logToWeb(email, 'yt-reels', message, 'error');
         process.exit(1);
     }
 
-    if (!fs.existsSync(outputPath)) {
-        console.error("✗ File không tồn tại sau khi tải.");
-        process.exit(1);
-    }
     console.log("✓ Tải video thành công!");
     await logToWeb(email, 'yt-reels', `Tải video 1080p hoàn tất! Đang kết nối Facebook để đăng...`, 'info');
 
