@@ -10,7 +10,7 @@ import ThreadsCrawler from "@/components/ThreadsCrawler";
 import { showToast } from "@/components/Toast";
 
 /* ─── Types ─────────────────────────────────────────── */
-interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; target_channels: string; }
+interface FormData { fb_cookie: string; threads_cookie: string; affiliate_links: string; tele_chat_id: string; target_channels: string; fb_targets: string; }
 interface LogEntry { time: string; level: "INFO" | "SUCCESS" | "WARN" | "ERROR"; msg: string; }
 interface ParsedLink { aff_link: string; title: string; image_url: string; suggested_comment: string; }
 
@@ -93,7 +93,7 @@ export default function AccountsPage() {
   const [userCredits, setUserCredits] = useState<number>(0);
   const [telegramGuideOpen, setTelegramGuideOpen] = useState(false);
   const [telegramGuideSeen, setTelegramGuideSeen] = useState(false);
-  const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "", target_channels: "" });
+  const [formData, setFormData] = useState<FormData>({ fb_cookie: "", threads_cookie: "", affiliate_links: "", tele_chat_id: "", target_channels: "", fb_targets: "" });
   const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
   const [globalLogs, setGlobalLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "Hệ thống sẵn sàng." }]);
   const [fbLogs, setFbLogs] = useState<LogEntry[]>([{ time: now(), level: "INFO", msg: "FB System khởi động..." }]);
@@ -204,11 +204,11 @@ export default function AccountsPage() {
       if (!user) { setLoading(false); pushLog("ERROR", "Chưa đăng nhập!"); return; }
       setUserId(user.id);
       setUserEmail(user.email || null);
-      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links, target_channels, credits").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("fb_cookie, threads_cookie, affiliate_links, tele_chat_id, tier, parsed_affiliate_links, target_channels, fb_targets, credits").eq("id", user.id).single();
       if (!error && data) {
         setUserTier(data.tier || "free");
         setUserCredits(data.credits || 0);
-        setFormData({ fb_cookie: data.fb_cookie || "", threads_cookie: data.threads_cookie || "", affiliate_links: data.affiliate_links || "", tele_chat_id: data.tele_chat_id || "", target_channels: data.target_channels || "" });
+        setFormData({ fb_cookie: data.fb_cookie || "", threads_cookie: data.threads_cookie || "", affiliate_links: data.affiliate_links || "", tele_chat_id: data.tele_chat_id || "", target_channels: data.target_channels || "", fb_targets: data.fb_targets || "" });
         setParsedLinks(data.parsed_affiliate_links || []);
         pushLog("SUCCESS", `Đã tải profile. Tier: ${(data.tier || "free").toUpperCase()}`, "global");
         if (data.fb_cookie) pushLog("INFO", "FB Cookie: Đã cấu hình ✓", "fb");
@@ -367,12 +367,15 @@ export default function AccountsPage() {
     const rawLinks = formData.affiliate_links.split("\n").map(l => l.trim()).filter(Boolean);
     const uniqueLinks = Array.from(new Set(rawLinks));
     const cleanedText = uniqueLinks.join("\n");
+    const rawFbTargets = formData.fb_targets.split("\n").map(link => link.trim()).filter(Boolean);
+    const uniqueFbTargets = Array.from(new Set(rawFbTargets));
+    const cleanedFbTargets = uniqueFbTargets.join("\n");
 
-    if (cleanedText !== formData.affiliate_links) {
-      setFormData(prev => ({ ...prev, affiliate_links: cleanedText }));
+    if (cleanedText !== formData.affiliate_links || cleanedFbTargets !== formData.fb_targets) {
+      setFormData(prev => ({ ...prev, affiliate_links: cleanedText, fb_targets: cleanedFbTargets }));
     }
 
-    const payloadToSave = { ...formData, affiliate_links: cleanedText };
+    const payloadToSave = { ...formData, affiliate_links: cleanedText, fb_targets: cleanedFbTargets };
 
     const getMaxLinks = (tier: string) => { if (tier === 'lite') return 8; if (tier === 'plus') return 20; if (tier === 'pro') return 100; if (tier === 'promax') return 9999; return 4; };
     const maxLinks = getMaxLinks(userTier);
@@ -380,6 +383,12 @@ export default function AccountsPage() {
     if (linkCount > maxLinks) {
       showToast(`Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link (Bạn nhập ${linkCount}). Hãy nâng cấp gói hoặc xoá bớt link!`);
       pushLog("ERROR", `Lỗi: Gói ${userTier.toUpperCase()} chỉ được tối đa ${maxLinks} link.`, "global");
+      return;
+    }
+    const maxFbTargets = 17;
+    if (uniqueFbTargets.length > maxFbTargets) {
+      showToast(`Mỗi gói được tối đa ${maxFbTargets} Group/Page để rải link. Bạn đang nhập ${uniqueFbTargets.length} mục.`);
+      pushLog("ERROR", `Danh sách Group/Page vượt giới hạn ${maxFbTargets} mục.`, "fb");
       return;
     }
     setSaving(true);
@@ -680,6 +689,21 @@ export default function AccountsPage() {
                       <span>Hỗ trợ quét video 1080p từ YouTube, TikTok, Douyin, Facebook Reels, Instagram Reels và Twitter.</span>
                     </div>
 
+                    <div className="mb-6">
+                      <CardTitle
+                        icon={MessageCircle}
+                        title="Nhóm/Page rải link Facebook"
+                        subtitle="Mỗi dòng một link Group hoặc Page, tối đa 17 mục. Bot comment nhóm sẽ ưu tiên đúng danh sách này."
+                        active={!!formData.fb_targets}
+                        tone="violet"
+                      />
+                    </div>
+                    <textarea rows={4} value={formData.fb_targets} onChange={(e) => setFormData({ ...formData, fb_targets: e.target.value })} onBlur={handleSave} placeholder={"Mỗi link Group/Page một dòng\nVí dụ: https://www.facebook.com/groups/123456"} className={`${inputClass} resize-none mb-2`} />
+                    <div className="mb-8 mt-3 flex items-start gap-3 rounded-2xl bg-violet-50/50 px-4 py-3 text-[13px] text-violet-700 leading-relaxed border-none shadow-none">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>Để trống để dùng list mặc định. 17 Group × 5 comment/Group × số phiên/ngày = quà 85–510 comment tùy gói.</span>
+                    </div>
+
                     <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-10"></div>
 
                     <div className="mb-6">
@@ -700,6 +724,10 @@ export default function AccountsPage() {
                       <button onClick={() => handleTrigger("fb_comment")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-3.5 w-full rounded-[16px]`}>
                         {triggeringType === "fb_comment" ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
                         Rải link Reels người khác
+                      </button>
+                      <button onClick={() => handleTrigger("fb")} disabled={triggeringType !== null || !formData.fb_cookie} className={`${btnSecondary} py-3.5 w-full rounded-[16px]`}>
+                        {triggeringType === "fb" ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageCircle className="w-5 h-5" />}
+                        Rải link Group/Page
                       </button>
                     </div>
                   </div>

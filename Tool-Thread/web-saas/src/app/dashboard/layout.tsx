@@ -111,7 +111,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           let comments = 85;
           if (t === 'promax') comments = 510;
           else if (t === 'pro') comments = 340;
-          else if (t === 'plus' || t === 'lite') comments = 170;
+          else if (t === 'plus') comments = 255;
+          else if (t === 'lite') comments = 170;
 
           setTimeout(() => {
             setGiftModal({ show: true, comments, tier: t });

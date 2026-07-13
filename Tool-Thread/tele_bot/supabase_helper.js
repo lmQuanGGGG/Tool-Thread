@@ -89,12 +89,14 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
     console.log("!!! Không có Supabase. Chạy bằng .env local...");
     return {
       fb_cookie:         process.env.FB_COOKIE || '',
+      fb_targets:        '',
       threads_cookie:    process.env.THREADS_COOKIE || '',
       affiliate_links:   process.env.SHOPEE_AFF_LINK || '',
       tele_chat_id:      process.env.TELE_CHAT_ID || '',
       tier:              process.env.USER_TIER || 'free',
       // Cookie đã được parse sẵn
       fb_cookies_arr:    parseCookieString(process.env.FB_COOKIE, '.facebook.com'),
+      fb_targets_arr:    [],
       threads_cookies_arr: parseCookieString(process.env.THREADS_COOKIE, '.threads.net'),
     };
   }
@@ -102,7 +104,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, fb_cookie, threads_cookie, affiliate_links, parsed_affiliate_links, tele_chat_id, tier, target_channels')
+      .select('id, email, fb_cookie, threads_cookie, affiliate_links, parsed_affiliate_links, tele_chat_id, tier, target_channels, fb_targets')
       .eq('email', email)
       .maybeSingle();
 
@@ -115,12 +117,14 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
         console.log(`!!! Không tìm thấy admin ${email} trên Supabase. Tự động Fallback về .env local...`);
         return {
           fb_cookie:         process.env.FB_COOKIE || '',
+          fb_targets:        '',
           threads_cookie:    process.env.THREADS_COOKIE || '',
           affiliate_links:   process.env.SHOPEE_AFF_LINK || '',
           tele_chat_id:      process.env.TELE_CHAT_ID || '',
           tier:              process.env.USER_TIER || 'free',
           fb_cookies_arr:    parseCookieString(process.env.FB_COOKIE, '.facebook.com'),
           fb_cookie_reels_arr: parseCookieString(process.env.FB_COOKIE_REELS || process.env.FB_COOKIE, '.facebook.com'),
+          fb_targets_arr:    [],
           threads_cookies_arr: parseCookieString(process.env.THREADS_COOKIE, '.threads.net'),
         };
       } else {
@@ -136,6 +140,10 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
       .split('\n')
       .map(l => l.trim())
       .filter(Boolean);
+    const fbTargetsArr = (data.fb_targets || '')
+      .split('\n')
+      .map(link => link.trim())
+      .filter(Boolean);
 
     const tierLimits = await getTierLimits(data.tier);
     const telegramNotifyEnabled = tierLimits.telegram_notify !== false;
@@ -146,6 +154,7 @@ async function fetchBotConfig(email = process.env.USER_EMAIL || 'admin@autofarm.
       // fetchBotConfig tự động tuân theo quyền hạn của gói.
       tele_chat_id: telegramNotifyEnabled ? data.tele_chat_id : '',
       affiliate_links_arr: affiliateArr,
+      fb_targets_arr: fbTargetsArr,
       // Puppeteer-ready cookie arrays
       fb_cookies_arr:      parseCookieString(data.fb_cookie, '.facebook.com'),
       fb_cookie_reels_arr: parseCookieString(process.env.FB_COOKIE_REELS || data.fb_cookie, '.facebook.com'), // Fallback reels cookie từ env nếu DB ko có

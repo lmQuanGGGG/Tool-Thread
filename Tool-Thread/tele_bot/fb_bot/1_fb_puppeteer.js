@@ -76,7 +76,17 @@ async function downloadImageFromTelegram(file_id) {
         return c;
     });
 
-    let targets = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fb_targets.json'), 'utf8'));
+    // Ưu tiên danh sách Group/Page riêng của account trong Supabase. Nếu chưa
+    // cấu hình trên web thì dùng list mặc định chung để tương thích dữ liệu cũ.
+    const MAX_GROUP_TARGETS = 17;
+    let targets = dbConfig?.fb_targets_arr?.length
+        ? dbConfig.fb_targets_arr
+        : JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fb_targets.json'), 'utf8'));
+    if (targets.length > MAX_GROUP_TARGETS) {
+        console.log(`[INFO] Danh sách có ${targets.length} Group/Page; chỉ dùng ${MAX_GROUP_TARGETS} mục đầu theo quyền lợi gói.`);
+        targets = targets.slice(0, MAX_GROUP_TARGETS);
+    }
+    console.log(`[INFO] Dùng ${targets.length} Group/Page comment từ ${dbConfig?.fb_targets_arr?.length ? 'cấu hình account' : 'danh sách mặc định'}.`);
 
     // Đọc data từ data_products.json (tệp đã chứa link ảnh và comment mẫu)
     const productsPath = path.resolve(__dirname, '../data_products.json');

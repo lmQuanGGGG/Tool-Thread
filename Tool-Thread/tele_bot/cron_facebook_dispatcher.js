@@ -13,7 +13,7 @@ const AUTO_SCHEDULES = {
     // dispatch trước, FB Post lấy lượt sau khi Reels đã có marker trong ngày.
     free:   { reels: [11, 19], fbReels: [16], fbGroups: [18], threadsPost: [8, 19], fbPost: [11] },
     lite:   { reels: [8, 11, 19], fbReels: [10, 16], fbGroups: [13, 18], threadsPost: [8, 13, 19], fbPost: [8, 11, 19] },
-    plus:   { reels: [8, 13, 16, 19], fbReels: [10, 12, 15, 18], fbGroups: [9, 11], threadsPost: [13, 19], fbPost: [8, 13, 16] },
+    plus:   { reels: [8, 13, 16, 19], fbReels: [10, 12, 15, 18], fbGroups: [9, 11, 14], threadsPost: [13, 19], fbPost: [8, 13, 16] },
     pro:    { reels: [8, 11, 13, 16, 19, 21], fbReels: [9, 10, 12, 15, 17, 18], fbGroups: [7, 14, 20, 22], threadsPost: [8, 11, 13, 19], fbPost: [8, 11, 13, 16, 19] },
     promax: { reels: [8, 10, 11, 13, 15, 16, 19, 21], fbReels: [9, 12, 14, 17, 18, 20, 22, 23], fbGroups: [7, 9, 12, 14, 17, 18], threadsPost: [8, 10, 11, 13, 15, 16, 19, 21], fbPost: [8, 10, 11, 13, 15] },
 };
